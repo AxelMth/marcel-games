@@ -1,16 +1,16 @@
-import mobileAds, { AdsConsent } from "react-native-google-mobile-ads";
+import mobileAds, { AdsConsent } from 'react-native-google-mobile-ads';
 
 let isMobileAdsStartCalled = false;
 
 export async function requestAdConsentAndStartMobileAdsSDK() {
   const showConsentFormPromise = AdsConsent.requestInfoUpdate().then(() =>
     AdsConsent.loadAndShowConsentFormIfRequired().then(
-      ({ canRequestAds }) => canRequestAds,
-    ),
+      ({ canRequestAds }) => canRequestAds
+    )
   );
 
   const canUserRequestAds = AdsConsent.getConsentInfo().then(
-    ({ canRequestAds }) => canRequestAds,
+    ({ canRequestAds }) => canRequestAds
   );
 
   const canRequestAds = await Promise.all([

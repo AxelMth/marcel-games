@@ -5,7 +5,7 @@ import HelpModal from './HelpModal';
 
 describe('HelpModal', () => {
   it('should render successfully', () => {
-    const { root } = render(< HelpModal />);
+    const { root } = render(<HelpModal />);
     expect(root).toBeTruthy();
   });
 });

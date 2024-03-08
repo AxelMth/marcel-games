@@ -5,7 +5,7 @@ import Modal from './Modal';
 
 describe('Modal', () => {
   it('should render successfully', () => {
-    const { root } = render(< Modal />);
+    const { root } = render(<Modal />);
     expect(root).toBeTruthy();
   });
 });

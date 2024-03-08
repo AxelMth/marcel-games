@@ -1,5 +1,5 @@
-import { Modal, StyleSheet, View } from "react-native";
-import React, { ReactElement } from "react";
+import { Modal, StyleSheet, View } from 'react-native';
+import React, { ReactElement } from 'react';
 
 import { DesignSystem } from '@marcel-games/ui';
 
@@ -42,37 +42,37 @@ export const ModalComponent = ({
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modal: {
     borderRadius: 20,
     backgroundColor: DesignSystem.backgroundColor,
     borderColor: DesignSystem.border.color,
     borderWidth: DesignSystem.border.width,
-    width: "80%",
+    width: '80%',
     height: 500,
-    alignItems: "center",
-    justifyContent: "space-between",
-    shadowColor: "#50555C",
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#50555C',
     padding: 20,
   },
   modalHeader: {
     flex: 1,
-    width: "100%",
-    justifyContent: "center",
-    alignItems: "center",
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modalContent: {
     flex: 4,
-    width: "100%",
-    justifyContent: "center",
-    alignItems: "center",
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modalFooter: {
     flex: 1,
-    width: "100%",
-    justifyContent: "center",
-    alignItems: "center",
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

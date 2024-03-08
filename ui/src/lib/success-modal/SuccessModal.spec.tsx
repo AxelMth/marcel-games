@@ -5,7 +5,7 @@ import SuccessModal from './SuccessModal';
 
 describe('SuccessModal', () => {
   it('should render successfully', () => {
-    const { root } = render(< SuccessModal />);
+    const { root } = render(<SuccessModal />);
     expect(root).toBeTruthy();
   });
 });

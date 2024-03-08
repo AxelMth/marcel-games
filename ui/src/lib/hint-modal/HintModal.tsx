@@ -1,14 +1,14 @@
-import React, { useState } from "react";
-import { Text } from "react-native";
-import { useTranslation } from "react-i18next";
+import React, { useState } from 'react';
+import { Text } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 // Components
-import { ModalComponent } from "../modal/Modal";
-import { Button } from "../button/Button";
-import { HintItem } from "../hint-item/HintItem";
+import { ModalComponent } from '../modal/Modal';
+import { Button } from '../button/Button';
+import { HintItem } from '../hint-item/HintItem';
 
 // Hooks
-import { AdType, useAd, useStorageForKey } from "@marcel-games/hooks";
+import { AdType, useAd, useStorageForKey } from '@marcel-games/hooks';
 
 // DS
 import { DesignSystem } from '@marcel-games/ui';
@@ -28,37 +28,37 @@ export const HintModal: React.FC<HintModalProps> = ({
   callbacks,
   onRequestClose,
 }) => {
-  const { t } = useTranslation("hintModal");
+  const { t } = useTranslation('hintModal');
 
   const [boughtHintIndex, setBoughtHintIndex] = useStorageForKey(
-    "Level" + level + "BoughtHint" + missingItemLabels[0],
-    0,
+    'Level' + level + 'BoughtHint' + missingItemLabels[0],
+    0
   );
   const [nextHintIndex, setNextHintIndex] = useStorageForKey(
-    "Level" + level + "Hint" + missingItemLabels[0],
-    boughtHintIndex + 1,
+    'Level' + level + 'Hint' + missingItemLabels[0],
+    boughtHintIndex + 1
   );
   const [currentAdHintIndex, setCurrentAdHintIndex] = useState<number | null>(
-    null,
+    null
   );
 
-  const nextCountryName = missingItemLabels[0]
+  const nextCountryName = missingItemLabels[0];
 
   const hints = [
     {
-      lockText: t("hint1"),
-      hintText: nextCountryName[0] ?? "",
+      lockText: t('hint1'),
+      hintText: nextCountryName[0] ?? '',
       disabledWhenShown: true,
     },
     {
-      lockText: t("hint2"),
-      hintText: t("hint2Revealed"),
+      lockText: t('hint2'),
+      hintText: t('hint2Revealed'),
       showHint: callbacks[1],
       disabledWhenShown: false,
     },
     {
-      lockText: t("hint3"),
-      hintText: nextCountryName ?? "",
+      lockText: t('hint3'),
+      hintText: nextCountryName ?? '',
       disabledWhenShown: true,
     },
   ];
@@ -103,7 +103,7 @@ export const HintModal: React.FC<HintModalProps> = ({
             fontFamily: DesignSystem.fontFamily.semiBold,
           }}
         >
-          {t("header")}
+          {t('header')}
         </Text>
       }
       modalContent={
@@ -111,7 +111,7 @@ export const HintModal: React.FC<HintModalProps> = ({
           <Text
             style={{ fontSize: DesignSystem.fontSize.medium, marginBottom: 20 }}
           >
-            {t("content")}
+            {t('content')}
           </Text>
           {hints.map(({ lockText, hintText, disabledWhenShown }, index) => {
             const hintIndex = index + 1;
@@ -127,7 +127,7 @@ export const HintModal: React.FC<HintModalProps> = ({
           })}
         </>
       }
-      modalFooter={<Button title={t("button")} onPress={onRequestClose} />}
+      modalFooter={<Button title={t('button')} onPress={onRequestClose} />}
       onRequestClose={onRequestClose}
     />
   );

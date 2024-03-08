@@ -1,7 +1,7 @@
-import React from "react";
-import { TouchableOpacity, Text, StyleSheet } from "react-native";
+import React from 'react';
+import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 
-import { DesignSystem } from "@marcel-games/ui";
+import { DesignSystem } from '@marcel-games/ui';
 
 interface ButtonProps {
   title: string;
@@ -22,11 +22,11 @@ const styles = StyleSheet.create({
     height: 35,
     width: 160,
     borderRadius: DesignSystem.border.radius,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   text: {
-    color: "white",
+    color: 'white',
     fontSize: 16,
   },
 });

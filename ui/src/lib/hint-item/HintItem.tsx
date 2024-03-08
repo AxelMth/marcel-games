@@ -1,12 +1,12 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from 'react';
 import {
   Animated,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-} from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+} from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { DesignSystem } from '@marcel-games/ui';
 
@@ -49,12 +49,12 @@ export const HintItem: React.FC<HintItemProps> = ({
   const isRevealed = !isLocked && isShown;
   function getIcon() {
     if (isRevealed) {
-      return "check";
+      return 'check';
     }
     if (isLocked) {
-      return "lock";
+      return 'lock';
     }
-    return "play";
+    return 'play';
   }
   return (
     <TouchableOpacity
@@ -66,15 +66,15 @@ export const HintItem: React.FC<HintItemProps> = ({
       onPress={onPress}
       disabled={isLocked || isShown}
     >
-      <View style={[styles.icon, isRevealed && { backgroundColor: "green" }]}>
+      <View style={[styles.icon, isRevealed && { backgroundColor: 'green' }]}>
         <MaterialCommunityIcons
           style={[
-            { alignSelf: "center", marginTop: 5 },
+            { alignSelf: 'center', marginTop: 5 },
             isLocked && !isShown && { opacity: 0.5 },
           ]}
           name={getIcon()}
           size={20}
-          color={"white"}
+          color={'white'}
         />
       </View>
       <Text style={styles.text}>{text}</Text>
@@ -84,14 +84,14 @@ export const HintItem: React.FC<HintItemProps> = ({
 
 const styles = StyleSheet.create({
   hintItem: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 10,
     borderWidth: DesignSystem.border.width,
     borderColor: DesignSystem.border.color,
     borderRadius: 50,
-    width: "100%",
+    width: '100%',
     marginBottom: 20,
   },
   text: {
@@ -101,10 +101,10 @@ const styles = StyleSheet.create({
   icon: {
     width: 30,
     height: 30,
-    backgroundColor: "black",
+    backgroundColor: 'black',
     borderRadius: 50,
   },
   locked: {
-    backgroundColor: "#D3D3D3",
+    backgroundColor: '#D3D3D3',
   },
 });

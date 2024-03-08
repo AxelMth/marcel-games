@@ -1,11 +1,11 @@
-import React from "react";
-import { useTranslation } from "react-i18next";
-import { StyleSheet, Text, View } from "react-native";
+import React from 'react';
+import { useTranslation } from 'react-i18next';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { formatTime } from "@marcel-games/helpers";
+import { formatTime } from '@marcel-games/helpers';
 
-import { ModalComponent } from "../modal/Modal";
-import { Button } from "../button/Button"
+import { ModalComponent } from '../modal/Modal';
+import { Button } from '../button/Button';
 
 import { DesignSystem } from '@marcel-games/ui';
 
@@ -24,7 +24,7 @@ export const SuccessModal = ({
   onPress: () => void;
   onRequestClose: () => void;
 }) => {
-  const { t } = useTranslation("successModal");
+  const { t } = useTranslation('successModal');
   return (
     <ModalComponent
       modalHeader={
@@ -34,23 +34,23 @@ export const SuccessModal = ({
             fontFamily: DesignSystem.fontFamily.semiBold,
           }}
         >
-          {t("congratulations")}
+          {t('congratulations')}
         </Text>
       }
       modalContent={
         <>
           <View style={styles.levelIndicator}>
-            <Text style={styles.text}>{t("attempts")}</Text>
+            <Text style={styles.text}>{t('attempts')}</Text>
             <Text style={styles.text}>{numberOfAttempt}</Text>
           </View>
           <View style={styles.levelIndicator}>
-            <Text style={styles.text}>{t("time")}</Text>
+            <Text style={styles.text}>{t('time')}</Text>
             <Text style={styles.text}>
-              {formatTime(timer)} min{timer > 60 ? "s" : ""}
+              {formatTime(timer)} min{timer > 60 ? 's' : ''}
             </Text>
           </View>
           <Text style={[styles.text, { marginBottom: 10 }]}>
-            {t("countries")}
+            {t('countries')}
           </Text>
           <View style={styles.countryList}>
             {foundItemLabels.map((item) => (
@@ -61,7 +61,7 @@ export const SuccessModal = ({
           </View>
         </>
       }
-      modalFooter={<Button title={t("nextLevel")} onPress={onPress} />}
+      modalFooter={<Button title={t('nextLevel')} onPress={onPress} />}
       isVisible={isSuccessModalVisible}
       onRequestClose={onRequestClose}
     ></ModalComponent>
@@ -71,17 +71,17 @@ export const SuccessModal = ({
 const styles = StyleSheet.create({
   levelIndicator: {
     height: 50,
-    width: "100%",
-    flexDirection: "row",
-    alignContent: "center",
-    justifyContent: "space-between",
+    width: '100%',
+    flexDirection: 'row',
+    alignContent: 'center',
+    justifyContent: 'space-between',
   },
   countryList: {
-    width: "100%",
-    flexDirection: "row",
-    alignContent: "center",
-    justifyContent: "space-between",
-    flexWrap: "wrap",
+    width: '100%',
+    flexDirection: 'row',
+    alignContent: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
   },
   countryName: {
     fontSize: DesignSystem.fontSize.small,

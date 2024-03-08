@@ -5,7 +5,7 @@ import HintItem from './HintItem';
 
 describe('HintItem', () => {
   it('should render successfully', () => {
-    const { root } = render(< HintItem />);
+    const { root } = render(<HintItem />);
     expect(root).toBeTruthy();
   });
 });

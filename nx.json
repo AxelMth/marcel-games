@@ -53,6 +53,6 @@
         "serveTargetName": "serve",
         "serveStaticTargetName": "serve-static"
       }
-    },
+    }
   ]
 }

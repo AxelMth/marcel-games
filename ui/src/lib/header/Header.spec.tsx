@@ -5,7 +5,7 @@ import Header from './Header';
 
 describe('Header', () => {
   it('should render successfully', () => {
-    const { root } = render(< Header />);
+    const { root } = render(<Header />);
     expect(root).toBeTruthy();
   });
 });

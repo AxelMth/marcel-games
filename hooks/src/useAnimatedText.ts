@@ -1,8 +1,8 @@
-import { Animated } from "react-native";
-import _ from "lodash";
+import { Animated } from 'react-native';
+import _ from 'lodash';
 
 export const useAnimatedText = (text: string, staggerDelay: number) => {
-  const letters = text.split("");
+  const letters = text.split('');
   const animatedValues = letters.map(() => new Animated.Value(0));
 
   const animation = Animated.stagger(
@@ -13,7 +13,7 @@ export const useAnimatedText = (text: string, staggerDelay: number) => {
         duration: Math.floor(Math.random() * 500),
         useNativeDriver: true,
       });
-    }),
+    })
   );
 
   return [animatedValues, animation] as const;

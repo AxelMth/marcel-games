@@ -1,13 +1,12 @@
-import React, { useState } from "react";
-import { Text } from "react-native";
-import { useTranslation } from "react-i18next";
+import React, { useState } from 'react';
+import { Text } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
-import { useStorageForKey } from "@marcel-games/hooks";
-import { DesignSystem } from "@marcel-games/ui";
+import { useStorageForKey } from '@marcel-games/hooks';
+import { DesignSystem } from '@marcel-games/ui';
 
-import { ModalComponent } from "../modal/Modal"
-import { Button } from "../button/Button";
-
+import { ModalComponent } from '../modal/Modal';
+import { Button } from '../button/Button';
 
 interface HelpModalComponentProps {
   isVisible: boolean;
@@ -18,12 +17,12 @@ export const HelpModalComponent: React.FC<HelpModalComponentProps> = ({
   isVisible,
   onRequestClose,
 }) => {
-  const { t } = useTranslation("helpModal");
+  const { t } = useTranslation('helpModal');
   const [isHelpModalVisible, setIsHelpModalVisible] = useState(false);
 
   const [hasSeenHelpModal, setHasSeenHelpModal] = useStorageForKey(
-    "hasSeenHelpModal",
-    false,
+    'hasSeenHelpModal',
+    false
   );
 
   const isFirstTime = !hasSeenHelpModal;
@@ -46,7 +45,7 @@ export const HelpModalComponent: React.FC<HelpModalComponentProps> = ({
             fontFamily: DesignSystem.fontFamily.semiBold,
           }}
         >
-          {isFirstTime ? t("welcomeTitle") : t("helpTitle")}
+          {isFirstTime ? t('welcomeTitle') : t('helpTitle')}
         </Text>
       }
       modalContent={
@@ -56,12 +55,12 @@ export const HelpModalComponent: React.FC<HelpModalComponentProps> = ({
             fontFamily: DesignSystem.fontFamily.regular,
           }}
         >
-          {t("content")}
+          {t('content')}
         </Text>
       }
       modalFooter={
         <Button
-          title={t("button")}
+          title={t('button')}
           onPress={() => {
             onClose();
             onRequestClose();

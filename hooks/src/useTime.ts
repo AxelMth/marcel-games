@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState } from 'react';
 
 export const useTimer = (): [number, () => void, () => void, () => void] => {
   const [time, setTime] = useState(0);
   const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(
-    null,
+    null
   );
 
   const clearTimerInterval = (): void => {
