@@ -14,7 +14,13 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@marcel-games/errors": ["errors/src/index.ts"],
+      "@marcel-games/helpers": ["helpers/src/index.ts"],
+      "@marcel-games/hooks": ["hooks/src/index.ts"],
+      "@marcel-games/lang": ["lang/src/index.ts"],
+      "@marcel-games/ui": ["ui/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }

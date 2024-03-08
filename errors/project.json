@@ -1,0 +1,8 @@
+{
+  "name": "errors",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "errors/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {}
+}
