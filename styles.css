@@ -1,0 +1,14 @@
+
+@font-face {
+    font-family: "KuzFam";
+    src:
+            url("./assets/Kuzfam.ttf") format("ttf"),
+            url("./assets/Kuzfam.ttf") format("ttf");
+}
+
+body {
+    font-family: "Kuzfam", sans-serif;
+    padding: 36px;
+    line-height: 1.6;
+}
+
