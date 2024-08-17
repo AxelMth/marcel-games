@@ -6,8 +6,37 @@
     <link href="./assets/Kuzfam.ttf" rel="stylesheet" />
     <link rel="icon" href="./assets/favicon.png" />
     <title>EartHunt</title>
-    <!-- Add your CSS styles or link to an external stylesheet here -->
     <link rel="stylesheet" href="./styles.css" />
+    <style>
+      body {
+        background-color: #9CDCE7;
+        color: #333;
+        font-family: "Kuzfam", sans-serif;
+      }
+      header, footer {
+        text-align: center;
+        padding: 20px;
+      }
+      main {
+        padding: 20px;
+      }
+      .download-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 20px;
+      }
+      .download-buttons a {
+        background-color: #333;
+        color: #fff;
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+      }
+      .download-buttons a:hover {
+        background-color: #555;
+      }
+    </style>
   </head>
   <body>
     <!-- Header section -->
@@ -17,12 +46,22 @@
         Discover the thrilling world of EartHunt, where the hunt for treasures
         begins.
       </p>
-      <!-- Add any additional content or features specific to your game showcase -->
     </header>
 
     <!-- Main content section -->
     <main>
-      <!-- Showcase your game content here -->
+      <section>
+        <h2>About EartHunt</h2>
+        <p>
+          EartHunt is an exciting app that takes you on a global treasure hunt. 
+          Explore different locations, solve puzzles, and find hidden treasures. 
+          Join the adventure and become the ultimate treasure hunter!
+        </p>
+      </section>
+      <section class="download-buttons">
+        <a href="https://play.google.com/store/apps/details?id=com.earthunt">Download on Google Play</a>
+        <a href="https://apps.apple.com/app/earthunt/id123456789">Download on the App Store</a>
+      </section>
     </main>
 
     <!-- Footer section -->
