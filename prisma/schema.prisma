@@ -1,0 +1,27 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "go run github.com/steebchen/prisma-client-go"
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  lastLogin   DateTime
+  openCount   Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  levelHistories LevelHistory[]
+}
+
+model LevelHistory {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  level     Int
+  attempts  Int
+  timeSpent Int
+  rank      Int
+  user      User     @relation(fields: [userId], references: [id])
+}
