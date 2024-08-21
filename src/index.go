@@ -119,7 +119,7 @@ func nextLevelHandler(w http.ResponseWriter, r *http.Request) {
 
     ctx := context.Background()
 
-    previousLevelHistory, err := client.LevelHistory.FindFirst(
+    levelHistories, err := client.LevelHistory.FindMany(
         db.LevelHistory.UserID.Equals(req.UserID),
     ).Exec(ctx)
 
@@ -128,17 +128,15 @@ func nextLevelHandler(w http.ResponseWriter, r *http.Request) {
     }
 
     var currentLevel int
-    if previousLevelHistory == nil {
+    if (len(levelHistories) == 0) {
         currentLevel = 1
     } else {
-        currentLevel = previousLevelHistory.Level + 1
+        currentLevel = levelHistories[len(levelHistories)-1].Level + 1
     }
 
     rank :=  calculateRank(req.Attempts, req.TimeSpent)
-
-    nextLevel := currentLevel + 1
     _, err = client.LevelHistory.CreateOne(
-        db.LevelHistory.Level.Set(nextLevel),
+        db.LevelHistory.Level.Set(currentLevel),
         db.LevelHistory.Attempts.Set(req.Attempts),
         db.LevelHistory.TimeSpent.Set(req.TimeSpent),
         db.LevelHistory.Rank.Set(rank),
@@ -153,6 +151,7 @@ func nextLevelHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+    nextLevel := currentLevel + 1
     response := map[string]int{"next_level": nextLevel, "rank": rank}
     json.NewEncoder(w).Encode(response)
 }
