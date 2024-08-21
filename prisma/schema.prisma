@@ -8,20 +8,36 @@ generator client {
 }
 
 model User {
-  id          Int      @id @default(autoincrement())
+  id          String      @id @default(uuid())
   lastLogin   DateTime
   openCount   Int
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   levelHistories LevelHistory[]
+  devices     UserDevice[]
 }
 
 model LevelHistory {
-  id        Int      @id @default(autoincrement())
-  userId    Int
+  id        String   @id @default(uuid())
+  userId    String   
   level     Int
   attempts  Int
   timeSpent Int
   rank      Int
   user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, level])
+}
+
+model UserDevice {
+  id        String   @id @default(uuid())
+  userId      String @unique
+  brand       String
+  deviceType  String
+  isDevice    Boolean
+  manufacturer String
+  modelName   String
+  osName      String
+  osVersion   String
+  user        User     @relation(fields: [userId], references: [id])
 }
