@@ -50,6 +50,7 @@ type LaunchRequest struct {
 func launchHandler(w http.ResponseWriter, r *http.Request) {
     var req LaunchRequest
     if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        fmt.Println(err)
         http.Error(w, "Invalid request payload", http.StatusBadRequest)
         return
     }
@@ -97,6 +98,7 @@ func launchHandler(w http.ResponseWriter, r *http.Request) {
     ).Exec(ctx)
 
     if err != nil {
+        fmt.Println(err)
         http.Error(w, "Failed to create user device", http.StatusInternalServerError)
         return
     }
@@ -124,6 +126,7 @@ func nextLevelHandler(w http.ResponseWriter, r *http.Request) {
     ).Exec(ctx)
 
     if err != nil {
+        fmt.Println(err)
         http.Error(w, "InternalError", http.StatusInternalServerError)
     }
 
