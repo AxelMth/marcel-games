@@ -26,23 +26,22 @@ interface GameState {
   worldLevel: number
   continentLevels: Record<string, number>
 
+  // API state
   userId: string | null
   pendingNextLevel: number | null
   pendingNextCountryCodes: string[] | null
   isLoadingGame: boolean
   gameError: string | null
-  progress: {
-    worldLevel: number
-    continentLevels: Record<string, number>
-    dailyCompleted: boolean
-  } | null
-  setProgress: (p: GameState["progress"]) => void
+  progress: { worldLevel: number; continentLevels: Record<string, number>; dailyCompleted: boolean } | null
+  setProgress: (progress: { worldLevel: number; continentLevels: Record<string, number>; dailyCompleted: boolean } | null) => void
   isLoadingProgress: boolean
-  setLoadingProgress: (l: boolean) => void
+  setLoadingProgress: (loading: boolean) => void
 
+  // Ads: skip interstitial once when first world level was loaded from API
   worldLevelWasFromApiLoad: boolean
   clearWorldLevelWasFromApiLoad: () => void
 
+  // Navigation
   goHome: () => void
   goToStats: () => void
   goToContinentSelect: () => void
@@ -51,18 +50,20 @@ interface GameState {
   startDailyGame: () => void
   nextLevel: () => void
 
+  // API-driven game start (called after launch + loadLevel)
   setUserId: (userId: string | null) => void
-  setGameFromLevel: (p: {
+  setGameFromLevel: (params: {
     mode: GameModeLocal
     level: number
     continent?: Continent
     countryCodes: string[]
     allCountries: Country[]
   }) => void
-  setPendingNextLevel: (level: number, codes: string[]) => void
-  setLoadingGame: (l: boolean) => void
-  setGameError: (e: string | null) => void
+  setPendingNextLevel: (level: number, countryCodes: string[]) => void
+  setLoadingGame: (loading: boolean) => void
+  setGameError: (error: string | null) => void
 
+  // Game actions
   submitGuess: (input: string, locale: CountryLocale) => GuessResult
   useHintFirstLetter: (locale: CountryLocale) => string | null
   useHintShowOnMap: () => string | null
@@ -72,22 +73,16 @@ interface GameState {
   tick: () => void
 }
 
-function freshGameSlice() {
-  return {
-    foundCountries: [] as Country[],
-    attempts: 0,
-    startTime: Date.now(),
-    elapsedTime: 0,
-    lastGuessResult: null as GuessResult | null,
-    highlightedCountry: null as string | null,
-    hintsUsed: 0,
-  }
-}
-
 export const useGameStore = create<GameState>((set, get) => ({
   screen: "home",
   gameConfig: null,
-  ...freshGameSlice(),
+  foundCountries: [],
+  attempts: 0,
+  startTime: null,
+  elapsedTime: 0,
+  lastGuessResult: null,
+  highlightedCountry: null,
+  hintsUsed: 0,
   worldLevel: 1,
   continentLevels: {},
   userId: null,
@@ -104,82 +99,139 @@ export const useGameStore = create<GameState>((set, get) => ({
   clearWorldLevelWasFromApiLoad: () => set({ worldLevelWasFromApiLoad: false }),
 
   goHome: () =>
-    set({ screen: "home", gameConfig: null, lastGuessResult: null, gameError: null }),
+    set({
+      screen: "home",
+      gameConfig: null,
+      lastGuessResult: null,
+      gameError: null,
+    }),
 
   goToStats: () => set({ screen: "stats" }),
 
-  goToContinentSelect: () =>
-    set({ screen: "continent-select", lastGuessResult: null }),
+  goToContinentSelect: () => set({ screen: "continent-select", lastGuessResult: null }),
 
   startWorldGame: () => {
-    const { worldLevel } = get()
+    const state = get()
+    const config = createGameConfig("world", state.worldLevel)
     set({
       screen: "game",
-      gameConfig: createGameConfig("world", worldLevel),
-      ...freshGameSlice(),
+      gameConfig: config,
+      foundCountries: [],
+      attempts: 0,
+      startTime: Date.now(),
+      elapsedTime: 0,
+      lastGuessResult: null,
+      highlightedCountry: null,
+      hintsUsed: 0,
     })
   },
 
-  startContinentGame: (continent) => {
-    const lvl = get().continentLevels[continent] || 1
+  startContinentGame: (continent: Continent) => {
+    const state = get()
+    const level = state.continentLevels[continent] || 1
+    const config = createGameConfig("continent", level, continent)
     set({
       screen: "game",
-      gameConfig: createGameConfig("continent", lvl, continent),
-      ...freshGameSlice(),
+      gameConfig: config,
+      foundCountries: [],
+      attempts: 0,
+      startTime: Date.now(),
+      elapsedTime: 0,
+      lastGuessResult: null,
+      highlightedCountry: null,
+      hintsUsed: 0,
     })
   },
 
-  startDailyGame: () =>
+  startDailyGame: () => {
+    const config = createGameConfig("daily", 1)
     set({
       screen: "game",
-      gameConfig: createGameConfig("daily", 1),
-      ...freshGameSlice(),
-    }),
+      gameConfig: config,
+      foundCountries: [],
+      attempts: 0,
+      startTime: Date.now(),
+      elapsedTime: 0,
+      lastGuessResult: null,
+      highlightedCountry: null,
+      hintsUsed: 0,
+    })
+  },
 
   nextLevel: () => {
-    const s = get()
-    if (!s.gameConfig) return
+    const state = get()
+    if (!state.gameConfig) return
 
-    const { pendingNextLevel, pendingNextCountryCodes, gameConfig } = s
-    if (pendingNextLevel != null && pendingNextCountryCodes?.length) {
+    const { pendingNextLevel, pendingNextCountryCodes } = state
+    if (
+      pendingNextLevel != null &&
+      pendingNextCountryCodes != null &&
+      pendingNextCountryCodes.length > 0
+    ) {
       const missingCountries = getCountriesByCodes(pendingNextCountryCodes)
+      const allCountries =
+        state.gameConfig.mode === "continent" && state.gameConfig.continent
+          ? state.gameConfig.allCountries
+          : state.gameConfig.allCountries
+      const mode = state.gameConfig.mode
+      const continent = state.gameConfig.continent
       set({
         screen: "game",
         gameConfig: {
-          mode: gameConfig.mode,
-          continent: gameConfig.continent,
+          mode,
+          continent,
           level: pendingNextLevel,
           missingCountries,
-          allCountries: gameConfig.allCountries,
+          allCountries,
         },
-        worldLevel: gameConfig.mode === "world" ? pendingNextLevel : s.worldLevel,
+        worldLevel: mode === "world" ? pendingNextLevel : state.worldLevel,
         continentLevels:
-          gameConfig.mode === "continent" && gameConfig.continent
-            ? { ...s.continentLevels, [gameConfig.continent]: pendingNextLevel }
-            : s.continentLevels,
-        ...freshGameSlice(),
+          mode === "continent" && continent
+            ? { ...state.continentLevels, [continent]: pendingNextLevel }
+            : state.continentLevels,
+        foundCountries: [],
+        attempts: 0,
+        startTime: Date.now(),
+        elapsedTime: 0,
+        lastGuessResult: null,
+        highlightedCountry: null,
+        hintsUsed: 0,
         pendingNextLevel: null,
         pendingNextCountryCodes: null,
       })
       return
     }
 
-    if (gameConfig.mode === "world") {
-      const nl = s.worldLevel + 1
+    if (state.gameConfig.mode === "world") {
+      const newLevel = state.worldLevel + 1
+      const config = createGameConfig("world", newLevel)
       set({
         screen: "game",
-        worldLevel: nl,
-        gameConfig: createGameConfig("world", nl),
-        ...freshGameSlice(),
+        worldLevel: newLevel,
+        gameConfig: config,
+        foundCountries: [],
+        attempts: 0,
+        startTime: Date.now(),
+        elapsedTime: 0,
+        lastGuessResult: null,
+        highlightedCountry: null,
+        hintsUsed: 0,
       })
-    } else if (gameConfig.mode === "continent" && gameConfig.continent) {
-      const c = gameConfig.continent
-      const nl = (s.continentLevels[c] || 1) + 1
+    } else if (state.gameConfig.mode === "continent" && state.gameConfig.continent) {
+      const continent = state.gameConfig.continent
+      const newLevel = (state.continentLevels[continent] || 1) + 1
+      const config = createGameConfig("continent", newLevel, continent)
       set({
         screen: "game",
-        continentLevels: { ...s.continentLevels, [c]: nl },
-        gameConfig: createGameConfig("continent", nl, c),
-        ...freshGameSlice(),
+        continentLevels: { ...state.continentLevels, [continent]: newLevel },
+        gameConfig: config,
+        foundCountries: [],
+        attempts: 0,
+        startTime: Date.now(),
+        elapsedTime: 0,
+        lastGuessResult: null,
+        highlightedCountry: null,
+        hintsUsed: 0,
       })
     } else {
       set({ screen: "home" })
@@ -187,15 +239,15 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   setUserId: (userId) => set({ userId }),
-
   setGameFromLevel: ({ mode, level, continent, countryCodes, allCountries }) => {
+    const missingCountries = getCountriesByCodes(countryCodes)
     set({
       screen: "game",
       gameConfig: {
         mode,
         continent,
         level,
-        missingCountries: getCountriesByCodes(countryCodes),
+        missingCountries,
         allCountries,
       },
       worldLevel: mode === "world" ? level : get().worldLevel,
@@ -203,110 +255,128 @@ export const useGameStore = create<GameState>((set, get) => ({
         mode === "continent" && continent
           ? { ...get().continentLevels, [continent]: level }
           : get().continentLevels,
-      ...freshGameSlice(),
+      foundCountries: [],
+      attempts: 0,
+      startTime: Date.now(),
+      elapsedTime: 0,
+      lastGuessResult: null,
+      highlightedCountry: null,
+      hintsUsed: 0,
       gameError: null,
       worldLevelWasFromApiLoad: mode === "world",
     })
   },
-
-  setPendingNextLevel: (level, codes) =>
-    set({ pendingNextLevel: level, pendingNextCountryCodes: codes }),
+  setPendingNextLevel: (level, countryCodes) =>
+    set({ pendingNextLevel: level, pendingNextCountryCodes: countryCodes }),
   setLoadingGame: (loading) => set({ isLoadingGame: loading }),
   setGameError: (error) => set({ gameError: error }),
 
-  submitGuess: (input, locale) => {
-    const s = get()
-    if (!s.gameConfig)
-      return { type: "invalid" as const, message: "No game in progress" }
+  submitGuess: (input: string, locale: CountryLocale) => {
+    const state = get()
+    if (!state.gameConfig) return { type: "invalid", message: "No game in progress" }
 
-    set({ attempts: s.attempts + 1 })
-    const matched = matchCountry(input, s.gameConfig.allCountries)
+    set({ attempts: state.attempts + 1 })
+
+    const matched = matchCountry(input, state.gameConfig.allCountries)
     if (!matched) {
-      const r = { type: "invalid" as const, message: "Country not found" }
-      set({ lastGuessResult: r })
-      return r
+      const result: GuessResult = { type: "invalid", message: "Country not found" }
+      set({ lastGuessResult: result })
+      return result
     }
 
-    if (s.foundCountries.some((c) => c.code === matched.code)) {
-      const r = {
-        type: "already-found" as const,
+    const alreadyFound = state.foundCountries.some((c) => c.code === matched.code)
+    if (alreadyFound) {
+      const result: GuessResult = {
+        type: "already-found",
         message: `${getCountryName(matched, locale)} already found!`,
         country: matched,
       }
-      set({ lastGuessResult: r })
-      return r
+      set({ lastGuessResult: result })
+      return result
     }
 
-    if (!s.gameConfig.missingCountries.some((c) => c.code === matched.code)) {
-      const r = {
-        type: "not-missing" as const,
+    const isMissing = state.gameConfig.missingCountries.some(
+      (c) => c.code === matched.code
+    )
+    if (!isMissing) {
+      const result: GuessResult = {
+        type: "not-missing",
         message: `${getCountryName(matched, locale)} is not missing`,
         country: matched,
       }
-      set({ lastGuessResult: r })
-      return r
+      set({ lastGuessResult: result })
+      return result
     }
 
-    const newFound = [...s.foundCountries, matched]
-    const r = {
-      type: "correct" as const,
+    const newFound = [...state.foundCountries, matched]
+    const result: GuessResult = {
+      type: "correct",
       message: `${getCountryName(matched, locale)} found!`,
       country: matched,
     }
 
+    const allFound = newFound.length === state.gameConfig.missingCountries.length
+
     set({
       foundCountries: newFound,
-      lastGuessResult: r,
+      lastGuessResult: result,
       highlightedCountry: matched.code,
     })
 
-    if (newFound.length === s.gameConfig.missingCountries.length) {
-      setTimeout(() => set({ screen: "success" }), 1200)
+    if (allFound) {
+      setTimeout(() => {
+        set({ screen: "success" })
+      }, 1200)
     }
 
-    return r
+    return result
   },
 
-  useHintFirstLetter: (locale) => {
-    const s = get()
-    if (!s.gameConfig) return null
-    const rem = s.gameConfig.missingCountries.filter(
-      (c) => !s.foundCountries.some((f) => f.code === c.code)
+  useHintFirstLetter: (locale: CountryLocale) => {
+    const state = get()
+    if (!state.gameConfig) return null
+    const remaining = state.gameConfig.missingCountries.filter(
+      (c) => !state.foundCountries.some((f) => f.code === c.code)
     )
-    if (!rem.length) return null
-    set({ hintsUsed: s.hintsUsed + 1 })
-    return getCountryName(rem[0], locale)[0]
+    if (remaining.length === 0) return null
+    set({ hintsUsed: state.hintsUsed + 1 })
+    return getCountryName(remaining[0], locale)[0]
   },
 
   useHintShowOnMap: () => {
-    const s = get()
-    if (!s.gameConfig) return null
-    const rem = s.gameConfig.missingCountries.filter(
-      (c) => !s.foundCountries.some((f) => f.code === c.code)
+    const state = get()
+    if (!state.gameConfig) return null
+    const remaining = state.gameConfig.missingCountries.filter(
+      (c) => !state.foundCountries.some((f) => f.code === c.code)
     )
-    if (!rem.length) return null
-    set({ hintsUsed: s.hintsUsed + 1, highlightedCountry: rem[0].code })
-    setTimeout(() => set({ highlightedCountry: null }), 5000)
-    return rem[0].code
+    if (remaining.length === 0) return null
+    set({
+      hintsUsed: state.hintsUsed + 1,
+      highlightedCountry: remaining[0].code,
+    })
+    setTimeout(() => {
+      set({ highlightedCountry: null })
+    }, 5000)
+    return remaining[0].code
   },
 
-  useHintFullName: (locale) => {
-    const s = get()
-    if (!s.gameConfig) return null
-    const rem = s.gameConfig.missingCountries.filter(
-      (c) => !s.foundCountries.some((f) => f.code === c.code)
+  useHintFullName: (locale: CountryLocale) => {
+    const state = get()
+    if (!state.gameConfig) return null
+    const remaining = state.gameConfig.missingCountries.filter(
+      (c) => !state.foundCountries.some((f) => f.code === c.code)
     )
-    if (!rem.length) return null
-    set({ hintsUsed: s.hintsUsed + 1 })
-    return getCountryName(rem[0], locale)
+    if (remaining.length === 0) return null
+    set({ hintsUsed: state.hintsUsed + 1 })
+    return getCountryName(remaining[0], locale)
   },
 
   clearHighlight: () => set({ highlightedCountry: null }),
   clearLastGuess: () => set({ lastGuessResult: null }),
   tick: () => {
-    const s = get()
-    if (s.startTime && s.screen === "game") {
-      set({ elapsedTime: Math.floor((Date.now() - s.startTime) / 1000) })
+    const state = get()
+    if (state.startTime && state.screen === "game") {
+      set({ elapsedTime: Math.floor((Date.now() - state.startTime) / 1000) })
     }
   },
 }))

@@ -1,57 +1,208 @@
 "use client"
 
+import { useRef, useState, useCallback, useEffect } from "react"
+import Image from "next/image"
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import { useGameStore } from "@/lib/game-store"
-import { useLanguage } from "./language-provider"
-import type { Continent } from "@/lib/countries"
+import { useLanguage } from "@/components/language-provider"
+import { useLaunch } from "@/hooks/use-launch"
+import { useLevelApi } from "@/hooks/use-level"
+import { getProgress } from "@/lib/api"
+import { getCountriesByContinent, type Continent } from "@/lib/countries"
+import { ScreenHeader } from "@/components/screen-header"
+import { ProfileModal } from "@/components/profile-modal"
 
-const CONTINENTS: { key: Continent; emoji: string; labelKey: string }[] = [
-  { key: "EUROPE", emoji: "🇪🇺", labelKey: "Europe" },
-  { key: "AFRICA", emoji: "🌍", labelKey: "Africa" },
-  { key: "ASIA", emoji: "🌏", labelKey: "Asia" },
-  { key: "AMERICAS", emoji: "🌎", labelKey: "Americas" },
-  { key: "OCEANIA", emoji: "🏝️", labelKey: "Oceania" },
+const CONTINENT_OPTIONS: {
+  id: Continent
+  labelKey: string
+  image: string
+}[] = [
+  { id: "EUROPE", labelKey: "continentSelect.EUROPE", image: "/images/europe.png" },
+  { id: "ASIA", labelKey: "continentSelect.ASIA", image: "/images/asia.png" },
+  { id: "AMERICAS", labelKey: "continentSelect.AMERICAS", image: "/images/americas.png" },
+  { id: "AFRICA", labelKey: "continentSelect.AFRICA", image: "/images/africa.png" },
+  { id: "OCEANIA", labelKey: "continentSelect.OCEANIA", image: "/images/oceania.png" },
 ]
 
 export function ContinentSelect() {
   const { t } = useLanguage()
-  const goHome = useGameStore((s) => s.goHome)
-  const startContinentGame = useGameStore((s) => s.startContinentGame)
-  const progress = useGameStore((s) => s.progress)
+  const {
+    goHome,
+    setUserId,
+    setGameFromLevel,
+    setLoadingGame,
+    setGameError,
+    setProgress,
+    setLoadingProgress,
+    userId,
+    progress,
+    isLoadingGame,
+    isLoadingProgress,
+    gameError,
+  } = useGameStore()
+  const [profileOpen, setProfileOpen] = useState(false)
+  const { launch } = useLaunch()
+  const { loadLevel } = useLevelApi()
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const firstCardRef = useRef<HTMLButtonElement>(null)
+  const [selectedIndex, setSelectedIndex] = useState(0)
+
+  useEffect(() => {
+    if (userId && !progress) {
+      setLoadingProgress(true)
+      getProgress(userId)
+        .then((p) =>
+          setProgress({
+            worldLevel: p.worldLevel,
+            continentLevels: p.continentLevels ?? {},
+            dailyCompleted: p.dailyCompleted,
+          })
+        )
+        .catch(() => setProgress(null))
+        .finally(() => setLoadingProgress(false))
+    }
+  }, [userId, progress, setProgress, setLoadingProgress])
+
+  const getScrollStep = useCallback(() => {
+    const card = firstCardRef.current
+    if (!card) return 0
+    return card.offsetWidth + 20
+  }, [])
+
+  const scrollToIndex = useCallback((index: number) => {
+    const el = scrollRef.current
+    if (!el) return
+    const step = getScrollStep()
+    if (!step) return
+    el.scrollTo({ left: index * step, behavior: "smooth" })
+    setSelectedIndex(index)
+  }, [getScrollStep])
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current
+    const step = getScrollStep()
+    if (!el || !step) return
+    const index = Math.round(el.scrollLeft / step)
+    setSelectedIndex(Math.max(0, Math.min(CONTINENT_OPTIONS.length - 1, index)))
+  }, [getScrollStep])
+
+  const startContinentFromApi = async (continent: Continent) => {
+    setLoadingGame(true)
+    setGameError(null)
+    try {
+      const gameMode = "CONTINENTS" as const
+      let uid = userId
+      if (!uid) {
+        uid = await launch(gameMode, continent)
+        if (uid) setUserId(uid)
+      }
+      if (!uid) {
+        setGameError(t("errors.couldNotStartGame"))
+        return
+      }
+      const data = await loadLevel({
+        userId: uid,
+        gameMode,
+        continent,
+      })
+      const allCountries = getCountriesByContinent(continent)
+      setGameFromLevel({
+        mode: "continent",
+        level: data.level,
+        continent,
+        countryCodes: data.countryCodes,
+        allCountries,
+      })
+    } catch (e) {
+      console.error(e)
+        setGameError(e instanceof Error ? e.message : t("errors.failedToLoad"))
+    } finally {
+      setLoadingGame(false)
+    }
+  }
 
   return (
-    <main className="flex min-h-screen flex-col bg-background px-4 py-6">
-      {/* Back button */}
-      <button
-        onClick={goHome}
-        className="mb-6 self-start text-sm text-muted-foreground"
-      >
-        {"<"} {t("home.world")}
-      </button>
-
-      <h2 className="mb-4 text-2xl font-bold text-foreground">
-        {t("home.continent")}
-      </h2>
-
-      <div className="flex flex-col gap-3">
-        {CONTINENTS.map(({ key, emoji, labelKey }) => {
-          const lvl = progress?.continentLevels?.[key] ?? 1
-          return (
-            <button
-              key={key}
-              onClick={() => startContinentGame(key)}
-              className="flex items-center gap-4 rounded-2xl bg-card p-4 text-left transition-transform active:scale-[0.98]"
-            >
-              <span className="text-3xl">{emoji}</span>
-              <div className="flex flex-col">
-                <span className="font-bold text-foreground">{labelKey}</span>
-                <span className="text-xs text-muted-foreground">
-                  {t("continentSelect.level")} {lvl}
-                </span>
-              </div>
-            </button>
-          )
-        })}
+    <main className="flex min-h-svh flex-col px-0 py-6">
+      <ScreenHeader
+        title="app.title"
+        subtitle="app.subtitle"
+        showBackButton
+        onBack={goHome}
+        onCogClick={() => goToStats()}
+      />
+      {gameError && (
+        <p className="mb-2 px-5 text-center text-sm font-medium text-red-600">
+          {gameError}
+        </p>
+      )}
+      {isLoadingProgress && (
+        <div className="mb-4 flex w-full items-center justify-center gap-2 px-5">
+          <Loader2 className="h-5 w-5 animate-spin text-[#0f2b3c]" />
+          <span className="text-sm font-medium text-[#0f2b3c]/80">
+            {t("profile.loading")}
+          </span>
+        </div>
+      )}
+      {/* Carousel with arrows */}
+      <div className="flex flex-1 items-center justify-center gap-2 px-5">
+        <button
+          type="button"
+          onClick={() => scrollToIndex(selectedIndex - 1)}
+          disabled={selectedIndex === 0}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/80 text-[#0f2b3c] shadow-md transition-opacity disabled:opacity-30"
+          aria-label="Previous continent"
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="flex w-[85%] max-w-md snap-x snap-mandatory gap-0 overflow-x-auto scrollbar-none"
+          style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
+        >
+          {CONTINENT_OPTIONS.map((c, i) => {
+            const level = progress?.continentLevels[c.id] ?? 1
+            return (
+              <button
+                key={c.id}
+                ref={i === 0 ? firstCardRef : undefined}
+                onClick={() => startContinentFromApi(c.id)}
+                disabled={isLoadingGame}
+                className="mx-2.5 flex w-[75vw] max-w-xs shrink-0 snap-center flex-col items-center p-6 transition-transform duration-200 active:scale-[0.97]"
+              >
+                <div className="mb-4 flex h-32 w-32 items-center justify-center">
+                  <Image
+                    src={c.image}
+                    alt={t(c.labelKey)}
+                    width={128}
+                    height={128}
+                    className="object-contain drop-shadow-md"
+                  />
+                </div>
+                <h2 className="mb-1 text-xl font-bold text-black">{t(c.labelKey)}</h2>
+                <p className="text-sm font-medium text-black/70">{t("continentSelect.level")} {level}</p>
+              </button>
+            )
+          })}
+        </div>
+        <button
+          type="button"
+          onClick={() => scrollToIndex(selectedIndex + 1)}
+          disabled={selectedIndex === CONTINENT_OPTIONS.length - 1}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/80 text-[#0f2b3c] shadow-md transition-opacity disabled:opacity-30"
+          aria-label="Next continent"
+        >
+          <ChevronRight className="h-6 w-6" />
+        </button>
       </div>
+      <p className="mt-4 max-w-sm px-4 text-center text-sm font-medium text-[#0f2b3c]/80">
+        {t("continentSelect.scrollToSelect")}
+      </p>
+      <ProfileModal
+        open={profileOpen}
+        onOpenChange={setProfileOpen}
+        userId={userId}
+      />
     </main>
   )
 }

@@ -27,7 +27,7 @@ export default function Page() {
   }
 
   if (showSplash === null) {
-    return <div className="min-h-screen bg-background" />
+    return <div className="fixed inset-0 bg-[#69cbeb]" aria-hidden />
   }
 
   if (showSplash) {
@@ -39,7 +39,7 @@ export default function Page() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-svh bg-gradient-to-b from-[#55b3d1] via-[#69cbeb] to-[#c0e8f0]">
       {screen === "home" && <HomeScreen />}
       {screen === "continent-select" && <ContinentSelect />}
       {screen === "success" && <SuccessScreen />}

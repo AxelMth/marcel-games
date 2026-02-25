@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Nunito, Nunito_Sans } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
-import { AdMobInit } from '@marcel-games/lib'
+import { AdMobInit } from '@/components/admob-init'
 import { LanguageProvider } from '@/components/language-provider'
 import './globals.css'
 
@@ -36,12 +36,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
-      <body className="font-sans antialiased">
+      <body
+        className={`${_nunito.variable} ${_nunitoSans.variable} font-sans antialiased`}
+        style={{
+          paddingTop: 'env(safe-area-inset-top)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+          paddingLeft: 'env(safe-area-inset-left)',
+          paddingRight: 'env(safe-area-inset-right)',
+        }}
+      >
         <LanguageProvider>
           {children}
+          <AdMobInit />
+          <Analytics />
         </LanguageProvider>
-        <AdMobInit />
-        <Analytics />
       </body>
     </html>
   )

@@ -1,40 +1,43 @@
 "use client"
 
-import { useCallback } from "react"
-import { useDeviceUUID } from "@marcel-games/lib"
+import { useEffect, useState } from "react"
+import { useDeviceUuid } from "./use-device-uuid"
 import { postLaunch, type GameMode, type Continent } from "@/lib/api"
 
-/**
- * Calls /launch with the device UUID and returns the userId.
- * Uses the shared useDeviceUUID hook from @marcel-games/lib.
- */
-export function useLaunch() {
-  const { getUUID } = useDeviceUUID()
+export type UseLaunchReturn = {
+  userId: string | null
+  launch: (gameMode: GameMode, continent: Continent | "") => Promise<string | null>
+}
 
-  const launch = useCallback(
-    async (gameMode: GameMode, continent: Continent | ""): Promise<string | null> => {
-      try {
-        const deviceUUID = getUUID()
-        const data = await postLaunch({
-          deviceUUID,
-          brand: null,
-          osName: null,
-          osVersion: null,
-          modelName: null,
-          manufacturer: null,
-          deviceType: "unknown",
-          isDevice: null,
-          gameMode,
-          continent,
-        })
-        return data.userId
-      } catch (err) {
-        console.error("[useLaunch] failed:", err)
-        return null
-      }
-    },
-    [getUUID]
-  )
+export function useLaunch(): UseLaunchReturn {
+  const deviceUuid = useDeviceUuid()
+  const [userId, setUserId] = useState<string | null>(null)
 
-  return { launch }
+  const launch = async (
+    gameMode: GameMode,
+    continent: Continent | ""
+  ): Promise<string | null> => {
+    if (!deviceUuid) return null
+    try {
+      const data = await postLaunch({
+        deviceUUID: deviceUuid,
+        brand: typeof navigator !== "undefined" ? (navigator as { vendor?: string }).vendor : null,
+        osName: typeof navigator !== "undefined" ? navigator.platform : null,
+        osVersion: undefined,
+        modelName: undefined,
+        manufacturer: undefined,
+        deviceType: "UNKNOWN",
+        isDevice: true,
+        gameMode,
+        continent,
+      })
+      setUserId(data.userId)
+      return data.userId
+    } catch (e) {
+      console.error("Launch failed:", e)
+      return null
+    }
+  }
+
+  return { userId, launch }
 }

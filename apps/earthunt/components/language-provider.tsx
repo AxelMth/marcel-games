@@ -7,18 +7,19 @@ import {
   useState,
   type ReactNode,
 } from "react"
-import { getLanguage, type Language } from "@marcel-games/lib"
+import { getLanguage, type Language } from "@/lib/language"
 import { t, tReplace } from "@/lib/i18n"
 
 interface LanguageContextValue {
   lang: Language
   t: (key: string) => string
-  tReplace: (key: string, params: Record<string, string>) => string
+  tReplace: (key: string, params: Record<string, string | number>) => string
 }
 
 const LanguageContext = createContext<LanguageContextValue | null>(null)
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
+  // Start with "fr" to match SSR and avoid hydration mismatch; update in useEffect
   const [lang, setLang] = useState<Language>("fr")
 
   useEffect(() => {
@@ -44,7 +45,7 @@ export function useLanguage() {
     return {
       lang: "fr" as Language,
       t: (key: string) => key,
-      tReplace: (key: string, _params: Record<string, string>) => key,
+      tReplace: (key: string, params: Record<string, string | number>) => key,
     }
   }
   return ctx
