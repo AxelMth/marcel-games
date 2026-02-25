@@ -12,6 +12,7 @@ const config: CapacitorConfig = {
       maxVersions: 2
     },
     AdMob: {
+      // App IDs are set in AndroidManifest.xml and Info.plist (same as earthunt app.json)
       androidAppId: 'ca-app-pub-6271901101573718~9313598215',
       iosAppId: 'ca-app-pub-6271901101573718~5878435021'
     }
