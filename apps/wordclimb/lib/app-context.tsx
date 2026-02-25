@@ -41,7 +41,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
-    getLanguage().then(setLanguage)
+    setLanguage(getLanguage())
   }, [])
 
   useEffect(() => {

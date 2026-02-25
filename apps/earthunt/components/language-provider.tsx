@@ -22,10 +22,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Language>("fr")
 
   useEffect(() => {
-    getLanguage().then((detected) => {
-      setLang(detected)
-      document.documentElement.lang = detected
-    })
+    const detected = getLanguage()
+    setLang(detected)
+    document.documentElement.lang = detected
   }, [])
 
   const value: LanguageContextValue = {
