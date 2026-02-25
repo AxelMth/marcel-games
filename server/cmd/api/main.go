@@ -1,79 +1,41 @@
 package main
 
 import (
-	"context"
-	"errors"
+	"fmt"
 	"log"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
+	"marcel-games-backend/internal/handlers"
 
-	"github.com/marcelgames/marcel-games-api/internal/config"
-	"github.com/marcelgames/marcel-games-api/internal/database"
-	"github.com/marcelgames/marcel-games-api/internal/middleware"
-	"github.com/marcelgames/marcel-games-api/internal/router"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	cfg := config.Load()
+	godotenv.Load()
 
-	// Connect to both app databases independently
-	earthuntDB, err := database.Connect(cfg.DBURLEarthunt, "earthunt")
-	if err != nil {
-		log.Fatalf("failed to connect to earthunt database: %v", err)
+	r := gin.Default()
+	r.SetTrustedProxies(nil)
+
+	// CORS: allow all origins so cross-origin calls are not blocked
+	r.Use(cors.New(cors.Config{
+		AllowOriginFunc:  func(origin string) bool { return true },
+		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
+
+	r.POST("/launch", handlers.LaunchHandler)
+
+	r.GET("/progress", handlers.GetProgressHandler)
+	r.GET("/profile", handlers.GetProfileHandler)
+	r.GET("/level", handlers.GetLevelHandler)
+	// deprecated
+	r.POST("/end-level", handlers.FinishLevelHandler)
+	r.POST("/level", handlers.FinishLevelHandler)
+
+	fmt.Println("Starting server at port 8080")
+	if err := r.Run(":8080"); err != nil {
+		log.Fatal(err)
 	}
-	defer earthuntDB.Close()
-
-	wordclimbDB, err := database.Connect(cfg.DBURLWordclimb, "wordclimb")
-	if err != nil {
-		log.Fatalf("failed to connect to wordclimb database: %v", err)
-	}
-	defer wordclimbDB.Close()
-
-	// Run schema migrations on both databases
-	if err := database.Migrate(earthuntDB); err != nil {
-		log.Fatalf("earthunt migration failed: %v", err)
-	}
-	if err := database.Migrate(wordclimbDB); err != nil {
-		log.Fatalf("wordclimb migration failed: %v", err)
-	}
-
-	dbs := &middleware.AppDatabases{
-		Earthunt:      earthuntDB,
-		Wordclimb:     wordclimbDB,
-		EarthuntHost:  cfg.EarthuntHost,
-		WordclimbHost: cfg.WordclimbHost,
-	}
-
-	r := router.New(dbs, cfg)
-
-	srv := &http.Server{
-		Addr:         ":" + cfg.Port,
-		Handler:      r,
-		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
-		IdleTimeout:  60 * time.Second,
-	}
-
-	go func() {
-		log.Printf("[api] listening on :%s", cfg.Port)
-		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("server error: %v", err)
-		}
-	}()
-
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-
-	log.Println("[api] shutting down...")
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("forced shutdown: %v", err)
-	}
-	log.Println("[api] exited cleanly")
 }

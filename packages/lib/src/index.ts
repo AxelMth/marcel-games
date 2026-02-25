@@ -1,3 +1,14 @@
-export { storage } from "./storage";
-export { useAuth, type AuthState, type UseAuthReturn } from "./use-auth";
-export { triggerHaptic, triggerNotificationHaptic, type HapticStyle } from "./haptics";
+// Shared storage layer (Capacitor Preferences / localStorage / in-memory)
+export { storage } from "./storage"
+
+// Shared hooks
+export { useDeviceUUID } from "./use-device-uuid"
+export { useAnimatedText } from "./use-animated-text"
+export { useInterstitialAd, type AdIds as InterstitialAdIds } from "./use-interstitial-ad"
+export { useRewardedAd, type UseRewardedAdOptions, type AdIds as RewardedAdIds } from "./use-rewarded-ad"
+
+// Shared utilities
+export { getLanguage, type Language } from "./language"
+
+// Shared components
+export { AdMobInit } from "./admob-init"

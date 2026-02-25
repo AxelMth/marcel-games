@@ -1,40 +1,27 @@
-app       = "marcel-games-api"
-primary_region = "cdg"   # Paris — close to EU players
+# fly.toml app configuration file generated for marcel-games-backend on 2025-01-02T10:08:27+01:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+
+app            = 'marcel-games-backend'
+primary_region = 'cdg'
 
 [build]
-  dockerfile = "Dockerfile"
+  [build.args]
+    GO_VERSION = '1.23.0'
 
 [env]
-  PORT    = "8080"
-  GIN_MODE = "release"
+  PORT     = '8080'
+  GIN_MODE = 'release'
 
-# The API handles both earthunt.* and wordclimb.* requests on the same process.
-# Separate custom domains are mapped in the Fly dashboard; both resolve here.
-[[services]]
-  protocol    = "tcp"
-  internal_port = 8080
-
-  [[services.ports]]
-    port     = 80
-    handlers = ["http"]
-    force_https = true
-
-  [[services.ports]]
-    port     = 443
-    handlers = ["tls", "http"]
-
-  [services.concurrency]
-    type       = "connections"
-    hard_limit = 200
-    soft_limit = 150
-
-  [[services.http_checks]]
-    interval    = "15s"
-    timeout     = "5s"
-    grace_period = "10s"
-    method      = "GET"
-    path        = "/health"
+[http_service]
+  internal_port       = 8080
+  force_https         = true
+  auto_stop_machines  = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes           = ['app']
 
 [[vm]]
-  size   = "shared-cpu-1x"
-  memory = "256mb"
+  memory   = '1gb'
+  cpu_kind = 'shared'
+  cpus     = 1

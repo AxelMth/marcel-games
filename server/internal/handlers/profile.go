@@ -1,81 +1,58 @@
 package handlers
 
 import (
-	"database/sql"
+	"context"
+	"fmt"
+	"marcel-games-backend/internal/repositories"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/marcelgames/marcel-games-api/internal/middleware"
 )
 
-type profileResponse struct {
-	ID        string `json:"id"`
-	Username  string `json:"username"`
-	AvatarURL string `json:"avatar_url"`
-	CreatedAt string `json:"created_at"`
+type GetProfileInfo struct {
+	UserID string `form:"userId" binding:"required"`
 }
 
-// GetProfile godoc — GET /api/v1/profile/me
-// Returns the authenticated user's profile.
-func GetProfile(c *gin.Context) {
-	userID := middleware.GetUserID(c)
-	db := middleware.GetDB(c)
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database unavailable"})
-		return
-	}
-
-	var p profileResponse
-	err := db.QueryRowContext(c.Request.Context(),
-		`SELECT id, username, avatar_url, created_at FROM users WHERE id = $1`,
-		userID,
-	).Scan(&p.ID, &p.Username, &p.AvatarURL, &p.CreatedAt)
-	if err == sql.ErrNoRows {
-		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
-		return
-	}
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
-		return
-	}
-
-	c.JSON(http.StatusOK, p)
+type ProfileStats struct {
+	DailyLevelsCompleted int `json:"dailyLevelsCompleted"`
+	LastLevelRank        int `json:"lastLevelRank"`
+	GlobalRank           int `json:"globalRank"`
 }
 
-// UpdateProfile godoc — PATCH /api/v1/profile/me
-// Updates username and/or avatar_url for the authenticated user.
-func UpdateProfile(c *gin.Context) {
-	userID := middleware.GetUserID(c)
-	db := middleware.GetDB(c)
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database unavailable"})
+type GetProfileResponse struct {
+	GameHistory []repositories.GameHistoryEntry `json:"gameHistory"`
+	Stats       ProfileStats                    `json:"stats"`
+}
+
+func GetProfileHandler(c *gin.Context) {
+	var req GetProfileInfo
+	if err := c.ShouldBindQuery(&req); err != nil {
+		fmt.Println(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid query parameters"})
 		return
 	}
 
-	var body struct {
-		Username  string `json:"username"   binding:"omitempty,min=3,max=32,alphanum"`
-		AvatarURL string `json:"avatar_url"`
-	}
-	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	ctx := context.Background()
 
-	var p profileResponse
-	err := db.QueryRowContext(c.Request.Context(), `
-		UPDATE users
-		SET
-			username   = CASE WHEN $2 <> '' THEN $2 ELSE username END,
-			avatar_url = CASE WHEN $3 <> '' THEN $3 ELSE avatar_url END,
-			updated_at = NOW()
-		WHERE id = $1
-		RETURNING id, username, avatar_url, created_at
-	`, userID, body.Username, body.AvatarURL).
-		Scan(&p.ID, &p.Username, &p.AvatarURL, &p.CreatedAt)
+	gameHistory, err := repositories.GetUserLevelHistory(ctx, req.UserID, 50)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		fmt.Println("Failed to get level history", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get profile"})
 		return
 	}
 
-	c.JSON(http.StatusOK, p)
+	dailyLevelsCompleted := repositories.GetUserDailyLevelCount(ctx, req.UserID)
+	lastLevelRank, _ := repositories.GetUserRankForLastDailyLevel(ctx, req.UserID)
+	globalRank, _ := repositories.GetUserGlobalDailyRank(ctx, req.UserID)
+
+	response := GetProfileResponse{
+		GameHistory: gameHistory,
+		Stats: ProfileStats{
+			DailyLevelsCompleted: dailyLevelsCompleted,
+			LastLevelRank:        lastLevelRank,
+			GlobalRank:           globalRank,
+		},
+	}
+
+	c.JSON(http.StatusOK, response)
 }

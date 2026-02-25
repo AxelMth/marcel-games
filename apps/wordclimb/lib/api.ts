@@ -1,82 +1,29 @@
 /**
- * WordClimb API client.
- *
- * Points at the Fly.io deployment for wordclimb:
- *   https://wordclimb.server.com  (production)
- *   http://localhost:8080          (local dev)
+ * WordClimb Backend API.
+ * Shares the same marcel-games-backend (Fly.io) with a different game mode context.
  */
+export const API_BASE_URL =
+  process.env.NEXT_PUBLIC_BASE_URL || "https://marcel-games-backend.fly.dev"
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "https://wordclimb.server.com";
-
-async function request<T>(
-  path: string,
-  init?: RequestInit
-): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
-    },
-    ...init,
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`API error ${res.status}: ${text}`);
-  }
-
-  return res.json() as Promise<T>;
+export type LaunchResponse = {
+  userId: string
 }
 
-// ── Puzzles ───────────────────────────────────────────────────────────────────
-
-export interface Puzzle {
-  id: string;
-  word: string;
-  hint: string;
-  difficulty: "easy" | "medium" | "hard";
-  solvedBy: number;
-}
-
-export const getPuzzles = () => request<Puzzle[]>("/api/puzzles");
-
-export const getPuzzle = (id: string) =>
-  request<Puzzle>(`/api/puzzles/${id}`);
-
-export const submitAnswer = (puzzleId: string, answer: string) =>
-  request<{ correct: boolean; points: number }>(`/api/puzzles/${puzzleId}/submit`, {
+export async function postLaunch(body: {
+  deviceUUID: string
+  brand?: string | null
+  osName?: string | null
+  osVersion?: string | null
+  modelName?: string | null
+  manufacturer?: string | null
+  deviceType: string
+  isDevice?: boolean | null
+}): Promise<LaunchResponse> {
+  const res = await fetch(`${API_BASE_URL}/launch`, {
     method: "POST",
-    body: JSON.stringify({ answer }),
-  });
-
-// ── Scores ───────────────────────────────────────────────────────────────────
-
-export interface ScoreEntry {
-  rank: number;
-  username: string;
-  score: number;
-  streak: number;
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) throw new Error(`Launch failed: ${res.status}`)
+  return res.json()
 }
-
-export const getLeaderboard = () =>
-  request<ScoreEntry[]>("/api/leaderboard");
-
-// ── Auth ─────────────────────────────────────────────────────────────────────
-
-export interface AuthPayload {
-  token: string;
-  username: string;
-}
-
-export const signIn = (username: string, password: string) =>
-  request<AuthPayload>("/api/auth/signin", {
-    method: "POST",
-    body: JSON.stringify({ username, password }),
-  });
-
-export const signUp = (username: string, password: string) =>
-  request<AuthPayload>("/api/auth/signup", {
-    method: "POST",
-    body: JSON.stringify({ username, password }),
-  });

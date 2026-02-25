@@ -7,7 +7,7 @@ const nextConfig = {
     unoptimized: true,
   },
   // Transpile shared workspace packages
-  transpilePackages: ["@marcel-games/ui", "@marcel-games/lib"],
+  transpilePackages: ["@marcel-games/lib"],
 };
 
 export default nextConfig;

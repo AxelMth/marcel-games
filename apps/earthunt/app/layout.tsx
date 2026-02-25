@@ -1,45 +1,48 @@
-import type { Metadata, Viewport } from "next";
-import { Inter, Space_Mono } from "next/font/google";
-import "./globals.css";
+import type { Metadata, Viewport } from 'next'
+import { Nunito, Nunito_Sans } from 'next/font/google'
+import { Analytics } from '@vercel/analytics/next'
+import { AdMobInit } from '@marcel-games/lib'
+import { LanguageProvider } from '@/components/language-provider'
+import './globals.css'
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-sans",
-});
-
-const spaceMono = Space_Mono({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-mono",
-});
+const _nunito = Nunito({
+  subsets: ['latin'],
+  variable: '--font-nunito',
+})
+const _nunitoSans = Nunito_Sans({
+  subsets: ['latin'],
+  variable: '--font-nunito-sans',
+})
 
 export const metadata: Metadata = {
-  title: "Earthunt",
-  description: "Hunt for hidden locations around the globe.",
-  applicationName: "Earthunt",
-  appleWebApp: {
-    capable: true,
-    title: "Earthunt",
-    statusBarStyle: "black-translucent",
-  },
-};
+  title: 'EartHunt - Geography Quiz Game',
+  description:
+    'Find all missing countries on an interactive world map. Test your geography knowledge!',
+}
 
 export const viewport: Viewport = {
-  themeColor: "#0f172a",
+  themeColor: '#55b3d1',
   userScalable: false,
-  width: "device-width",
+  width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-};
+  viewportFit: 'cover',
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${spaceMono.variable}`}>
-      <body className="font-sans antialiased">{children}</body>
+    <html lang="fr">
+      <body className="font-sans antialiased">
+        <LanguageProvider>
+          {children}
+        </LanguageProvider>
+        <AdMobInit />
+        <Analytics />
+      </body>
     </html>
-  );
+  )
 }

@@ -3,42 +3,23 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ─── WordClimb Design Tokens ───────────────────────────────────────────────── */
-/* Palette: deep forest green + lime accent, warm neutrals                       */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-mono);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
   --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -48,60 +29,86 @@
 :root {
   --radius: 0.625rem;
 
-  /* WordClimb: deep forest green + lime */
-  --background: 138 50% 5%;
-  --foreground: 80 70% 92%;
+  --background: 235 25% 12%;
+  --foreground: 0 0% 95%;
 
-  --card: 138 40% 9%;
-  --card-foreground: 80 70% 92%;
+  --card: 235 22% 16%;
+  --card-foreground: 0 0% 95%;
 
-  --popover: 138 40% 9%;
-  --popover-foreground: 80 70% 92%;
+  --primary: 262 83% 58%;
+  --primary-foreground: 0 0% 100%;
 
-  --primary: 84 80% 50%;          /* lime-400 */
-  --primary-foreground: 138 50% 5%;
+  --secondary: 235 20% 22%;
+  --secondary-foreground: 0 0% 90%;
 
-  --secondary: 138 30% 18%;
-  --secondary-foreground: 80 70% 92%;
+  --muted: 235 18% 18%;
+  --muted-foreground: 235 10% 55%;
 
-  --muted: 138 25% 14%;
-  --muted-foreground: 138 15% 52%;
-
-  --accent: 84 65% 42%;
-  --accent-foreground: 138 50% 5%;
+  --accent: 43 96% 56%;
+  --accent-foreground: 235 25% 12%;
 
   --destructive: 0 72% 51%;
-
-  --border: 138 25% 18%;
-  --input: 138 25% 18%;
-  --ring: 84 80% 50%;
-
-  --chart-1: 84 80% 50%;
-  --chart-2: 200 70% 50%;
-  --chart-3: 38 95% 55%;
-  --chart-4: 280 65% 60%;
-  --chart-5: 340 75% 55%;
-
-  --sidebar: 138 50% 7%;
-  --sidebar-foreground: 80 70% 92%;
-  --sidebar-primary: 84 80% 50%;
-  --sidebar-primary-foreground: 138 50% 5%;
-  --sidebar-accent: 138 30% 14%;
-  --sidebar-accent-foreground: 80 70% 92%;
-  --sidebar-border: 138 25% 18%;
-  --sidebar-ring: 84 80% 50%;
+  --border: 235 20% 22%;
+  --ring: 262 83% 58%;
 }
 
 * {
   box-sizing: border-box;
 }
 
-html,
-body {
+html, body {
   height: 100%;
   overscroll-behavior: none;
 }
 
 body {
   @apply bg-background text-foreground font-sans antialiased;
+}
+
+/* Letter tiles */
+.tile {
+  @apply flex items-center justify-center rounded-md text-xl font-bold
+         w-12 h-12 transition-all duration-200;
+}
+
+.tile-empty {
+  @apply border-2 border-muted bg-transparent;
+}
+
+.tile-filled {
+  @apply bg-secondary text-foreground border-2 border-secondary;
+}
+
+.tile-correct {
+  @apply bg-green-600 text-white border-2 border-green-600;
+}
+
+.tile-present {
+  @apply bg-amber-500 text-white border-2 border-amber-500;
+}
+
+.tile-absent {
+  @apply bg-muted-foreground/30 text-foreground border-2 border-muted-foreground/30;
+}
+
+/* Keyboard */
+.key {
+  @apply flex items-center justify-center rounded-md text-sm font-semibold
+         min-w-[2rem] h-10 px-2 cursor-pointer transition-colors duration-150;
+}
+
+.key-default {
+  @apply bg-secondary text-foreground hover:bg-secondary/80;
+}
+
+.key-correct {
+  @apply bg-green-600 text-white;
+}
+
+.key-present {
+  @apply bg-amber-500 text-white;
+}
+
+.key-absent {
+  @apply bg-muted text-muted-foreground;
 }

@@ -1,23 +1,25 @@
-# ── Build stage ────────────────────────────────────────────────────────────────
-FROM golang:1.23-alpine AS builder
+ARG GO_VERSION=1
+FROM golang:${GO_VERSION}-alpine AS builder
 
-RUN apk add --no-cache git ca-certificates
+WORKDIR /usr/src/app
 
-WORKDIR /app
-
+# Copy Go module files
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY . .
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-    go build -ldflags="-s -w" -o /api ./cmd/api
+# Copy the rest of the application
+COPY . ./
 
-# ── Runtime stage ───────────────────────────────────────────────────────────────
-FROM gcr.io/distroless/static-debian12 AS runtime
+# Generate Prisma client
+RUN go run github.com/steebchen/prisma-client-go generate
 
-COPY --from=builder /api /api
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+RUN go build -v -o ./run-app ./cmd/api
 
-EXPOSE 8080
+FROM alpine:latest
 
-ENTRYPOINT ["/api"]
+WORKDIR /usr/src/app
+
+# Copy the binary and Prisma query engine
+COPY --from=builder /usr/src/app/run-app /usr/local/bin
+
+CMD ["run-app"]

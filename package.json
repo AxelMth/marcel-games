@@ -7,12 +7,12 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "dev:earthunt": "turbo run dev --filter=earthunt",
-    "dev:wordclimb": "turbo run dev --filter=wordclimb",
-    "build:earthunt": "turbo run build --filter=earthunt",
-    "build:wordclimb": "turbo run build --filter=wordclimb",
-    "cap:sync:earthunt": "turbo run cap:sync --filter=earthunt",
-    "cap:sync:wordclimb": "turbo run cap:sync --filter=wordclimb"
+    "dev:earthunt": "turbo run dev --filter=@marcel-games/earthunt",
+    "dev:wordclimb": "turbo run dev --filter=@marcel-games/wordclimb",
+    "build:earthunt": "turbo run build --filter=@marcel-games/earthunt",
+    "build:wordclimb": "turbo run build --filter=@marcel-games/wordclimb",
+    "cap:sync:earthunt": "turbo run cap:sync --filter=@marcel-games/earthunt",
+    "cap:sync:wordclimb": "turbo run cap:sync --filter=@marcel-games/wordclimb"
   },
   "devDependencies": {
     "turbo": "^2.3.3",

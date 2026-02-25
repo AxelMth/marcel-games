@@ -1,28 +1,21 @@
-import type { CapacitorConfig } from "@capacitor/cli";
+import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: "com.marcelgames.earthunt",
-  appName: "Earthunt",
-  webDir: "out",
-  server: {
-    // During development, point to the local Next.js server.
-    // Comment this out for production builds.
-    // url: "http://192.168.1.x:3001",
-    // cleartext: true,
-  },
+  appId: 'com.marcelgames.earthunt',
+  appName: 'earthunt',
+  webDir: 'out',
   plugins: {
-    SplashScreen: {
-      launchShowDuration: 2000,
-      backgroundColor: "#0f172a",
-      androidSplashResourceName: "splash",
-      androidScaleType: "CENTER_CROP",
-      showSpinner: false,
+    LiveUpdates: {
+      appId: '64ef723b',
+      channel: 'Production',
+      autoUpdateMethod: 'background',
+      maxVersions: 2
     },
-    StatusBar: {
-      style: "DARK",
-      backgroundColor: "#0f172a",
-    },
-  },
+    AdMob: {
+      androidAppId: 'ca-app-pub-6271901101573718~9313598215',
+      iosAppId: 'ca-app-pub-6271901101573718~5878435021'
+    }
+  }
 };
 
 export default config;
