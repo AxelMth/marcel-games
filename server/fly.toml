@@ -1,0 +1,40 @@
+app       = "marcel-games-api"
+primary_region = "cdg"   # Paris — close to EU players
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT    = "8080"
+  GIN_MODE = "release"
+
+# The API handles both earthunt.* and wordclimb.* requests on the same process.
+# Separate custom domains are mapped in the Fly dashboard; both resolve here.
+[[services]]
+  protocol    = "tcp"
+  internal_port = 8080
+
+  [[services.ports]]
+    port     = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port     = 443
+    handlers = ["tls", "http"]
+
+  [services.concurrency]
+    type       = "connections"
+    hard_limit = 200
+    soft_limit = 150
+
+  [[services.http_checks]]
+    interval    = "15s"
+    timeout     = "5s"
+    grace_period = "10s"
+    method      = "GET"
+    path        = "/health"
+
+[[vm]]
+  size   = "shared-cpu-1x"
+  memory = "256mb"

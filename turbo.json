@@ -1,0 +1,28 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [".next/**", "!.next/cache/**", "out/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "cap:sync": {
+      "dependsOn": ["build"],
+      "cache": false
+    },
+    "cap:open:ios": {
+      "cache": false
+    },
+    "cap:open:android": {
+      "cache": false
+    }
+  }
+}

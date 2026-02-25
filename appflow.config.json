@@ -1,0 +1,20 @@
+{
+  "apps": [
+    {
+      "appId": "YOUR_APPFLOW_ID_EARTHUNT",
+      "root": "apps/earthunt",
+      "dependencyInstallCommand": "cd ../.. && pnpm install",
+      "webBuildCommand": "pnpm run build",
+      "iosPath": "ios",
+      "androidPath": "android"
+    },
+    {
+      "appId": "YOUR_APPFLOW_ID_WORDCLIMB",
+      "root": "apps/wordclimb",
+      "dependencyInstallCommand": "cd ../.. && pnpm install",
+      "webBuildCommand": "pnpm run build",
+      "iosPath": "ios",
+      "androidPath": "android"
+    }
+  ]
+}
