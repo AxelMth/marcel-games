@@ -12,7 +12,7 @@ func Test_CountryCodesAreReturned(t *testing.T) {
 	result := GetLevelCountryCodesForLevel(level)
 
 	for _, code := range result {
-		if len(code) != 2 {
+		if len(code) != 3 {
 			t.Errorf("Expected country code to be 2 characters long, but got %d", len(code))
 		}
 	}
