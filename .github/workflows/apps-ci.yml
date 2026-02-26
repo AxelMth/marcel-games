@@ -56,6 +56,7 @@ jobs:
         run: curl -sL https://ionic.io/get-appflow-cli | bash
 
       - name: Build & deploy Live Update for earthunt
+        working-directory: ${{ github.workspace }}
         run: |
           BUILD_ID=$(appflow build web --token="$IONIC_TOKEN" --app-id="$APPFLOW_ID_EARTHUNT" --commit="$GITHUB_SHA" --json | jq -r '.buildId')
           appflow deploy web --token="$IONIC_TOKEN" --app-id="$APPFLOW_ID_EARTHUNT" --build-id="$BUILD_ID" --destination="Production"
@@ -63,6 +64,7 @@ jobs:
           APPFLOW_ID_EARTHUNT: ${{ secrets.APPFLOW_ID_EARTHUNT }}
 
       - name: Build & deploy Live Update for wordclimb
+        working-directory: ${{ github.workspace }}
         run: |
           BUILD_ID=$(appflow build web --token="$IONIC_TOKEN" --app-id="$APPFLOW_ID_WORDCLIMB" --commit="$GITHUB_SHA" --json | jq -r '.buildId')
           appflow deploy web --token="$IONIC_TOKEN" --app-id="$APPFLOW_ID_WORDCLIMB" --build-id="$BUILD_ID" --destination="Production"
