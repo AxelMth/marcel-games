@@ -13,6 +13,8 @@ COPY . ./
 # Generate Prisma client
 RUN go run github.com/steebchen/prisma-client-go generate
 
+RUN rm -f db/query-engine-debian-openssl-3.0.x_gen.go
+
 RUN go build -v -o ./run-app ./cmd/api
 
 FROM alpine:latest
