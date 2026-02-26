@@ -9,7 +9,7 @@ import {
   getPersistedHints,
   setPersistedHint,
 } from "@/lib/hint-storage"
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTitle } from "@marcel-games/ui"
 
 export type HintsHelpVariant = "hints" | "help"
 

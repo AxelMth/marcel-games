@@ -15,7 +15,7 @@ import {
 import { useGameStore } from "@/lib/game-store"
 import { useLanguage } from "@/components/language-provider"
 import { ScreenHeader } from "@/components/screen-header"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { ToggleGroup, ToggleGroupItem } from "@marcel-games/ui"
 import { getProfile, type ProfileResponse, type GameHistoryEntry } from "@/lib/api"
 
 type GameModeFilter = "WORLD" | "CONTINENTS" | "LEVEL_OF_THE_DAY"

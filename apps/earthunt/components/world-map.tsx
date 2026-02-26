@@ -4,7 +4,7 @@ import { useRef, useEffect, useCallback, useState, useMemo } from "react"
 import mapboxgl from "mapbox-gl"
 import "mapbox-gl/dist/mapbox-gl.css"
 import type { Country, Continent } from "@/lib/countries"
-import { Spinner } from "@/components/ui/spinner"
+import { Spinner } from "@marcel-games/ui"
 
 interface GeoJsonFeature {
   type: "Feature"

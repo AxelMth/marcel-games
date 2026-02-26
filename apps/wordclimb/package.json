@@ -8,11 +8,13 @@
     "export": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "generate:ladders": "node scripts/generate-word-ladders.mjs",
     "mobile": "next build && npx cap sync",
     "add:ios": "npx cap add ios",
     "add:android": "npx cap add android"
   },
   "dependencies": {
+    "@marcel-games/ui": "workspace:*",
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-accordion": "1.2.12",
     "@radix-ui/react-alert-dialog": "1.1.15",

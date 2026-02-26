@@ -7,7 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@marcel-games/ui"
 import { useLanguage } from "@/components/language-provider"
 import { getProfile, type ProfileResponse } from "@/lib/api"
 
