@@ -1,50 +1,53 @@
-import * as React from "react";
-import { cn } from "./utils";
+'use client'
 
-interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
-  src?: string;
-  alt?: string;
-  fallback?: string;
-  size?: "sm" | "md" | "lg";
-}
+import * as React from 'react'
+import * as AvatarPrimitive from '@radix-ui/react-avatar'
 
-const sizeMap = {
-  sm: "h-8 w-8 text-xs",
-  md: "h-10 w-10 text-sm",
-  lg: "h-14 w-14 text-base",
-};
+import { cn } from '@/lib/utils'
 
-export function Avatar({
-  src,
-  alt = "",
-  fallback,
-  size = "md",
+function Avatar({
   className,
   ...props
-}: AvatarProps) {
-  const [imgError, setImgError] = React.useState(false);
-
+}: React.ComponentProps<typeof AvatarPrimitive.Root>) {
   return (
-    <div
+    <AvatarPrimitive.Root
+      data-slot="avatar"
       className={cn(
-        "relative flex shrink-0 overflow-hidden rounded-full bg-muted",
-        sizeMap[size],
-        className
+        'relative flex size-8 shrink-0 overflow-hidden rounded-full',
+        className,
       )}
       {...props}
-    >
-      {src && !imgError ? (
-        <img
-          src={src}
-          alt={alt}
-          className="h-full w-full object-cover"
-          onError={() => setImgError(true)}
-        />
-      ) : (
-        <span className="flex h-full w-full items-center justify-center font-semibold text-muted-foreground uppercase">
-          {fallback ?? alt.charAt(0)}
-        </span>
-      )}
-    </div>
-  );
+    />
+  )
 }
+
+function AvatarImage({
+  className,
+  ...props
+}: React.ComponentProps<typeof AvatarPrimitive.Image>) {
+  return (
+    <AvatarPrimitive.Image
+      data-slot="avatar-image"
+      className={cn('aspect-square size-full', className)}
+      {...props}
+    />
+  )
+}
+
+function AvatarFallback({
+  className,
+  ...props
+}: React.ComponentProps<typeof AvatarPrimitive.Fallback>) {
+  return (
+    <AvatarPrimitive.Fallback
+      data-slot="avatar-fallback"
+      className={cn(
+        'bg-muted flex size-full items-center justify-center rounded-full',
+        className,
+      )}
+      {...props}
+    />
+  )
+}
+
+export { Avatar, AvatarImage, AvatarFallback }

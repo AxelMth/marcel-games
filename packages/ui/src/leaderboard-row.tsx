@@ -1,6 +1,6 @@
 import * as React from "react";
 import { cn } from "./utils";
-import { Avatar } from "./avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "./avatar";
 
 export interface LeaderboardRowProps {
   rank: number;
@@ -41,12 +41,14 @@ export function LeaderboardRow({
       >
         {rank}
       </span>
-      <Avatar
-        src={avatarUrl}
-        alt={username}
-        fallback={username.charAt(0).toUpperCase()}
-        size="sm"
-      />
+      <Avatar className="size-8">
+        {avatarUrl && (
+          <AvatarImage src={avatarUrl} alt={username} />
+        )}
+        <AvatarFallback>
+          {username.charAt(0).toUpperCase()}
+        </AvatarFallback>
+      </Avatar>
       <span className="flex-1 truncate text-sm font-medium text-foreground">
         {username}
       </span>
