@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint .",
     "generate:ladders": "node scripts/generate-word-ladders.mjs",
+    "find-all-ladders-fr": "node scripts/find-all-ladders-fr.mjs",
     "mobile": "next build && npx cap sync",
     "add:ios": "npx cap add ios",
     "add:android": "npx cap add android"

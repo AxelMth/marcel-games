@@ -1,0 +1,173 @@
+{
+  "levels": [
+    {
+      "id": 1,
+      "beginWord": "cold",
+      "endWord": "warm",
+      "wordLadder": [
+        "cord",
+        "word",
+        "ward"
+      ]
+    },
+    {
+      "id": 2,
+      "beginWord": "love",
+      "endWord": "hate",
+      "wordLadder": [
+        "lone",
+        "lane",
+        "late"
+      ]
+    },
+    {
+      "id": 3,
+      "beginWord": "four",
+      "endWord": "five",
+      "wordLadder": [
+        "pour",
+        "poor",
+        "pool",
+        "tool",
+        "toll",
+        "roll",
+        "role",
+        "rile",
+        "file"
+      ]
+    },
+    {
+      "id": 4,
+      "beginWord": "head",
+      "endWord": "tail",
+      "wordLadder": [
+        "heal",
+        "teal",
+        "tell",
+        "tall"
+      ]
+    },
+    {
+      "id": 5,
+      "beginWord": "soft",
+      "endWord": "hard",
+      "wordLadder": [
+        "sort",
+        "fort",
+        "ford",
+        "cord",
+        "card"
+      ]
+    },
+    {
+      "id": 6,
+      "beginWord": "mind",
+      "endWord": "body",
+      "wordLadder": [
+        "bind",
+        "bond",
+        "bony"
+      ]
+    },
+    {
+      "id": 7,
+      "beginWord": "lass",
+      "endWord": "male",
+      "wordLadder": [
+        "mass",
+        "mast",
+        "malt"
+      ]
+    },
+    {
+      "id": 8,
+      "beginWord": "milk",
+      "endWord": "wine",
+      "wordLadder": [
+        "mill",
+        "will",
+        "wile"
+      ]
+    },
+    {
+      "id": 9,
+      "beginWord": "west",
+      "endWord": "east",
+      "wordLadder": [
+        "best",
+        "bast"
+      ]
+    },
+    {
+      "id": 10,
+      "beginWord": "slow",
+      "endWord": "fast",
+      "wordLadder": [
+        "flow",
+        "flaw",
+        "flat",
+        "feat",
+        "beat",
+        "best",
+        "bast"
+      ]
+    },
+    {
+      "id": 11,
+      "beginWord": "rise",
+      "endWord": "fall",
+      "wordLadder": [
+        "rile",
+        "file",
+        "fill"
+      ]
+    },
+    {
+      "id": 12,
+      "beginWord": "dark",
+      "endWord": "lamp",
+      "wordLadder": [
+        "dare",
+        "care",
+        "came",
+        "camp"
+      ]
+    },
+    {
+      "id": 13,
+      "beginWord": "cake",
+      "endWord": "pine",
+      "wordLadder": [
+        "cane",
+        "pane"
+      ]
+    },
+    {
+      "id": 14,
+      "beginWord": "hire",
+      "endWord": "fast",
+      "wordLadder": [
+        "hare",
+        "bare",
+        "base",
+        "bast"
+      ]
+    },
+    {
+      "id": 15,
+      "beginWord": "game",
+      "endWord": "play",
+      "wordLadder": [
+        "came",
+        "case",
+        "base",
+        "bast",
+        "best",
+        "beat",
+        "feat",
+        "flat",
+        "flay"
+      ]
+    }
+  ]
+}

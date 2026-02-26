@@ -1,4 +1,6 @@
 node_modules
+.pnpm-store
+
 # Keep environment variables out of version control
 .env
 
