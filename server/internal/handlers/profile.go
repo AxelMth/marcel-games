@@ -15,8 +15,8 @@ type GetProfileInfo struct {
 
 type ProfileStats struct {
 	DailyLevelsCompleted int `json:"dailyLevelsCompleted"`
-	LastLevelRank        int `json:"lastLevelRank"`
-	GlobalRank           int `json:"globalRank"`
+	LastLevelRank       int `json:"lastLevelRank"`
+	GlobalRank          int `json:"globalRank"`
 }
 
 type GetProfileResponse struct {
@@ -49,8 +49,8 @@ func GetProfileHandler(c *gin.Context) {
 		GameHistory: gameHistory,
 		Stats: ProfileStats{
 			DailyLevelsCompleted: dailyLevelsCompleted,
-			LastLevelRank:        lastLevelRank,
-			GlobalRank:           globalRank,
+			LastLevelRank:       lastLevelRank,
+			GlobalRank:          globalRank,
 		},
 	}
 

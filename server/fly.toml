@@ -1,8 +1,9 @@
 # fly.toml app configuration file generated for marcel-games-backend on 2025-01-02T10:08:27+01:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
-app            = 'marcel-games-backend'
+app = 'marcel-games-backend'
 primary_region = 'cdg'
 
 [build]
@@ -10,18 +11,18 @@ primary_region = 'cdg'
     GO_VERSION = '1.23.0'
 
 [env]
-  PORT     = '8080'
+  PORT = '8080'
   GIN_MODE = 'release'
 
 [http_service]
-  internal_port       = 8080
-  force_https         = true
-  auto_stop_machines  = 'stop'
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
-  processes           = ['app']
+  processes = ['app']
 
 [[vm]]
-  memory   = '1gb'
+  memory = '1gb'
   cpu_kind = 'shared'
-  cpus     = 1
+  cpus = 1

@@ -12,8 +12,10 @@ import (
 )
 
 type GetLevelInfo struct {
-	UserID    string `form:"userId"    binding:"required"`
-	GameMode  string `form:"gameMode"  binding:"required"`
+	UserID string `form:"userId" binding:"required"`
+	// TODO: Add game mode validation
+	GameMode string `form:"gameMode" binding:"required"`
+	// TODO: Add continent validation
 	Continent string `form:"continent"`
 }
 
@@ -37,6 +39,7 @@ func GetLevelHandler(c *gin.Context) {
 		return
 	}
 
+	// Normalize continent for world/daily so it matches stored level history (same as FinishLevelHandler)
 	if req.Continent == "" && (req.GameMode == "WORLD" || req.GameMode == "LEVEL_OF_THE_DAY") {
 		req.Continent = "WORLD"
 	}
@@ -49,15 +52,19 @@ func GetLevelHandler(c *gin.Context) {
 
 	fmt.Println("req.GameMode", req.GameMode)
 	if req.GameMode == "LEVEL_OF_THE_DAY" {
+		// Check if user has already completed today's level
 		hasCompletedToday := repositories.HasUserCompletedTodaysLevel(ctx, req.UserID)
 		if hasCompletedToday {
+			// Return empty country codes if already completed
 			countryCodes = []string{}
-			currentLevel = 1
+			currentLevel = 1 // Level of the day is always level 1
 		} else {
+			// Get today's country codes
 			countryCodes = repositories.GetLevelOfTheDayCountryCodes(ctx)
 			currentLevel = 1
 		}
 
+		// Calculate daily level statistics
 		dailyLevelsCompleted := repositories.GetUserDailyLevelCount(ctx, req.UserID)
 		lastLevelRank, _ := repositories.GetUserRankForLastDailyLevel(ctx, req.UserID)
 		globalRank, _ := repositories.GetUserGlobalDailyRank(ctx, req.UserID)
@@ -68,6 +75,7 @@ func GetLevelHandler(c *gin.Context) {
 			GlobalRank:           globalRank,
 		}
 	} else {
+		// For other game modes, get the last level and increment
 		level := repositories.GetLastLevelFromHistory(ctx, req.UserID, req.GameMode, req.Continent)
 		currentLevel = level + 1
 		countryCodes = getCountryCodes(req.GameMode, req.Continent, currentLevel)
@@ -111,6 +119,7 @@ func FinishLevelHandler(c *gin.Context) {
 		return
 	}
 
+	// Continent is required by DB enum; default to WORLD for world/daily modes when client sends empty
 	if req.Continent == "" {
 		req.Continent = "WORLD"
 	}
@@ -130,6 +139,7 @@ func FinishLevelHandler(c *gin.Context) {
 		req.Continent,
 		req.CountryCodes,
 	)
+
 	if err != nil {
 		fmt.Println("Failed to create level history", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create level history"})
@@ -141,9 +151,11 @@ func FinishLevelHandler(c *gin.Context) {
 	var stats *DailyLevelStats
 
 	if req.GameMode == "LEVEL_OF_THE_DAY" {
+		// For level of the day, return empty country codes after completion
 		nextLevel = 1
 		countryCodes = []string{}
 
+		// Calculate updated daily level statistics after completion
 		dailyLevelsCompleted := repositories.GetUserDailyLevelCount(ctx, req.UserID)
 		lastLevelRank, _ := repositories.GetUserRankForLastDailyLevel(ctx, req.UserID)
 		globalRank, _ := repositories.GetUserGlobalDailyRank(ctx, req.UserID)
@@ -172,12 +184,14 @@ func getCountryCodes(gameMode string, continent string, level int) []string {
 	if gameMode == "WORLD" {
 		countryCodes = utils.GetLevelCountryCodesForLevel(level)
 	} else if gameMode == "CONTINENTS" {
+		// TODO: Add continent check (e.g. Africa, Americas, Asia, Europe, Oceania)
 		continentEnum := constants.Continent(continent)
 		countryCodes = utils.GetLevelCountryCodesForContinent(level, continentEnum)
 	}
 	return countryCodes
 }
 
+// Progress response for carousel: current level per mode and daily completion.
 var progressContinents = []string{"EUROPE", "ASIA", "AMERICAS", "AFRICA", "OCEANIA"}
 
 type GetProgressInfo struct {
@@ -185,10 +199,10 @@ type GetProgressInfo struct {
 }
 
 type GetProgressResponse struct {
-	WorldLevel      int            `json:"worldLevel"`
-	ContinentLevels map[string]int `json:"continentLevels"`
-	DailyCompleted  bool           `json:"dailyCompleted"`
-	Stats           *DailyLevelStats `json:"stats,omitempty"`
+	WorldLevel      int               `json:"worldLevel"`
+	ContinentLevels map[string]int    `json:"continentLevels"`
+	DailyCompleted  bool              `json:"dailyCompleted"`
+	Stats           *DailyLevelStats  `json:"stats,omitempty"`
 }
 
 func GetProgressHandler(c *gin.Context) {
@@ -219,10 +233,11 @@ func GetProgressHandler(c *gin.Context) {
 
 	dailyCompleted := repositories.HasUserCompletedTodaysLevel(ctx, req.UserID)
 
+	var stats *DailyLevelStats
 	dailyLevelsCompleted := repositories.GetUserDailyLevelCount(ctx, req.UserID)
 	lastLevelRank, _ := repositories.GetUserRankForLastDailyLevel(ctx, req.UserID)
 	globalRank, _ := repositories.GetUserGlobalDailyRank(ctx, req.UserID)
-	stats := &DailyLevelStats{
+	stats = &DailyLevelStats{
 		DailyLevelsCompleted: dailyLevelsCompleted,
 		LastLevelRank:        lastLevelRank,
 		GlobalRank:           globalRank,

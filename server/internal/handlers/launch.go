@@ -34,6 +34,7 @@ func LaunchHandler(c *gin.Context) {
 	ctx := context.Background()
 
 	user, err := repositories.UpsertOneUser(ctx, req.DeviceUUID)
+
 	if err != nil {
 		fmt.Println("Failed to create user", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
@@ -51,6 +52,7 @@ func LaunchHandler(c *gin.Context) {
 		req.OsName,
 		req.OsVersion,
 	)
+
 	if err != nil {
 		fmt.Println("Failed to create user device", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user device"})

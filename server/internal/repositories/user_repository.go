@@ -13,7 +13,9 @@ func GetUserByID(ctx context.Context, id string) (*db.UserModel, error) {
 	return user, err
 }
 
-func UpsertOneUser(ctx context.Context, deviceUUID string) (*db.UserModel, error) {
+func UpsertOneUser(ctx context.Context,
+	deviceUUID string,
+) (*db.UserModel, error) {
 	user, err := db.Client().User.UpsertOne(
 		db.User.DeviceUUID.Equals(deviceUUID),
 	).Create(

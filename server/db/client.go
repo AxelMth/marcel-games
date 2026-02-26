@@ -10,7 +10,7 @@ var (
 	once   sync.Once
 )
 
-// Client returns the singleton instance of PrismaClient.
+// Client returns the singleton instance of PrismaClient
 func Client() *PrismaClient {
 	once.Do(func() {
 		client = NewClient()
@@ -21,7 +21,7 @@ func Client() *PrismaClient {
 	return client
 }
 
-// Disconnect closes the database connection.
+// Disconnect closes the database connection
 func Disconnect() {
 	if client != nil {
 		if err := client.Prisma.Disconnect(); err != nil {
@@ -30,8 +30,8 @@ func Disconnect() {
 	}
 }
 
-// Initialize explicitly initializes the database connection.
+// Initialize explicitly initializes the database connection
 func Initialize() error {
-	Client() // establishes the connection if not already done
+	Client() // This will establish the connection if not already done
 	return nil
 }

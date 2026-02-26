@@ -49,6 +49,7 @@ model LevelHistory {
   user User @relation(fields: [userId], references: [id])
 
   createdAt DateTime @default(now())
+  // updatedAt DateTime @updatedAt
 
   @@unique([userId, level, gameMode, continent])
 }
@@ -76,4 +77,5 @@ model UserDevice {
   user User @relation(fields: [userId], references: [id])
 
   createdAt DateTime @default(now())
+  // updatedAt DateTime @updatedAt
 }

@@ -1,5 +1,5 @@
 ARG GO_VERSION=1
-FROM golang:${GO_VERSION}-alpine AS builder
+FROM golang:${GO_VERSION}-alpine as builder
 
 WORKDIR /usr/src/app
 
@@ -16,6 +16,7 @@ RUN go run github.com/steebchen/prisma-client-go generate
 RUN go build -v -o ./run-app ./cmd/api
 
 FROM alpine:latest
+
 
 WORKDIR /usr/src/app
 
