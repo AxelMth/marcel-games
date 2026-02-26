@@ -1,6 +1,7 @@
 name: Apps CI & Appflow Live Updates
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
