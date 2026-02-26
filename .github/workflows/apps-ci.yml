@@ -1,0 +1,71 @@
+name: Apps CI & Appflow Live Updates
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "turbo.json"
+      - "pnpm-workspace.yaml"
+      - "package.json"
+  pull_request:
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "turbo.json"
+      - "pnpm-workspace.yaml"
+      - "package.json"
+
+jobs:
+  build-lint-deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      IONIC_TOKEN: ${{ secrets.IONIC_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.15.0 --activate
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Lint apps and packages
+        run: pnpm lint
+
+      - name: Build all apps
+        run: pnpm build
+
+      - name: Install Appflow CLI
+        run: curl -sL https://ionic.io/get-appflow-cli | bash
+
+      - name: Login to Appflow
+        run: appflow login --token="$IONIC_TOKEN"
+
+      - name: Build & deploy Live Update for earthunt
+        run: |
+          BUILD_ID=$(appflow build web --app-id="$APPFLOW_ID_EARTHUNT" --commit="$GITHUB_SHA" --json | jq -r '.buildId')
+          appflow deploy web --app-id="$APPFLOW_ID_EARTHUNT" --build-id="$BUILD_ID" --destination="Production"
+        env:
+          APPFLOW_ID_EARTHUNT: ${{ secrets.APPFLOW_ID_EARTHUNT }}
+
+      - name: Build & deploy Live Update for wordclimb
+        run: |
+          BUILD_ID=$(appflow build web --app-id="$APPFLOW_ID_WORDCLIMB" --commit="$GITHUB_SHA" --json | jq -r '.buildId')
+          appflow deploy web --app-id="$APPFLOW_ID_WORDCLIMB" --build-id="$BUILD_ID" --destination="Production"
+        env:
+          APPFLOW_ID_WORDCLIMB: ${{ secrets.APPFLOW_ID_WORDCLIMB }}
+
