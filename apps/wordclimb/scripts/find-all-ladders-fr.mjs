@@ -22,16 +22,34 @@ const MAX_PAIRS_PER_LENGTH = 5000 // cap pairs stored per length (to keep JSON s
 // ----- Helpers -----
 function getNeighbors(word, wordSet, len) {
   const normalized = word.toLowerCase()
-  const neighbors = []
+  const neighbors = new Set()
   const alphabet = "abcdefghijklmnopqrstuvwxyz"
+
+  // substitution (same length)
   for (let i = 0; i < normalized.length; i++) {
     for (const c of alphabet) {
       if (c === normalized[i]) continue
       const candidate = normalized.slice(0, i) + c + normalized.slice(i + 1)
-      if (wordSet.has(candidate)) neighbors.push(candidate)
+      if (wordSet.has(candidate)) neighbors.add(candidate)
     }
   }
-  return neighbors
+
+  // deletion (length - 1)
+  for (let i = 0; i < normalized.length; i++) {
+    const candidate = normalized.slice(0, i) + normalized.slice(i + 1)
+    if (wordSet.has(candidate)) neighbors.add(candidate)
+  }
+
+  // insertion (length + 1)
+  for (let i = 0; i <= normalized.length; i++) {
+    for (const c of alphabet) {
+      const candidate = normalized.slice(0, i) + c + normalized.slice(i)
+      if (wordSet.has(candidate)) neighbors.add(candidate)
+    }
+  }
+
+  neighbors.delete(normalized)
+  return [...neighbors]
 }
 
 function findLadder(start, end, wordSet) {
@@ -40,16 +58,13 @@ function findLadder(start, end, wordSet) {
   if (s.length !== e.length) return null
   if (s === e) return []
   if (!wordSet.has(s) || !wordSet.has(e)) return null
-  const len = s.length
-  const filteredSet = new Set(
-    [...wordSet].filter((w) => w.length === len && w.toLowerCase() === w)
-  )
-  if (!filteredSet.has(s) || !filteredSet.has(e)) return null
+
   const queue = [{ word: s, path: [] }]
   const visited = new Set([s])
+
   while (queue.length > 0) {
     const { word, path } = queue.shift()
-    const neighbors = getNeighbors(word, filteredSet, len)
+    const neighbors = getNeighbors(word, wordSet)
     for (const next of neighbors) {
       if (visited.has(next)) continue
       visited.add(next)

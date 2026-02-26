@@ -189,10 +189,9 @@
       "beginWord": "chancel",
       "endWord": "charter",
       "wordLadder": [
-        "chances",
-        "changes",
-        "charges",
-        "charger"
+        "chance",
+        "chante",
+        "charte"
       ]
     },
     {
@@ -262,13 +261,12 @@
       "endWord": "separes",
       "wordLadder": [
         "deviner",
-        "devider",
-        "decider",
-        "deceder",
-        "deceler",
-        "receler",
-        "reveler",
-        "reverer",
+        "devier",
+        "levier",
+        "lever",
+        "rever",
+        "revere",
+        "repere",
         "reperer",
         "reparer",
         "separer"
@@ -1467,18 +1465,12 @@
       "endWord": "wallon",
       "wordLadder": [
         "barrer",
-        "barres",
-        "carres",
-        "cartes",
-        "certes",
-        "cernes",
-        "cerner",
-        "berner",
-        "berger",
-        "berges",
-        "belges",
-        "belles",
-        "balles",
+        "marrer",
+        "marre",
+        "mare",
+        "male",
+        "malle",
+        "balle",
         "ballet",
         "ballot",
         "ballon"
@@ -1605,15 +1597,13 @@
       "beginWord": "brosse",
       "endWord": "pleins",
       "wordLadder": [
-        "grosse",
-        "grasse",
-        "crasse",
-        "chasse",
-        "chaise",
-        "chaire",
-        "claire",
-        "plaire",
-        "plaine",
+        "bosse",
+        "cosse",
+        "cesse",
+        "cense",
+        "pense",
+        "penne",
+        "peine",
         "pleine"
       ]
     },
@@ -1706,11 +1696,9 @@
       "wordLadder": [
         "datent",
         "patent",
-        "parent",
-        "purent",
-        "furent",
-        "firent",
-        "virent"
+        "paient",
+        "aient",
+        "vient"
       ]
     },
     {
@@ -1863,11 +1851,10 @@
       "endWord": "plumet",
       "wordLadder": [
         "planer",
-        "placer",
-        "places",
-        "plaies",
-        "pluies",
-        "plumes"
+        "plane",
+        "plaie",
+        "pluie",
+        "plume"
       ]
     },
     {
@@ -2089,16 +2076,9 @@
       "wordLadder": [
         "acces",
         "actes",
-        "aptes",
-        "apres",
-        "aires",
-        "dires",
-        "dites",
-        "dates",
-        "pates",
-        "patee",
-        "patre",
-        "paire"
+        "acte",
+        "acre",
+        "aire"
       ]
     },
     {
@@ -2309,11 +2289,10 @@
       "endWord": "zele",
       "wordLadder": [
         "aube",
-        "cube",
-        "cure",
-        "pure",
-        "pere",
-        "pele"
+        "tube",
+        "tuee",
+        "tee",
+        "tele"
       ]
     },
     {
@@ -2334,11 +2313,10 @@
       "endWord": "yen",
       "wordLadder": [
         "arc",
-        "art",
-        "ait",
-        "bit",
-        "bat",
-        "ban",
+        "marc",
+        "mac",
+        "bac",
+        "bec",
         "ben"
       ]
     },
