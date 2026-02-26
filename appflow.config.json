@@ -9,7 +9,7 @@
       "androidPath": "android"
     },
     {
-      "appId": "YOUR_APPFLOW_ID_WORDCLIMB",
+      "appId": "860819d5",
       "root": "apps/wordclimb",
       "dependencyInstallCommand": "cd ../.. && pnpm install",
       "webBuildCommand": "pnpm run build",
