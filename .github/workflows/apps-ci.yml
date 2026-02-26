@@ -55,20 +55,17 @@ jobs:
       - name: Install Appflow CLI
         run: curl -sL https://ionic.io/get-appflow-cli | bash
 
-      - name: Login to Appflow
-        run: appflow login --token="$IONIC_TOKEN"
-
       - name: Build & deploy Live Update for earthunt
         run: |
-          BUILD_ID=$(appflow build web --app-id="$APPFLOW_ID_EARTHUNT" --commit="$GITHUB_SHA" --json | jq -r '.buildId')
-          appflow deploy web --app-id="$APPFLOW_ID_EARTHUNT" --build-id="$BUILD_ID" --destination="Production"
+          BUILD_ID=$(appflow build web --token="$IONIC_TOKEN" --app-id="$APPFLOW_ID_EARTHUNT" --commit="$GITHUB_SHA" --json | jq -r '.buildId')
+          appflow deploy web --token="$IONIC_TOKEN" --app-id="$APPFLOW_ID_EARTHUNT" --build-id="$BUILD_ID" --destination="Production"
         env:
           APPFLOW_ID_EARTHUNT: ${{ secrets.APPFLOW_ID_EARTHUNT }}
 
       - name: Build & deploy Live Update for wordclimb
         run: |
-          BUILD_ID=$(appflow build web --app-id="$APPFLOW_ID_WORDCLIMB" --commit="$GITHUB_SHA" --json | jq -r '.buildId')
-          appflow deploy web --app-id="$APPFLOW_ID_WORDCLIMB" --build-id="$BUILD_ID" --destination="Production"
+          BUILD_ID=$(appflow build web --token="$IONIC_TOKEN" --app-id="$APPFLOW_ID_WORDCLIMB" --commit="$GITHUB_SHA" --json | jq -r '.buildId')
+          appflow deploy web --token="$IONIC_TOKEN" --app-id="$APPFLOW_ID_WORDCLIMB" --build-id="$BUILD_ID" --destination="Production"
         env:
           APPFLOW_ID_WORDCLIMB: ${{ secrets.APPFLOW_ID_WORDCLIMB }}
 
