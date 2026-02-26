@@ -28,6 +28,7 @@ export function ContinentSelect() {
   const { t } = useLanguage()
   const {
     goHome,
+    goToStats,
     setUserId,
     setGameFromLevel,
     setLoadingGame,
