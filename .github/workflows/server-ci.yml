@@ -30,6 +30,10 @@ jobs:
         working-directory: server
         run: go mod download
 
+      - name: Generate Prisma client
+        working-directory: server
+        run: go run github.com/steebchen/prisma-client-go generate
+
       - name: Build API binary
         working-directory: server
         run: go build ./cmd/api
