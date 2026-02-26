@@ -1,7 +1,7 @@
 {
   "apps": [
     {
-      "appId": "YOUR_APPFLOW_ID_EARTHUNT",
+      "appId": "64ef723b",
       "root": "apps/earthunt",
       "dependencyInstallCommand": "cd ../.. && pnpm install",
       "webBuildCommand": "pnpm run build",
