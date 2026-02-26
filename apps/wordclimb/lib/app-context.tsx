@@ -1,79 +1,59 @@
 "use client"
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react"
-import { useDeviceUUID, getLanguage, type Language } from "@marcel-games/lib"
-import { postLaunch } from "./api"
-import { Device } from "@capacitor/device"
+import { createContext, useContext, useState, useCallback, type ReactNode } from "react"
+import type { Locale } from "@/lib/i18n"
+import type { GameMode, GameState } from "@/lib/game-store"
+import { createGameState, getSavedLocale, saveLocale } from "@/lib/game-store"
 
-type Screen = "splash" | "home" | "game" | "settings"
+type Screen = "home" | "game"
 
 interface AppContextValue {
-  userId: string | null
-  language: Language
   screen: Screen
-  setScreen: (s: Screen) => void
-  isReady: boolean
+  locale: Locale
+  gameState: GameState | null
+  setLocale: (locale: Locale) => void
+  startGame: (mode: GameMode) => void
+  goHome: () => void
+  setGameState: (stateOrUpdater: GameState | ((prev: GameState | null) => GameState | null)) => void
 }
 
-const AppContext = createContext<AppContextValue>({
-  userId: null,
-  language: "en",
-  screen: "splash",
-  setScreen: () => {},
-  isReady: false,
-})
-
-export function useAppContext() {
-  return useContext(AppContext)
-}
+const AppContext = createContext<AppContextValue | null>(null)
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const deviceUUID = useDeviceUUID()
-  const [userId, setUserId] = useState<string | null>(null)
-  const [language, setLanguage] = useState<Language>("en")
-  const [screen, setScreen] = useState<Screen>("splash")
-  const [isReady, setIsReady] = useState(false)
+  const [screen, setScreen] = useState<Screen>("home")
+  const [locale, setLocaleState] = useState<Locale>(() => {
+    if (typeof window === "undefined") return "en"
+    return getSavedLocale()
+  })
+  const [gameState, setGameState] = useState<GameState | null>(null)
 
-  useEffect(() => {
-    setLanguage(getLanguage())
+  const setLocale = useCallback((l: Locale) => {
+    setLocaleState(l)
+    saveLocale(l)
   }, [])
 
-  useEffect(() => {
-    if (!deviceUUID) return
+  const startGame = useCallback((mode: GameMode) => {
+    const state = createGameState(mode)
+    setGameState(state)
+    setScreen("game")
+  }, [])
 
-    async function init() {
-      try {
-        const info = await Device.getInfo()
-        const result = await postLaunch({
-          deviceUUID: deviceUUID!,
-          brand: info.name ?? null,
-          osName: info.operatingSystem ?? null,
-          osVersion: info.osVersion ?? null,
-          modelName: info.model ?? null,
-          manufacturer: info.manufacturer ?? null,
-          deviceType: info.platform ?? "web",
-          isDevice: info.isVirtual === false,
-        })
-        setUserId(result.userId)
-      } catch {
-        // offline — allow playing locally
-      } finally {
-        setIsReady(true)
-        setTimeout(() => setScreen("home"), 1500)
-      }
-    }
-    init()
-  }, [deviceUUID])
+  const goHome = useCallback(() => {
+    setScreen("home")
+    setGameState(null)
+  }, [])
 
   return (
-    <AppContext.Provider value={{ userId, language, screen, setScreen, isReady }}>
+    <AppContext.Provider
+      value={{ screen, locale, gameState, setLocale, startGame, goHome, setGameState }}
+    >
       {children}
     </AppContext.Provider>
   )
+}
+
+export function useApp() {
+  const ctx = useContext(AppContext)
+  if (!ctx) throw new Error("useApp must be used within AppProvider")
+  return ctx
 }

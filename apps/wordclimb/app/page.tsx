@@ -1,4 +1,5 @@
 "use client"
+
 import { AppProvider } from "@/lib/app-context"
 import { WordClimbApp } from "@/components/wordclimb/app"
 

@@ -1,178 +1,118 @@
 "use client"
 
-import { create } from "zustand"
-import { LEVELS, type WordLevel } from "./data/levels"
-import { DEFINITIONS } from "./data/definitions"
-import type { Language } from "@marcel-games/lib"
+import { validLevels, type Level } from "@/lib/data/levels"
 
-export type TileState = "empty" | "filled" | "correct" | "present" | "absent"
+export type GameMode = "classic" | "daily" | "random"
 
-export interface Tile {
-  letter: string
-  state: TileState
+export interface GameState {
+  mode: GameMode
+  level: Level
+  currentWordIndex: number // index in wordLadder of the word the user needs to find
+  foundWords: boolean[] // which intermediate words have been found
+  attempts: number
+  startTime: number
+  hintsUsed: number
+  isComplete: boolean
+  feedback: "correct" | "wrong" | "already" | null
 }
 
-interface GameState {
-  // Level progress
-  currentLevelIndex: number
-  currentLevel: WordLevel | null
-
-  // Guessing state
-  guesses: Tile[][]
-  currentRow: number
-  currentCol: number
-
-  // Keyboard coloring
-  letterStates: Record<string, TileState>
-
-  // Game status
-  isWon: boolean
-  isLost: boolean
-  showDefinition: boolean
-
-  // Actions
-  init: (levelIndex?: number) => void
-  addLetter: (letter: string) => void
-  removeLetter: () => void
-  submitGuess: () => void
-  nextLevel: () => void
-  getDefinition: (lang: Language) => string
+// Get the classic level progress from localStorage
+export function getClassicProgress(): number {
+  if (typeof window === "undefined") return 0
+  const stored = localStorage.getItem("wordclimb-classic-progress")
+  return stored ? parseInt(stored, 10) : 0
 }
 
-const MAX_GUESSES = 6
-
-function createEmptyGrid(wordLength: number): Tile[][] {
-  return Array.from({ length: MAX_GUESSES }, () =>
-    Array.from({ length: wordLength }, () => ({ letter: "", state: "empty" as TileState }))
-  )
+export function setClassicProgress(level: number): void {
+  if (typeof window === "undefined") return
+  localStorage.setItem("wordclimb-classic-progress", level.toString())
 }
 
-function evaluateGuess(guess: string, answer: string): TileState[] {
-  const result: TileState[] = Array(answer.length).fill("absent")
-  const answerArr = answer.split("")
-  const used = Array(answer.length).fill(false)
-
-  // First pass: find correct letters
-  for (let i = 0; i < guess.length; i++) {
-    if (guess[i] === answerArr[i]) {
-      result[i] = "correct"
-      used[i] = true
-    }
+// Get the daily level based on date
+export function getDailyLevelIndex(): number {
+  const today = new Date()
+  const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
+  let hash = 0
+  for (let i = 0; i < dateStr.length; i++) {
+    const char = dateStr.charCodeAt(i)
+    hash = (hash << 5) - hash + char
+    hash |= 0
   }
-
-  // Second pass: find present letters
-  for (let i = 0; i < guess.length; i++) {
-    if (result[i] === "correct") continue
-    for (let j = 0; j < answerArr.length; j++) {
-      if (!used[j] && guess[i] === answerArr[j]) {
-        result[i] = "present"
-        used[j] = true
-        break
-      }
-    }
-  }
-
-  return result
+  return Math.abs(hash) % validLevels.length
 }
 
-export const useGameStore = create<GameState>((set, get) => ({
-  currentLevelIndex: 0,
-  currentLevel: null,
-  guesses: [],
-  currentRow: 0,
-  currentCol: 0,
-  letterStates: {},
-  isWon: false,
-  isLost: false,
-  showDefinition: false,
+// Check if daily challenge has been completed today
+export function isDailyCompleted(): boolean {
+  if (typeof window === "undefined") return false
+  const today = new Date().toISOString().split("T")[0]
+  const stored = localStorage.getItem("wordclimb-daily-completed")
+  return stored === today
+}
 
-  init: (levelIndex = 0) => {
-    const level = LEVELS[levelIndex] ?? LEVELS[0]
-    set({
-      currentLevelIndex: levelIndex,
-      currentLevel: level,
-      guesses: createEmptyGrid(level.word.length),
-      currentRow: 0,
-      currentCol: 0,
-      letterStates: {},
-      isWon: false,
-      isLost: false,
-      showDefinition: false,
-    })
-  },
+export function setDailyCompleted(): void {
+  if (typeof window === "undefined") return
+  const today = new Date().toISOString().split("T")[0]
+  localStorage.setItem("wordclimb-daily-completed", today)
+}
 
-  addLetter: (letter: string) => {
-    const { guesses, currentRow, currentCol, currentLevel, isWon, isLost } = get()
-    if (isWon || isLost || !currentLevel) return
-    if (currentCol >= currentLevel.word.length) return
+// Get a random level
+export function getRandomLevel(): Level {
+  const index = Math.floor(Math.random() * validLevels.length)
+  return validLevels[index]
+}
 
-    const newGuesses = guesses.map((row) => row.map((t) => ({ ...t })))
-    newGuesses[currentRow][currentCol] = { letter: letter.toUpperCase(), state: "filled" }
-    set({ guesses: newGuesses, currentCol: currentCol + 1 })
-  },
-
-  removeLetter: () => {
-    const { guesses, currentRow, currentCol, isWon, isLost } = get()
-    if (isWon || isLost) return
-    if (currentCol <= 0) return
-
-    const newGuesses = guesses.map((row) => row.map((t) => ({ ...t })))
-    newGuesses[currentRow][currentCol - 1] = { letter: "", state: "empty" }
-    set({ guesses: newGuesses, currentCol: currentCol - 1 })
-  },
-
-  submitGuess: () => {
-    const { guesses, currentRow, currentCol, currentLevel, letterStates, isWon, isLost } = get()
-    if (isWon || isLost || !currentLevel) return
-    if (currentCol < currentLevel.word.length) return
-
-    const guessWord = guesses[currentRow].map((t) => t.letter).join("")
-    const answer = currentLevel.word.toUpperCase()
-    const evaluation = evaluateGuess(guessWord, answer)
-
-    const newGuesses = guesses.map((row) => row.map((t) => ({ ...t })))
-    const newLetterStates = { ...letterStates }
-
-    for (let i = 0; i < evaluation.length; i++) {
-      newGuesses[currentRow][i].state = evaluation[i]
-      const l = guessWord[i]
-      const prev = newLetterStates[l]
-      if (evaluation[i] === "correct") {
-        newLetterStates[l] = "correct"
-      } else if (evaluation[i] === "present" && prev !== "correct") {
-        newLetterStates[l] = "present"
-      } else if (!prev) {
-        newLetterStates[l] = "absent"
-      }
+// Get level for a specific mode
+export function getLevelForMode(mode: GameMode): Level {
+  switch (mode) {
+    case "classic": {
+      const progress = getClassicProgress()
+      const index = progress % validLevels.length
+      return validLevels[index]
     }
-
-    const won = guessWord === answer
-    const lost = !won && currentRow >= MAX_GUESSES - 1
-
-    set({
-      guesses: newGuesses,
-      letterStates: newLetterStates,
-      currentRow: currentRow + 1,
-      currentCol: 0,
-      isWon: won,
-      isLost: lost,
-      showDefinition: won || lost,
-    })
-  },
-
-  nextLevel: () => {
-    const { currentLevelIndex } = get()
-    const nextIndex = currentLevelIndex + 1
-    if (nextIndex < LEVELS.length) {
-      get().init(nextIndex)
+    case "daily": {
+      const index = getDailyLevelIndex()
+      return validLevels[index]
     }
-  },
+    case "random":
+      return getRandomLevel()
+  }
+}
 
-  getDefinition: (lang: Language) => {
-    const { currentLevel } = get()
-    if (!currentLevel) return ""
-    const def = DEFINITIONS[currentLevel.word.toLowerCase()]
-    if (!def) return ""
-    return def[lang] ?? def.en ?? ""
-  },
-}))
+// Create initial game state
+export function createGameState(mode: GameMode): GameState {
+  const level = getLevelForMode(mode)
+  return {
+    mode,
+    level,
+    currentWordIndex: 0,
+    foundWords: new Array(level.wordLadder.length).fill(false),
+    attempts: 0,
+    startTime: Date.now(),
+    hintsUsed: 0,
+    isComplete: false,
+    feedback: null,
+  }
+}
+
+// Get saved locale
+export function getSavedLocale(): "en" | "fr" {
+  if (typeof window === "undefined") return "en"
+  const stored = localStorage.getItem("wordclimb-locale")
+  return (stored === "fr" ? "fr" : "en")
+}
+
+export function saveLocale(locale: "en" | "fr"): void {
+  if (typeof window === "undefined") return
+  localStorage.setItem("wordclimb-locale", locale)
+}
+
+// Check first visit for welcome modal
+export function isFirstVisit(): boolean {
+  if (typeof window === "undefined") return true
+  return !localStorage.getItem("wordclimb-visited")
+}
+
+export function setVisited(): void {
+  if (typeof window === "undefined") return
+  localStorage.setItem("wordclimb-visited", "true")
+}

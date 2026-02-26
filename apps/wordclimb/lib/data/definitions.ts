@@ -1,4 +1,5 @@
 export const definitions: Record<string, { en: string; fr: string }> = {
+  // Level 1: cold → cord → card → ward → warm
   cord: {
     en: "A thin, flexible string or rope made from several twisted strands.",
     fr: "Une corde fine et flexible faite de plusieurs brins torsades.",
@@ -11,6 +12,8 @@ export const definitions: Record<string, { en: string; fr: string }> = {
     en: "A separate room in a hospital, or a division of a city for administrative purposes.",
     fr: "Une salle separee dans un hopital, ou une division d'une ville.",
   },
+
+  // Level 2: love → lone → lane → late → hate
   lone: {
     en: "Having no companions; solitary or single.",
     fr: "Sans compagnon ; solitaire ou seul.",
@@ -23,6 +26,8 @@ export const definitions: Record<string, { en: string; fr: string }> = {
     en: "Doing something or taking place after the expected, proper, or usual time.",
     fr: "Faire quelque chose apres l'heure prevue ou habituelle.",
   },
+
+  // Level 3: four → fore → fire → five
   fore: {
     en: "Situated or placed in front; the front part of something.",
     fr: "Situe ou place a l'avant ; la partie avant de quelque chose.",
@@ -31,6 +36,8 @@ export const definitions: Record<string, { en: string; fr: string }> = {
     en: "Combustion or burning, in which substances combine with oxygen giving off light, heat, and flame.",
     fr: "Combustion dans laquelle des substances se combinent avec de l'oxygene.",
   },
+
+  // Level 4: head → heal → teal → tell → tall → tail
   heal: {
     en: "To cause a wound, injury, or person to become sound or healthy again.",
     fr: "Faire en sorte qu'une blessure ou une personne redevienne saine.",
@@ -47,6 +54,8 @@ export const definitions: Record<string, { en: string; fr: string }> = {
     en: "Of great or more than average height.",
     fr: "D'une grande taille ou plus grand que la moyenne.",
   },
+
+  // Level 5: soft → sort → sore → hare → hard
   sort: {
     en: "A category of things or people having some common feature.",
     fr: "Une categorie de choses ou de personnes ayant un trait commun.",
@@ -59,6 +68,8 @@ export const definitions: Record<string, { en: string; fr: string }> = {
     en: "A fast-running, long-eared mammal that resembles a large rabbit.",
     fr: "Un mammifere rapide aux longues oreilles ressemblant a un grand lapin.",
   },
+
+  // Level 6: mind → bind → bond → bony → body
   bind: {
     en: "To tie or fasten something tightly together.",
     fr: "Attacher ou fixer quelque chose fermement ensemble.",
@@ -71,6 +82,8 @@ export const definitions: Record<string, { en: string; fr: string }> = {
     en: "Of or resembling bone; having prominent bones; very thin.",
     fr: "Ressemblant a un os ; ayant des os proeminents ; tres mince.",
   },
+
+  // Level 7: lass → mass → mast → malt → male
   mass: {
     en: "A large body of matter with no definite shape; a large amount.",
     fr: "Un grand corps de matiere sans forme definie ; une grande quantite.",
@@ -83,6 +96,8 @@ export const definitions: Record<string, { en: string; fr: string }> = {
     en: "Barley or other grain that has been soaked and dried, used in brewing.",
     fr: "De l'orge ou un autre grain trempe et seche, utilise en brasserie.",
   },
+
+  // Level 8: milk → mill → will → wile → wine
   mill: {
     en: "A building with machinery for grinding grain into flour.",
     fr: "Un batiment avec des machines pour moudre le grain en farine.",
@@ -95,6 +110,8 @@ export const definitions: Record<string, { en: string; fr: string }> = {
     en: "Devious or cunning stratagems employed in manipulating or persuading someone.",
     fr: "Des stratagemes rusees employees pour manipuler ou persuader quelqu'un.",
   },
+
+  // Level 9: west → best → bast → east
   best: {
     en: "Of the most excellent, effective, or desirable type or quality.",
     fr: "Du type ou de la qualite la plus excellente ou desirable.",
@@ -103,6 +120,8 @@ export const definitions: Record<string, { en: string; fr: string }> = {
     en: "Plant fiber used for making rope or textiles.",
     fr: "Fibre vegetale utilisee pour fabriquer des cordes ou des textiles.",
   },
+
+  // Level 10: slow → slaw → flaw → flay → flat → fast
   slaw: {
     en: "A salad made of shredded raw cabbage, often with a dressing.",
     fr: "Une salade faite de chou cru rape, souvent avec une vinaigrette.",
@@ -119,6 +138,8 @@ export const definitions: Record<string, { en: string; fr: string }> = {
     en: "Having a level surface; without raised areas or indentations.",
     fr: "Ayant une surface plane ; sans zones sureleves ni indentations.",
   },
+
+  // Level 11: rise → rile → file → fill → fall
   rile: {
     en: "To make someone annoyed or irritated.",
     fr: "Rendre quelqu'un agace ou irrite.",
@@ -131,6 +152,8 @@ export const definitions: Record<string, { en: string; fr: string }> = {
     en: "To cause something to become full; to occupy all the space in.",
     fr: "Faire en sorte que quelque chose devienne plein ; occuper tout l'espace.",
   },
+
+  // Level 13: cake → cane → pane → pine
   cane: {
     en: "A stick or staff used as a walking aid; or the hollow stem of certain plants.",
     fr: "Un baton utilise comme aide a la marche ; ou la tige creuse de certaines plantes.",
@@ -143,6 +166,8 @@ export const definitions: Record<string, { en: string; fr: string }> = {
     en: "An evergreen coniferous tree with clusters of long needle-shaped leaves.",
     fr: "Un arbre conifere a feuilles persistantes en forme d'aiguilles longues.",
   },
+
+  // Level 15: game → came → clam → clan → plan → play
   came: {
     en: "Past tense of 'come'; to have moved toward or arrived at.",
     fr: "Passe simple de 'venir' ; s'etre deplace vers ou etre arrive a.",

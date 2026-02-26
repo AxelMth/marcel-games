@@ -1,20 +1,29 @@
 "use client"
 
-import { useAppContext } from "@/lib/app-context"
-import { SplashScreen } from "./splash-screen"
+import { useEffect, useState } from "react"
+import { useApp } from "@/lib/app-context"
+import { isFirstVisit, setVisited } from "@/lib/game-store"
 import { HomeScreen } from "./home-screen"
 import { GameScreen } from "./game-screen"
-import { AdMobInit } from "@marcel-games/lib"
+import { HelpModal } from "./help-modal"
 
 export function WordClimbApp() {
-  const { screen } = useAppContext()
+  const { screen } = useApp()
+  const [showWelcome, setShowWelcome] = useState(false)
+
+  useEffect(() => {
+    if (isFirstVisit()) {
+      setShowWelcome(true)
+      setVisited()
+    }
+  }, [])
 
   return (
-    <>
-      <AdMobInit />
-      {screen === "splash" && <SplashScreen />}
+    <main className="min-h-[100dvh]">
       {screen === "home" && <HomeScreen />}
       {screen === "game" && <GameScreen />}
-    </>
+
+      {showWelcome && <HelpModal onClose={() => setShowWelcome(false)} />}
+    </main>
   )
 }

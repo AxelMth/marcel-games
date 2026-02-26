@@ -1,152 +1,329 @@
 "use client"
 
-import { useCallback, useEffect } from "react"
-import { useAppContext } from "@/lib/app-context"
-import { useGameStore, type TileState } from "@/lib/game-store"
-import { useWordclimbInterstitialAd } from "@/hooks/use-interstitial-ad"
-import { Haptics, ImpactStyle } from "@capacitor/haptics"
+import { useState, useCallback, useRef, useEffect } from "react"
+import { ArrowLeft, Lightbulb, HelpCircle } from "lucide-react"
+import { useApp } from "@/lib/app-context"
 import { t } from "@/lib/i18n"
-
-const KEYBOARD_ROWS = [
-  ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
-  ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
-  ["ENTER", "Z", "X", "C", "V", "B", "N", "M", "DEL"],
-]
-
-function tileClass(state: TileState): string {
-  switch (state) {
-    case "correct": return "tile tile-correct"
-    case "present": return "tile tile-present"
-    case "absent": return "tile tile-absent"
-    case "filled": return "tile tile-filled"
-    default: return "tile tile-empty"
-  }
-}
-
-function keyClass(state?: TileState): string {
-  switch (state) {
-    case "correct": return "key key-correct"
-    case "present": return "key key-present"
-    case "absent": return "key key-absent"
-    default: return "key key-default"
-  }
-}
+import { getDefinition } from "@/lib/data/definitions"
+import { setClassicProgress, getClassicProgress, setDailyCompleted, createGameState } from "@/lib/game-store"
+import type { GameState } from "@/lib/game-store"
+import { WordRow } from "./word-row"
+import { HintsModal } from "./hints-modal"
+import { HelpModal } from "./help-modal"
+import { SuccessModal } from "./success-modal"
 
 export function GameScreen() {
-  const { language, setScreen } = useAppContext()
-  const {
-    currentLevel,
-    currentLevelIndex,
-    guesses,
-    letterStates,
-    isWon,
-    isLost,
-    showDefinition,
-    addLetter,
-    removeLetter,
-    submitGuess,
-    nextLevel,
-    getDefinition,
-  } = useGameStore()
+  const { locale, gameState, setGameState, goHome } = useApp()
+  const [input, setInput] = useState("")
+  const [showHints, setShowHints] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const ladderRef = useRef<HTMLDivElement>(null)
 
-  const { showAd } = useWordclimbInterstitialAd()
+  const state = gameState!
+  const level = state.level
+  const { beginWord, endWord, wordLadder } = level
 
-  const handleKeyPress = useCallback(
-    (key: string) => {
-      try { Haptics.impact({ style: ImpactStyle.Light }) } catch {}
-      if (key === "ENTER") {
-        submitGuess()
-      } else if (key === "DEL") {
-        removeLetter()
-      } else {
-        addLetter(key)
+  // Full ladder: endWord, ...reversed(wordLadder), beginWord
+  // Display: endWord at top, beginWord at bottom
+  // User finds intermediate words from beginWord side going up
+
+  const currentTargetWord = wordLadder[state.currentWordIndex]
+  const wordsLeft = wordLadder.length - state.currentWordIndex
+
+  const handleSubmit = useCallback(() => {
+    if (!input.trim()) return
+
+    const guess = input.trim().toLowerCase()
+    const target = currentTargetWord.toLowerCase()
+
+    if (guess === target) {
+      const newFoundWords = [...state.foundWords]
+      newFoundWords[state.currentWordIndex] = true
+
+      const nextIndex = state.currentWordIndex + 1
+      const isComplete = nextIndex >= wordLadder.length
+
+      const newState: GameState = {
+        ...state,
+        foundWords: newFoundWords,
+        currentWordIndex: nextIndex,
+        attempts: state.attempts + 1,
+        feedback: "correct",
+        isComplete,
       }
+
+      setGameState(newState)
+      setInput("")
+
+      if (isComplete) {
+        // Handle completion
+        if (state.mode === "classic") {
+          const currentProgress = getClassicProgress()
+          setClassicProgress(currentProgress + 1)
+        }
+        if (state.mode === "daily") {
+          setDailyCompleted()
+        }
+        setTimeout(() => setShowSuccess(true), 600)
+      }
+    } else {
+      // Check if already found
+      const alreadyFound = state.foundWords.some(
+        (found, idx) => found && wordLadder[idx].toLowerCase() === guess
+      )
+
+      setGameState({
+        ...state,
+        attempts: state.attempts + 1,
+        feedback: alreadyFound ? "already" : "wrong",
+      })
+    }
+
+    // Clear feedback after a delay
+    setTimeout(() => {
+      setGameState((prev) => (prev ? { ...prev, feedback: null } : prev))
+    }, 1500)
+  }, [input, currentTargetWord, state, wordLadder, setGameState])
+
+  const handleHint = useCallback(
+    (type: "firstLetter" | "fullWord") => {
+      if (state.isComplete) return
+
+      if (type === "firstLetter") {
+        setInput(currentTargetWord[0])
+        setGameState({ ...state, hintsUsed: state.hintsUsed + 1 })
+      } else {
+        // Reveal full word
+        const newFoundWords = [...state.foundWords]
+        newFoundWords[state.currentWordIndex] = true
+        const nextIndex = state.currentWordIndex + 1
+        const isComplete = nextIndex >= wordLadder.length
+
+        setGameState({
+          ...state,
+          foundWords: newFoundWords,
+          currentWordIndex: nextIndex,
+          hintsUsed: state.hintsUsed + 1,
+          isComplete,
+        })
+        setInput("")
+
+        if (isComplete) {
+          if (state.mode === "classic") {
+            setClassicProgress(getClassicProgress() + 1)
+          }
+          if (state.mode === "daily") {
+            setDailyCompleted()
+          }
+          setTimeout(() => setShowSuccess(true), 600)
+        }
+      }
+      setShowHints(false)
     },
-    [addLetter, removeLetter, submitGuess]
+    [state, currentTargetWord, wordLadder, setGameState]
   )
 
-  // Physical keyboard support
+  // Scroll ladder to show current word
   useEffect(() => {
-    function handler(e: KeyboardEvent) {
-      if (e.key === "Enter") handleKeyPress("ENTER")
-      else if (e.key === "Backspace") handleKeyPress("DEL")
-      else if (/^[a-zA-Z]$/.test(e.key)) handleKeyPress(e.key.toUpperCase())
+    if (ladderRef.current) {
+      const currentEl = ladderRef.current.querySelector("[data-current]")
+      if (currentEl) {
+        currentEl.scrollIntoView({ behavior: "smooth", block: "center" })
+      }
     }
-    window.addEventListener("keydown", handler)
-    return () => window.removeEventListener("keydown", handler)
-  }, [handleKeyPress])
+  }, [state.currentWordIndex])
 
-  function handleNext() {
-    showAd()
-    nextLevel()
-  }
+  // Focus input on mount
+  useEffect(() => {
+    inputRef.current?.focus()
+  }, [])
 
-  function handleBack() {
-    setScreen("home")
-  }
-
-  if (!currentLevel) return null
+  const modeLabel =
+    state.mode === "classic"
+      ? `${t(locale, "level")} ${getClassicProgress() + 1}`
+      : state.mode === "daily"
+        ? t(locale, "dailyChallenge")
+        : t(locale, "random")
 
   return (
-    <main className="flex h-screen flex-col bg-background">
-      {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3">
-        <button onClick={handleBack} className="text-muted-foreground text-sm">
-          {"<"} {t("back", language)}
+    <div
+      className="flex flex-col h-[100dvh] bg-[#F8F8F8] relative"
+      style={{
+        paddingTop: "env(safe-area-inset-top)",
+        paddingBottom: "env(safe-area-inset-bottom)",
+      }}
+    >
+      {/* Top bar */}
+      <div className="flex items-center justify-between px-4 py-3 bg-[#F8F8F8] border-b border-[#E0E0E0] z-10">
+        <button
+          onClick={goHome}
+          className="flex items-center gap-1 text-[#1D70A2] font-semibold text-sm"
+          aria-label="Back to menu"
+        >
+          <ArrowLeft size={20} />
         </button>
-        <h2 className="text-lg font-bold text-foreground">
-          {t("level", language)} {currentLevelIndex + 1}
-        </h2>
-        <div className="w-12" />
-      </header>
-
-      {/* Grid */}
-      <section className="flex flex-1 flex-col items-center justify-center gap-1.5 px-4">
-        {guesses.map((row, ri) => (
-          <div key={ri} className="flex gap-1.5">
-            {row.map((tile, ci) => (
-              <div key={ci} className={tileClass(tile.state)}>
-                {tile.letter}
-              </div>
-            ))}
-          </div>
-        ))}
-      </section>
-
-      {/* Result overlay */}
-      {showDefinition && (
-        <div className="mx-4 mb-3 rounded-xl bg-card p-4 text-center">
-          <p className="mb-1 text-sm font-bold text-primary">
-            {isWon ? t("correct", language) : `${t("answer", language)}: ${currentLevel.word.toUpperCase()}`}
-          </p>
-          <p className="text-xs text-muted-foreground">{getDefinition(language)}</p>
+        <span className="text-sm font-bold text-[#0A3D62]">{modeLabel}</span>
+        <div className="flex items-center gap-2">
           <button
-            onClick={handleNext}
-            className="mt-3 rounded-lg bg-primary px-6 py-2 text-sm font-bold text-primary-foreground"
+            onClick={() => setShowHints(true)}
+            className="flex items-center gap-1 rounded-full bg-[#1D70A2] bg-opacity-10 px-2.5 py-1 text-xs font-semibold text-[#1D70A2]"
           >
-            {t("next", language)}
+            <Lightbulb size={14} />
+            {t(locale, "hints")}
           </button>
+          <button
+            onClick={() => setShowHelp(true)}
+            className="text-[#50555C]"
+            aria-label="Help"
+          >
+            <HelpCircle size={20} />
+          </button>
+        </div>
+      </div>
+
+      {/* Words left banner */}
+      {!state.isComplete && (
+        <div className="px-4 py-2 bg-[#EDF7FC] text-center">
+          <span className="text-xs font-semibold text-[#1D70A2]">
+            {wordsLeft} {wordsLeft === 1 ? t(locale, "wordLeft") : t(locale, "wordsLeft")}
+          </span>
         </div>
       )}
 
-      {/* Keyboard */}
-      <section className="px-1.5 pb-4">
-        {KEYBOARD_ROWS.map((row, ri) => (
-          <div key={ri} className="mb-1.5 flex justify-center gap-1">
-            {row.map((key) => (
-              <button
-                key={key}
-                onClick={() => handleKeyPress(key)}
-                className={`${keyClass(letterStates[key])} ${
-                  key === "ENTER" || key === "DEL" ? "min-w-[3.25rem] text-xs" : ""
-                }`}
-              >
-                {key === "DEL" ? "\u232B" : key}
-              </button>
-            ))}
+      {/* Word ladder display */}
+      <div ref={ladderRef} className="flex-1 overflow-y-auto px-4 py-6">
+        <div className="flex flex-col items-center gap-3">
+          {/* End word at top */}
+          <WordRow
+            word={endWord}
+            state="given"
+            label={locale === "en" ? "END" : "FIN"}
+          />
+
+          {/* Connector */}
+          <div className="w-0.5 h-3 bg-[#D0D0D0]" />
+
+          {/* Intermediate words (reversed so end is at top) */}
+          {[...wordLadder].reverse().map((word, reverseIdx) => {
+            const actualIdx = wordLadder.length - 1 - reverseIdx
+            const isFound = state.foundWords[actualIdx]
+            const isCurrent = actualIdx === state.currentWordIndex && !state.isComplete
+
+            return (
+              <div key={`word-${actualIdx}`} className="flex flex-col items-center gap-3">
+                <div data-current={isCurrent || undefined}>
+                  <WordRow
+                    word={word}
+                    state={isFound ? "found" : isCurrent ? "current" : "hidden"}
+                    highlight={isCurrent}
+                  />
+                </div>
+                <div className="w-0.5 h-3 bg-[#D0D0D0]" />
+              </div>
+            )
+          })}
+
+          {/* Begin word at bottom */}
+          <WordRow
+            word={beginWord}
+            state="given"
+            label={locale === "en" ? "START" : "DEBUT"}
+          />
+        </div>
+
+        {/* Definition card */}
+        {!state.isComplete && currentTargetWord && (
+          <div className="mt-6 mx-auto max-w-sm rounded-2xl bg-[rgba(255,255,255,0.95)] border border-[#E0E0E0] p-4 shadow-sm">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#1D70A2] mb-1 block">
+              {t(locale, "definition")}
+            </span>
+            <p className="text-sm text-[#333] leading-relaxed">
+              {getDefinition(currentTargetWord, locale)}
+            </p>
           </div>
-        ))}
-      </section>
-    </main>
+        )}
+      </div>
+
+      {/* Feedback toast */}
+      {state.feedback && (
+        <div
+          className={`absolute left-1/2 -translate-x-1/2 bottom-24 px-4 py-2 rounded-full text-sm font-bold shadow-lg z-20 transition-all animate-in fade-in slide-in-from-bottom-2 ${
+            state.feedback === "correct"
+              ? "bg-[#2E8B57] text-[#F8F8F8]"
+              : state.feedback === "wrong"
+                ? "bg-[#DC3545] text-[#F8F8F8]"
+                : "bg-[#D4782F] text-[#F8F8F8]"
+          }`}
+        >
+          {state.feedback === "correct"
+            ? t(locale, "correct")
+            : state.feedback === "wrong"
+              ? t(locale, "wrong")
+              : t(locale, "alreadyFound")}
+        </div>
+      )}
+
+      {/* Input bar fixed at bottom */}
+      {!state.isComplete && (
+        <div className="border-t border-[#E0E0E0] bg-[#F8F8F8] px-4 py-3 z-10">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              handleSubmit()
+            }}
+            className="flex gap-2"
+          >
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={t(locale, "enterWord")}
+              className="flex-1 rounded-xl border-2 border-[#D0D0D0] bg-[#FFFFFF] px-4 py-2.5 text-base font-semibold text-[#0A3D62] placeholder:text-[#A0A0A0] focus:border-[#1D70A2] focus:outline-none transition-colors"
+              autoCapitalize="none"
+              autoCorrect="off"
+              autoComplete="off"
+              spellCheck="false"
+            />
+            <button
+              type="submit"
+              className="rounded-xl bg-[#1D70A2] px-5 py-2.5 text-sm font-bold text-[#F8F8F8] shadow-sm transition-colors hover:bg-[#165d8a] active:bg-[#124d73]"
+            >
+              {t(locale, "submit")}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* Modals */}
+      {showHints && (
+        <HintsModal onClose={() => setShowHints(false)} onHint={handleHint} />
+      )}
+      {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
+      {showSuccess && (
+        <SuccessModal
+          attempts={state.attempts}
+          hintsUsed={state.hintsUsed}
+          wordsFound={wordLadder.length}
+          startTime={state.startTime}
+          onNextLevel={() => {
+            setShowSuccess(false)
+            if (state.mode === "classic") {
+              const newState = createGameState("classic")
+              setGameState(newState)
+            } else {
+              goHome()
+            }
+          }}
+          onBackToMenu={() => {
+            setShowSuccess(false)
+            goHome()
+          }}
+          showNextLevel={state.mode === "classic"}
+        />
+      )}
+    </div>
   )
 }
