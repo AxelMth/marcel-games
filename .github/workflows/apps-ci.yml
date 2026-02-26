@@ -2,15 +2,6 @@ name: Apps CI & Appflow Live Updates
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - "apps/**"
-      - "packages/**"
-      - "turbo.json"
-      - "pnpm-workspace.yaml"
-      - "package.json"
   pull_request:
     paths:
       - "apps/**"
