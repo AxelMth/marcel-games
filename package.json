@@ -6,6 +6,7 @@
     "dev": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
+    "cap:sync": "turbo run cap:sync",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "dev:earthunt": "turbo run dev --filter=@marcel-games/earthunt",
     "dev:wordclimb": "turbo run dev --filter=@marcel-games/wordclimb",
