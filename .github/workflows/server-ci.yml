@@ -15,9 +15,6 @@ jobs:
   build-test-deploy:
     runs-on: ubuntu-latest
 
-    env:
-      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -50,10 +47,14 @@ jobs:
       - name: Deploy Earthunt API
         if: github.event_name == 'push'
         working-directory: server
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_EARTHUNT_API_TOKEN }}
         run: flyctl deploy --config fly.earthunt.toml --remote-only
 
       - name: Deploy Wordclimb API
         if: github.event_name == 'push'
         working-directory: server
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_WORDCLIMB_API_TOKEN }}
         run: flyctl deploy --config fly.wordclimb.toml --remote-only
 
