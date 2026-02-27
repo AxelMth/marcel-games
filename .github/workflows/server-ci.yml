@@ -41,18 +41,18 @@ jobs:
         run: go test ./...
 
       - name: Set up Flyctl
-        if: github.event_name == 'push'
+        # if: github.event_name == 'push'
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy Earthunt API
-        if: github.event_name == 'push'
+        # if: github.event_name == 'push'
         working-directory: server
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_EARTHUNT_API_TOKEN }}
         run: flyctl deploy --config fly.earthunt.toml --remote-only
 
       - name: Deploy Wordclimb API
-        if: github.event_name == 'push'
+        # if: github.event_name == 'push'
         working-directory: server
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_WORDCLIMB_API_TOKEN }}
