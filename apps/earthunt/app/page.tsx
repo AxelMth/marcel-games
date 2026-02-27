@@ -8,6 +8,7 @@ import { GameScreen } from "@/components/game-screen"
 import { SuccessScreen } from "@/components/success-screen"
 import { SplashScreen } from "@/components/splash-screen"
 import { StatsScreen } from "@/components/stats-screen"
+import { askForTrackingPermission } from "@/lib/app-tracking-transparency"
 
 const SPLASH_STORAGE_KEY = "splash-done"
 
@@ -24,6 +25,8 @@ export default function Page() {
   const handleSplashComplete = () => {
     if (typeof window !== "undefined") sessionStorage.setItem(SPLASH_STORAGE_KEY, "1")
     setShowSplash(false)
+    // Ask for ATT permission after splash (iOS only; no-op on web/Android)
+    askForTrackingPermission()
   }
 
   if (showSplash === null) {
