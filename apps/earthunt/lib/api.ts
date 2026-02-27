@@ -1,9 +1,13 @@
 /**
  * Backend API for levels and launch.
  * Same contract as earthunt useLaunch / useLevel / useFinishLevel.
+ *
+ * Each app (Earthunt / Wordclimb) uses its own API base URL via env.
  */
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_BASE_URL || "https://marcel-games-backend.fly.dev"
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_BASE_URL ||
+  "https://earthunt-api.fly.dev"
 
 export type GameMode = "WORLD" | "CONTINENTS" | "LEVEL_OF_THE_DAY"
 

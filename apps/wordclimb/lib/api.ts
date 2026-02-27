@@ -1,10 +1,13 @@
 /**
  * WordClimb API client for progress and profile (stats).
- * Calls the shared backend API, same as Earthunt.
+ * Calls the shared backend API, same code as Earthunt but with its own
+ * API base URL configured via environment.
  */
 
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_BASE_URL || "https://marcel-games-backend.fly.dev"
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_BASE_URL ||
+  "https://wordclimb-api.fly.dev"
 
 // Earthunt-style progress response from /progress
 export type DailyLevelStats = {

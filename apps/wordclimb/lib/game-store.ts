@@ -4,6 +4,21 @@ import { validLevels, type Level } from "@/lib/data/levels"
 
 export type GameMode = "classic" | "daily" | "random"
 
+// Backend game modes used by the shared API schema.
+// Wordclimb modes map onto these when talking to the server.
+export type BackendGameMode = "WORLD" | "LEVEL_OF_THE_DAY"
+
+export function toBackendGameMode(mode: GameMode): BackendGameMode {
+  switch (mode) {
+    case "daily":
+      return "LEVEL_OF_THE_DAY"
+    case "classic":
+    case "random":
+    default:
+      return "WORLD"
+  }
+}
+
 export interface GameState {
   mode: GameMode
   level: Level

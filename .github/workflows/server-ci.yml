@@ -47,8 +47,13 @@ jobs:
         if: github.event_name == 'push'
         uses: superfly/flyctl-actions/setup-flyctl@master
 
-      - name: Deploy to Fly
+      - name: Deploy Earthunt API
         if: github.event_name == 'push'
         working-directory: server
-        run: flyctl deploy --config fly.toml --remote-only
+        run: flyctl deploy --config fly.earthunt.toml --remote-only
+
+      - name: Deploy Wordclimb API
+        if: github.event_name == 'push'
+        working-directory: server
+        run: flyctl deploy --config fly.wordclimb.toml --remote-only
 
