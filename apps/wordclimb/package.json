@@ -15,8 +15,8 @@
     "add:android": "npx cap add android"
   },
   "dependencies": {
-    "@marcel-games/ui": "workspace:*",
     "@hookform/resolvers": "^3.9.1",
+    "@marcel-games/ui": "workspace:*",
     "@radix-ui/react-accordion": "1.2.12",
     "@radix-ui/react-alert-dialog": "1.1.15",
     "@radix-ui/react-aspect-ratio": "1.1.8",
@@ -67,6 +67,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@tailwindcss/postcss": "^4.2.0",
     "@types/node": "^22",
     "@types/react": "19.2.14",
