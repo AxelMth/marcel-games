@@ -1,6 +1,7 @@
 "use client"
 
-import { useRef, type MouseEvent, type TouchEvent } from "react"
+import { useRef, useState, useCallback, type MouseEvent, type TouchEvent } from "react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { BookOpen, Calendar, Shuffle } from "lucide-react"
 import { useApp } from "@/lib/app-context"
 import { t } from "@/lib/i18n"
@@ -13,8 +14,38 @@ const modes: { key: GameMode; icon: typeof BookOpen; color: string }[] = [
 ]
 
 export function ModeCarousel() {
-  const { locale, startGame } = useApp()
+  const { locale, startGame, progress } = useApp()
   const scrollRef = useRef<HTMLDivElement>(null)
+  const firstCardRef = useRef<HTMLButtonElement>(null)
+  const [selectedIndex, setSelectedIndex] = useState(0)
+
+  const getScrollStep = useCallback(() => {
+    const card = firstCardRef.current
+    if (!card) return 0
+    const cardWidth = card.offsetWidth
+    const gap = 16
+    return cardWidth + gap
+  }, [])
+
+  const scrollToIndex = useCallback(
+    (index: number) => {
+      const el = scrollRef.current
+      if (!el) return
+      const step = getScrollStep()
+      if (!step) return
+      el.scrollTo({ left: index * step, behavior: "smooth" })
+      setSelectedIndex(index)
+    },
+    [getScrollStep]
+  )
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current
+    const step = getScrollStep()
+    if (!el || !step) return
+    const index = Math.round(el.scrollLeft / step)
+    setSelectedIndex(Math.max(0, Math.min(modes.length - 1, index)))
+  }, [getScrollStep])
 
   const titleKey = (key: GameMode) => {
     switch (key) {
@@ -38,7 +69,6 @@ export function ModeCarousel() {
     }
   }
 
-  // Prevent swipe from triggering click
   const startX = useRef(0)
   const handlePointerDown = (e: MouseEvent | TouchEvent) => {
     const x = "touches" in e ? e.touches[0].clientX : e.clientX
@@ -47,49 +77,80 @@ export function ModeCarousel() {
 
   const handleCardClick = (mode: GameMode, e: MouseEvent) => {
     const diff = Math.abs(e.clientX - startX.current)
-    if (diff > 10) return // was a swipe
+    if (diff > 10) return
+    const dailyDone = progress?.dailyCompleted ?? false
+    if (mode === "daily" && dailyDone) return
     startGame(mode)
   }
 
+  const classicLevel = progress?.worldLevel ?? 1
+  const dailyDone = progress?.dailyCompleted ?? false
+
   return (
-    <div
-      ref={scrollRef}
-      className="flex gap-4 overflow-x-auto snap-x snap-mandatory px-[12.5vw] pb-4"
-      style={{
-        scrollbarWidth: "none",
-        msOverflowStyle: "none",
-        WebkitOverflowScrolling: "touch",
-      }}
-    >
-      {modes.map(({ key, icon: Icon, color }) => (
-        <button
-          key={key}
-          onPointerDown={handlePointerDown as any}
-          onClick={(e) => handleCardClick(key, e)}
-          className="snap-center shrink-0 flex flex-col items-center justify-center gap-3 rounded-[20px] bg-[rgba(255,255,255,0.92)] backdrop-blur-sm p-6 shadow-lg transition-transform hover:scale-[1.03] active:scale-[0.97] cursor-pointer"
-          style={{ width: "75vw", maxWidth: "320px", minHeight: "180px" }}
-        >
-          <div
-            className="flex items-center justify-center rounded-full"
-            style={{
-              width: 56,
-              height: 56,
-              backgroundColor: `${color}20`,
-            }}
-          >
-            <Icon size={28} color={color} strokeWidth={2.2} />
-          </div>
-          <span
-            className="text-lg font-bold"
-            style={{ color }}
-          >
-            {t(locale, titleKey(key))}
-          </span>
-          <span className="text-sm text-[#50555C] text-center leading-relaxed">
-            {t(locale, descKey(key))}
-          </span>
-        </button>
-      ))}
+    <div className="flex w-full items-center justify-center gap-2 px-4">
+      <button
+        type="button"
+        onClick={() => scrollToIndex(selectedIndex - 1)}
+        disabled={selectedIndex === 0}
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/80 text-[#0A3D62] shadow-md transition-opacity disabled:opacity-30"
+        aria-label="Previous mode"
+      >
+        <ChevronLeft className="h-6 w-6" />
+      </button>
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="flex w-[82%] max-w-md snap-x snap-mandatory gap-4 overflow-x-auto overflow-y-visible scrollbar-none"
+        style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
+      >
+        {modes.map(({ key, icon: Icon, color }, i) => {
+          const isDailyDisabled = key === "daily" && dailyDone
+          return (
+            <button
+              key={key}
+              ref={i === 0 ? firstCardRef : undefined}
+              onPointerDown={handlePointerDown as (e: MouseEvent) => void}
+              onClick={(e) => handleCardClick(key, e)}
+              disabled={isDailyDisabled}
+              className="mx-2 flex w-[75vw] max-w-xs shrink-0 snap-center flex-col items-center justify-center gap-3 rounded-[20px] bg-[rgba(255,255,255,0.92)] p-6 shadow-lg backdrop-blur-sm transition-transform active:scale-[0.97] disabled:opacity-60"
+              style={{ minHeight: "180px" }}
+            >
+              <div
+                className="flex items-center justify-center rounded-full"
+                style={{
+                  width: 56,
+                  height: 56,
+                  backgroundColor: `${color}20`,
+                }}
+              >
+                <Icon size={28} color={color} strokeWidth={2.2} />
+              </div>
+              <span className="text-center text-lg font-bold" style={{ color }}>
+                {t(locale, titleKey(key))}
+              </span>
+              <span className="min-h-[2.5rem] w-full text-center text-sm leading-relaxed text-[#50555C]">
+                {key === "daily" && dailyDone
+                  ? t(locale, "doneForToday")
+                  : t(locale, descKey(key))}
+              </span>
+              {key === "classic" && (
+                <span className="w-full text-center text-xs font-medium text-[#50555C]/80">
+                  {t(locale, "level")} {classicLevel}
+                </span>
+              )}
+            </button>
+          )
+        })}
+      </div>
+      <button
+        type="button"
+        onClick={() => scrollToIndex(selectedIndex + 1)}
+        disabled={selectedIndex === modes.length - 1}
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/80 text-[#0A3D62] shadow-md transition-opacity disabled:opacity-30"
+        aria-label="Next mode"
+      >
+        <ChevronRight className="h-6 w-6" />
+      </button>
     </div>
   )
 }

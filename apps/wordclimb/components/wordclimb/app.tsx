@@ -5,6 +5,7 @@ import { useApp } from "@/lib/app-context"
 import { isFirstVisit, setVisited } from "@/lib/game-store"
 import { HomeScreen } from "./home-screen"
 import { GameScreen } from "./game-screen"
+import { StatsScreen } from "./stats-screen"
 import { HelpModal } from "./help-modal"
 
 export function WordClimbApp() {
@@ -22,6 +23,7 @@ export function WordClimbApp() {
     <main className="min-h-[100dvh]">
       {screen === "home" && <HomeScreen />}
       {screen === "game" && <GameScreen />}
+      {screen === "stats" && <StatsScreen />}
 
       {showWelcome && <HelpModal onClose={() => setShowWelcome(false)} />}
     </main>
