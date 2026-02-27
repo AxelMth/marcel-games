@@ -137,6 +137,9 @@ importers:
       '@vercel/analytics':
         specifier: 1.6.1
         version: 1.6.1(next@16.1.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
+      capacitor-plugin-app-tracking-transparency:
+        specifier: ^3.0.0
+        version: 3.0.0(@capacitor/core@8.1.0)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -2267,6 +2270,12 @@ packages:
 
   caniuse-lite@1.0.30001769:
     resolution: {integrity: sha512-BCfFL1sHijQlBGWBMuJyhZUhzo7wer5sVj9hqekB/7xn0Ypy+pER/edCYQm4exbXj4WiySGp40P8UuTh6w1srg==}
+
+  capacitor-plugin-app-tracking-transparency@3.0.0:
+    resolution: {integrity: sha512-paBaxm/7nu83e4U/o2PiM39oI6XKIpUGuG/WuoXyX9olZ6EYFc9YXA4wUvR4fllBDqGqvVYzUrZ7XTSeZxJMVw==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      '@capacitor/core': '>=7.0.0'
 
   chalk@2.4.2:
     resolution: {integrity: sha512-Mti+f9lpJNcwF4tWV8/OrTTtF1gZi+f8FqlyAdouralcFWFQWF2+NgCHShjkCb+IFBLq9buZwE1xckQU4peSuQ==}
@@ -6080,6 +6089,10 @@ snapshots:
   camelcase@5.3.1: {}
 
   caniuse-lite@1.0.30001769: {}
+
+  capacitor-plugin-app-tracking-transparency@3.0.0(@capacitor/core@8.1.0):
+    dependencies:
+      '@capacitor/core': 8.1.0
 
   chalk@2.4.2:
     dependencies:
