@@ -1,0 +1,18 @@
+services:
+  postgresql:
+    container_name: postgresql
+    restart: unless-stopped
+    image: postgres:17
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: earthunt
+    volumes:
+      - ./.docker/postgresql/data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root -d earthunt"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
