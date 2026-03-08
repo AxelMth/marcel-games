@@ -9,6 +9,7 @@ import { useLevelApi } from "@/hooks/use-level"
 import { useInterstitialAd } from "@/hooks/use-interstitial-ad"
 import { NUMBER_OF_LEVELS_BETWEEN_ADS } from "@/lib/ad-constants"
 import { getStars } from "@/lib/stars"
+import { setProgressCache } from "@/lib/progress-cache"
 
 const CARD_DELAY_MS = 120
 const MODE_LABEL_DELAY_MS = 500
@@ -31,6 +32,8 @@ export function SuccessScreen() {
     goHome,
     nextLevel,
     userId,
+    progress,
+    setProgress,
     setPendingNextLevel,
     worldLevelWasFromApiLoad,
     clearWorldLevelWasFromApiLoad,
@@ -65,9 +68,36 @@ export function SuccessScreen() {
     })
       .then((res) => {
         setPendingNextLevel(res.nextLevel, res.nextCountryCodes)
+        const current = progress ?? {
+          worldLevel: 1,
+          continentLevels: {} as Record<string, number>,
+          dailyCompleted: false,
+        }
+        let updated: { worldLevel: number; continentLevels: Record<string, number>; dailyCompleted: boolean }
+        if (gameConfig.mode === "world") {
+          updated = {
+            worldLevel: res.nextLevel,
+            continentLevels: current.continentLevels ?? {},
+            dailyCompleted: current.dailyCompleted ?? false,
+          }
+        } else if (gameConfig.mode === "continent" && gameConfig.continent) {
+          updated = {
+            worldLevel: current.worldLevel ?? 1,
+            continentLevels: { ...(current.continentLevels ?? {}), [gameConfig.continent]: res.nextLevel },
+            dailyCompleted: current.dailyCompleted ?? false,
+          }
+        } else {
+          updated = {
+            worldLevel: current.worldLevel ?? 1,
+            continentLevels: current.continentLevels ?? {},
+            dailyCompleted: true,
+          }
+        }
+        setProgress(updated)
+        setProgressCache(updated)
       })
       .catch((e) => console.error("Finish level failed:", e))
-  }, [gameConfig, userId, foundCountries, attempts, elapsedTime, hintsUsed, finishLevel, setPendingNextLevel])
+  }, [gameConfig, userId, progress, foundCountries, attempts, elapsedTime, hintsUsed, finishLevel, setPendingNextLevel, setProgress])
 
   // Preload interstitial when success screen mounts (for "Next Level" tap)
   useEffect(() => {

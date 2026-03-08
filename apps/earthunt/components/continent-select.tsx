@@ -8,6 +8,7 @@ import { useLanguage } from "@/components/language-provider"
 import { useLaunch } from "@/hooks/use-launch"
 import { useLevelApi } from "@/hooks/use-level"
 import { getProgress } from "@/lib/api"
+import { getProgressCache, setProgressCache } from "@/lib/progress-cache"
 import { getCountriesByContinent, type Continent } from "@/lib/countries"
 import { ScreenHeader } from "@/components/screen-header"
 import { ProfileModal } from "@/components/profile-modal"
@@ -49,16 +50,38 @@ export function ContinentSelect() {
   const [selectedIndex, setSelectedIndex] = useState(0)
 
   useEffect(() => {
-    if (userId && !progress) {
+    if (userId && progress == null) {
+      const cached = getProgressCache()
+      if (cached) {
+        setProgress({
+          worldLevel: cached.worldLevel,
+          continentLevels: cached.continentLevels ?? {},
+          dailyCompleted: cached.dailyCompleted,
+        })
+        getProgress(userId)
+          .then((p) => {
+            const next = {
+              worldLevel: p.worldLevel,
+              continentLevels: p.continentLevels ?? {},
+              dailyCompleted: p.dailyCompleted,
+            }
+            setProgress(next)
+            setProgressCache(next)
+          })
+          .catch(() => {})
+        return
+      }
       setLoadingProgress(true)
       getProgress(userId)
-        .then((p) =>
-          setProgress({
+        .then((p) => {
+          const next = {
             worldLevel: p.worldLevel,
             continentLevels: p.continentLevels ?? {},
             dailyCompleted: p.dailyCompleted,
-          })
-        )
+          }
+          setProgress(next)
+          setProgressCache(next)
+        })
         .catch(() => setProgress(null))
         .finally(() => setLoadingProgress(false))
     }

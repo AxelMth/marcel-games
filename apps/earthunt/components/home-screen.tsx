@@ -8,6 +8,7 @@ import { useLanguage } from "@/components/language-provider"
 import { useLaunch } from "@/hooks/use-launch"
 import { useLevelApi } from "@/hooks/use-level"
 import { getProgress } from "@/lib/api"
+import { getProgressCache, setProgressCache } from "@/lib/progress-cache"
 import { countries } from "@/lib/countries"
 import { ScreenHeader } from "@/components/screen-header"
 
@@ -90,19 +91,44 @@ export function HomeScreen() {
 
   useEffect(() => {
     if (screen === "home" && userId) {
+      if (progress != null) {
+        return
+      }
+      const cached = getProgressCache()
+      if (cached) {
+        setProgress({
+          worldLevel: cached.worldLevel,
+          continentLevels: cached.continentLevels ?? {},
+          dailyCompleted: cached.dailyCompleted,
+        })
+        getProgress(userId)
+          .then((p) => {
+            const next = {
+              worldLevel: p.worldLevel,
+              continentLevels: p.continentLevels ?? {},
+              dailyCompleted: p.dailyCompleted,
+            }
+            setProgress(next)
+            setProgressCache(next)
+          })
+          .catch(() => {})
+        return
+      }
       setLoadingProgress(true)
       getProgress(userId)
-        .then((p) =>
-          setProgress({
+        .then((p) => {
+          const next = {
             worldLevel: p.worldLevel,
             continentLevels: p.continentLevels ?? {},
             dailyCompleted: p.dailyCompleted,
-          })
-        )
+          }
+          setProgress(next)
+          setProgressCache(next)
+        })
         .catch(() => setProgress(null))
         .finally(() => setLoadingProgress(false))
     }
-  }, [screen, userId, setProgress, setLoadingProgress])
+  }, [screen, userId, progress, setProgress, setLoadingProgress])
 
   const getScrollStep = useCallback(() => {
     const card = firstCardRef.current

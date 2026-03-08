@@ -99,7 +99,7 @@ export function StatsScreen() {
 
       <div className="flex flex-1 flex-col gap-6 px-5 pt-2">
         {loading && (
-          <div className="flex items-center justify-center gap-2 py-12 my-8">
+          <div className="flex flex-1 flex-col items-center justify-center gap-2 py-12">
             <Loader2 className="h-6 w-6 animate-spin text-[#0f2b3c]" />
             <span className="text-sm font-medium text-[#0f2b3c]/80">
               {t("profile.loading")}
