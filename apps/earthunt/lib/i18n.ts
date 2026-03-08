@@ -99,6 +99,9 @@ export const translations = {
       loading: "Loading...",
       noHistory: "No games played yet",
       noUser: "Start a game to see your stats",
+      level: "Level",
+      bestRankInMode: "Best rank in this mode",
+      globalRankInMode: "Global rank in this mode",
     },
   },
   fr: {
@@ -199,6 +202,9 @@ export const translations = {
       loading: "Chargement...",
       noHistory: "Aucune partie jouée",
       noUser: "Lance une partie pour voir tes stats",
+      level: "Niveau",
+      bestRankInMode: "Meilleur rang dans ce mode",
+      globalRankInMode: "Rang global dans ce mode",
     },
   },
 } as const

@@ -1,14 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Image from "next/image"
 import {
   Loader2,
-  CalendarCheck,
-  Trophy,
-  Globe,
-  Globe2,
-  Map,
-  Calendar,
   Star,
   Medal,
 } from "lucide-react"
@@ -20,11 +15,16 @@ import { getProfile, type ProfileResponse, type GameHistoryEntry } from "@/lib/a
 
 type GameModeFilter = "WORLD" | "CONTINENTS" | "LEVEL_OF_THE_DAY"
 
-function formatGameMode(mode: string, continent: string): string {
-  if (mode === "LEVEL_OF_THE_DAY") return "Daily"
-  if (mode === "WORLD") return "World"
-  if (mode === "CONTINENTS") return continent === "WORLD" ? "World" : continent
-  return mode
+const MODE_IMAGES: Record<GameModeFilter, { src: string; alt: string }> = {
+  WORLD: { src: "/images/earth-logo.png", alt: "World" },
+  CONTINENTS: { src: "/images/continent.png", alt: "Continent" },
+  LEVEL_OF_THE_DAY: { src: "/images/daily.png", alt: "Daily" },
+}
+
+function modeImageForEntry(entry: GameHistoryEntry): { src: string; alt: string } {
+  if (entry.gameMode === "LEVEL_OF_THE_DAY") return MODE_IMAGES.LEVEL_OF_THE_DAY
+  if (entry.gameMode === "WORLD") return MODE_IMAGES.WORLD
+  return MODE_IMAGES.CONTINENTS
 }
 
 function filterHistory(
@@ -81,6 +81,13 @@ export function StatsScreen() {
     ? filterHistory(data.gameHistory, gameModeFilter)
     : []
 
+  const modeLabel =
+    gameModeFilter === "WORLD"
+      ? t("home.world")
+      : gameModeFilter === "CONTINENTS"
+        ? t("home.continent")
+        : t("home.daily")
+
   return (
     <main className="flex min-h-svh flex-col px-0 py-6 pb-20">
       <ScreenHeader
@@ -112,41 +119,14 @@ export function StatsScreen() {
 
         {!loading && !error && userId && data && (
           <>
-            {/* Main stats with icons */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="flex flex-col items-center gap-2 rounded-xl bg-white/80 p-4 shadow-sm">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0f2b3c]/15">
-                  <CalendarCheck className="h-6 w-6 text-[#0f2b3c]" />
-                </div>
-                <p className="text-2xl font-bold text-[#0f2b3c]">
-                  {data.stats.dailyLevelsCompleted}
-                </p>
-                <p className="text-center text-xs font-medium text-[#0f2b3c]/80">
-                  {t("profile.daysCompleted")}
-                </p>
-              </div>
-              <div className="flex flex-col items-center gap-2 rounded-xl bg-white/80 p-4 shadow-sm">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0f2b3c]/15">
-                  <Trophy className="h-6 w-6 text-[#0f2b3c]" />
-                </div>
-                <p className="text-2xl font-bold text-[#0f2b3c]">
-                  #{data.stats.lastLevelRank}
-                </p>
-                <p className="text-center text-xs font-medium text-[#0f2b3c]/80">
-                  {t("profile.todaysRank")}
-                </p>
-              </div>
-              <div className="flex flex-col items-center gap-2 rounded-xl bg-white/80 p-4 shadow-sm">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0f2b3c]/15">
-                  <Globe className="h-6 w-6 text-[#0f2b3c]" />
-                </div>
-                <p className="text-2xl font-bold text-[#0f2b3c]">
-                  #{data.stats.globalRank}
-                </p>
-                <p className="text-center text-xs font-medium text-[#0f2b3c]/80">
-                  {t("profile.globalRank")}
-                </p>
-              </div>
+            {/* Global rank hero at top */}
+            <div className="flex flex-col items-center gap-1 rounded-2xl bg-[#0f2b3c] px-6 py-5 text-white shadow-md">
+              <p className="text-sm font-medium text-white/80">
+                {t("profile.globalRank")}
+              </p>
+              <p className="text-3xl font-bold tracking-tight">
+                #{data.stats.globalRank}
+              </p>
             </div>
 
             {/* Game mode toggle */}
@@ -161,33 +141,61 @@ export function StatsScreen() {
                   v && setGameModeFilter(v as GameModeFilter)
                 }
                 variant="outline"
-                className="w-full justify-stretch"
+                className="w-full justify-stretch bg-white rounded-lg"
               >
                 <ToggleGroupItem
                   value="WORLD"
-                  className="flex-1 gap-1.5 px-2 py-2 text-xs"
+                  className="flex flex-1 items-center justify-center gap-1.5 px-2 py-2 text-xs"
                   aria-label={t("home.world")}
                 >
-                  <Globe2 className="h-4 w-4 shrink-0" />
+                  <Image
+                    src={MODE_IMAGES.WORLD.src}
+                    alt=""
+                    width={20}
+                    height={20}
+                    className="h-4 w-4 shrink-0 object-contain"
+                  />
                   {t("home.world")}
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="CONTINENTS"
-                  className="flex-1 gap-1.5 px-2 py-2 text-xs"
+                  className="flex flex-1 items-center justify-center gap-1.5 px-2 py-2 text-xs"
                   aria-label={t("home.continent")}
                 >
-                  <Map className="h-4 w-4 shrink-0" />
+                  <Image
+                    src={MODE_IMAGES.CONTINENTS.src}
+                    alt=""
+                    width={20}
+                    height={20}
+                    className="h-4 w-4 shrink-0 object-contain"
+                  />
                   {t("home.continent")}
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="LEVEL_OF_THE_DAY"
-                  className="flex-1 gap-1.5 px-2 py-2 text-xs"
+                  className="flex flex-1 items-center justify-center gap-1.5 px-2 py-2 text-xs"
                   aria-label={t("home.daily")}
                 >
-                  <Calendar className="h-4 w-4 shrink-0" />
+                  <Image
+                    src={MODE_IMAGES.LEVEL_OF_THE_DAY.src}
+                    alt=""
+                    width={20}
+                    height={20}
+                    className="h-4 w-4 shrink-0 object-contain"
+                  />
                   {t("home.daily")}
                 </ToggleGroupItem>
               </ToggleGroup>
+            </div>
+
+            {/* Global rank for selected mode */}
+            <div className="rounded-xl bg-white/80 px-4 py-3 shadow-sm">
+              <p className="text-xs font-medium text-[#0f2b3c]/70">
+                {t("profile.globalRankInMode")} ({modeLabel})
+              </p>
+              <p className="mt-0.5 flex items-center gap-1.5 text-lg font-bold text-[#0f2b3c]">
+                <RankDisplay rank={data.stats.globalRank} />
+              </p>
             </div>
 
             {/* Game history */}
@@ -201,33 +209,46 @@ export function StatsScreen() {
                 </p>
               ) : (
                 <ul className="space-y-2">
-                  {filteredHistory.map((entry, i) => (
-                    <li
-                      key={i}
-                      className="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-4 py-3 shadow-sm"
-                    >
-                      <span className="font-medium text-[#0f2b3c]">
-                        {formatGameMode(entry.gameMode, entry.continent)} Lvl{" "}
-                        {entry.level}
-                      </span>
-                      <div className="flex items-center gap-3">
-                        <div className="flex gap-0.5">
-                          {[1, 2, 3].map((star) => (
-                            <Star
-                              key={star}
-                              className={`h-4 w-4 ${
-                                star <= entry.stars
-                                  ? "fill-[#f0a830] text-[#f0a830]"
-                                  : "fill-none text-[#b0d8e4]"
-                              }`}
-                              strokeWidth={1.5}
+                  {filteredHistory.map((entry, i) => {
+                    const modeImg = modeImageForEntry(entry)
+                    return (
+                      <li
+                        key={i}
+                        className="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-4 py-3 shadow-sm"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0f2b3c]/10 overflow-hidden">
+                            <Image
+                              src={modeImg.src}
+                              alt={modeImg.alt}
+                              width={20}
+                              height={20}
+                              className="object-contain"
                             />
-                          ))}
+                          </div>
+                          <span className="font-medium text-[#0f2b3c]">
+                            {t("profile.level")} {entry.level}
+                          </span>
                         </div>
-                        <RankDisplay rank={entry.rank} />
-                      </div>
-                    </li>
-                  ))}
+                        <div className="flex items-center gap-3">
+                          <div className="flex gap-0.5">
+                            {[1, 2, 3].map((star) => (
+                              <Star
+                                key={star}
+                                className={`h-4 w-4 ${
+                                  star <= entry.stars
+                                    ? "fill-[#f0a830] text-[#f0a830]"
+                                    : "fill-none text-[#b0d8e4]"
+                                }`}
+                                strokeWidth={1.5}
+                              />
+                            ))}
+                          </div>
+                          <RankDisplay rank={entry.rank} />
+                        </div>
+                      </li>
+                    )
+                  })}
                 </ul>
               )}
             </div>
