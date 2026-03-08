@@ -61,6 +61,25 @@ export function HomeScreen() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const firstCardRef = useRef<HTMLButtonElement>(null)
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const [scrollPadding, setScrollPadding] = useState(0)
+
+  useEffect(() => {
+    if (isLoadingProgress) return
+    const el = scrollRef.current
+    const card = firstCardRef.current
+    if (!el || !card) return
+    const updatePadding = () => {
+      const containerWidth = el.clientWidth
+      const cardWidth = card.offsetWidth
+      const gap = 20
+      const padding = Math.max(0, (containerWidth - cardWidth - gap) / 2)
+      setScrollPadding(padding)
+    }
+    updatePadding()
+    const ro = new ResizeObserver(updatePadding)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [isLoadingProgress])
 
   useEffect(() => {
     if (screen !== "home" || userId) return
@@ -98,17 +117,17 @@ export function HomeScreen() {
     if (!el) return
     const step = getScrollStep()
     if (!step) return
-    el.scrollTo({ left: index * step, behavior: "smooth" })
+    el.scrollTo({ left: scrollPadding + index * step, behavior: "smooth" })
     setSelectedIndex(index)
-  }, [getScrollStep])
+  }, [getScrollStep, scrollPadding])
 
   const handleScroll = useCallback(() => {
     const el = scrollRef.current
     const step = getScrollStep()
     if (!el || !step) return
-    const index = Math.round(el.scrollLeft / step)
+    const index = Math.round((el.scrollLeft - scrollPadding) / step)
     setSelectedIndex(Math.max(0, Math.min(modes.length - 1, index)))
-  }, [getScrollStep])
+  }, [getScrollStep, scrollPadding])
 
   const startFromApi = async (mode: "world" | "daily") => {
     setLoadingGame(true)
@@ -192,6 +211,10 @@ export function HomeScreen() {
               className="flex w-[82%] max-w-md snap-x snap-mandatory gap-0 overflow-x-auto overflow-y-visible scrollbar-none"
               style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
             >
+              <div
+                className="flex shrink-0 items-stretch gap-5"
+                style={{ paddingLeft: scrollPadding, paddingRight: scrollPadding }}
+              >
               {modes.map((mode, i) => {
                 const worldLevel = progress?.worldLevel ?? 1
                 const dailyDone = progress?.dailyCompleted ?? false
@@ -202,7 +225,7 @@ export function HomeScreen() {
                     ref={i === 0 ? firstCardRef : undefined}
                     onClick={() => handleTap(mode.id)}
                     disabled={isLoadingGame || isDailyDisabled}
-                    className="mx-2.5 flex w-[75vw] max-w-xs shrink-0 snap-center flex-col items-center p-6 transition-transform duration-200 active:scale-[0.97] disabled:opacity-60"
+                    className="mx-0 flex w-[75vw] max-w-xs shrink-0 snap-center flex-col items-center p-6 transition-transform duration-200 active:scale-[0.97] disabled:opacity-60"
                   >
                     <div className="mb-4 flex h-28 w-28 items-center justify-center">
                       <Image
@@ -227,6 +250,7 @@ export function HomeScreen() {
                   </button>
                 )
               })}
+              </div>
             </div>
             <button
               type="button"
