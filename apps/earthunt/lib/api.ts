@@ -67,13 +67,25 @@ export type ProfileResponse = {
   stats: ProfileStats
 }
 
+const PROGRESS_TIMEOUT_MS = 10_000
+
 export async function getProgress(userId: string): Promise<ProgressResponse> {
-  const res = await fetch(
-    `${API_BASE_URL}/progress?${new URLSearchParams({ userId })}`,
-    { method: "GET", headers: { "Content-Type": "application/json" } }
-  )
-  if (!res.ok) throw new Error(`Get progress failed: ${res.status}`)
-  return res.json()
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), PROGRESS_TIMEOUT_MS)
+  try {
+    const res = await fetch(
+      `${API_BASE_URL}/progress?${new URLSearchParams({ userId })}`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+      }
+    )
+    if (!res.ok) throw new Error(`Get progress failed: ${res.status}`)
+    return res.json()
+  } finally {
+    clearTimeout(timeoutId)
+  }
 }
 
 export async function postLaunch(body: {

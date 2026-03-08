@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { useGameStore } from "@/lib/game-store"
 import { HomeScreen } from "@/components/home-screen"
 import { ContinentSelect } from "@/components/continent-select"
@@ -23,6 +23,7 @@ export default function Page() {
   const [showSplash, setShowSplash] = useState<boolean | null>(null)
   const [initLoading, setInitLoading] = useState(true)
   const [initError, setInitError] = useState<string | null>(null)
+  const initStartedRef = useRef(false)
   const { launch } = useLaunch()
 
   const runInit = useCallback(async () => {
@@ -32,14 +33,28 @@ export default function Page() {
       const uid = await launch("WORLD", "")
       if (uid) setUserId(uid)
       if (uid) {
-        const p = await getProgress(uid)
-        const next = {
-          worldLevel: p.worldLevel,
-          continentLevels: p.continentLevels ?? {},
-          dailyCompleted: p.dailyCompleted,
+        try {
+          const p = await getProgress(uid)
+          const next = {
+            worldLevel: p.worldLevel,
+            continentLevels: p.continentLevels ?? {},
+            dailyCompleted: p.dailyCompleted,
+          }
+          setProgress(next)
+          setProgressCache(next)
+        } catch (progressError) {
+          const cached =
+            typeof window !== "undefined" ? getProgressCache() : null
+          if (cached) {
+            setProgress({
+              worldLevel: cached.worldLevel,
+              continentLevels: cached.continentLevels ?? {},
+              dailyCompleted: cached.dailyCompleted,
+            })
+          } else {
+            throw progressError
+          }
         }
-        setProgress(next)
-        setProgressCache(next)
       }
     } catch (e) {
       setInitError(e instanceof Error ? e.message : "Failed to load")
@@ -55,7 +70,13 @@ export default function Page() {
   }, [])
 
   useEffect(() => {
+    if (showSplash === false) {
+      initStartedRef.current = false
+      return
+    }
     if (showSplash !== true) return
+    if (initStartedRef.current) return
+    initStartedRef.current = true
     runInit()
   }, [showSplash, runInit])
 

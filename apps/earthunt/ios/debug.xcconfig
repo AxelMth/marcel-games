@@ -1,1 +1,3 @@
+// Env.xcconfig is generated from .env by scripts/generate-env-xcconfig.mjs. For first-time clone, run that script or force-add a stub: git add -f ios/Env.xcconfig
+#include "Env.xcconfig"
 CAPACITOR_DEBUG = true
