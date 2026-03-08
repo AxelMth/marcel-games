@@ -141,7 +141,7 @@ export function StatsScreen() {
                   v && setGameModeFilter(v as GameModeFilter)
                 }
                 variant="outline"
-                className="w-full justify-stretch bg-white rounded-lg"
+                className="w-full justify-stretch bg-white"
               >
                 <ToggleGroupItem
                   value="WORLD"
