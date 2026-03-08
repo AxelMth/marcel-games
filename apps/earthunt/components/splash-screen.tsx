@@ -14,9 +14,9 @@ interface SplashScreenProps {
 export function SplashScreen({ onComplete }: SplashScreenProps) {
   const { t } = useLanguage()
   const title = useMemo(() => "EartHunt", [])
-  const [titleOpacities, startTitle] = useAnimatedText(title, 200)
+  const [titleOpacities, startTitle, titleChars] = useAnimatedText(title, 200)
   const subtitle = t("splash.subtitle")
-  const [subtitleOpacities, startSubtitle] = useAnimatedText(subtitle, 50)
+  const [subtitleOpacities, startSubtitle, subtitleChars] = useAnimatedText(subtitle, 80)
 
   useEffect(() => {
     startTitle()
@@ -40,16 +40,16 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
         <Image
           src="/images/earth-logo.png"
           alt="EartHunt"
-          width={240}
-          height={160}
-          className="h-auto w-full object-contain"
+          width={180}
+          height={120}
+          className="h-auto object-contain"
           priority
         />
       </div>
 
       <div className="flex flex-col items-center gap-1">
         <div className="flex flex-wrap justify-center gap-0">
-          {title.split("").map((letter, i) => (
+          {titleChars.map((letter, i) => (
             <span
               key={i}
               className="text-4xl font-extrabold tracking-tight text-[#0f2b3c] transition-opacity duration-300"
@@ -60,7 +60,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
           ))}
         </div>
         <div className="flex flex-wrap justify-center gap-0">
-          {subtitle.split("").map((letter, i) => (
+          {subtitleChars.map((letter, i) => (
             <span
               key={i}
               className="text-lg font-semibold text-[#0f2b3c]/90 transition-opacity duration-300"

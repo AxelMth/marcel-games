@@ -18,7 +18,6 @@ export function GameScreen() {
   const {
     gameConfig,
     foundCountries,
-    attempts,
     elapsedTime,
     lastGuessResult,
     highlightedCountry,
