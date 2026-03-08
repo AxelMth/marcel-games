@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useDeviceUuid } from "./use-device-uuid"
+import { getLaunchDeviceInfo } from "@marcel-games/lib"
 import { postLaunch, type GameMode, type Continent } from "@/lib/api"
 
 export type UseLaunchReturn = {
@@ -19,15 +20,10 @@ export function useLaunch(): UseLaunchReturn {
   ): Promise<string | null> => {
     if (!deviceUuid) return null
     try {
+      const deviceInfo = await getLaunchDeviceInfo()
       const data = await postLaunch({
         deviceUUID: deviceUuid,
-        brand: typeof navigator !== "undefined" ? (navigator as { vendor?: string }).vendor : null,
-        osName: typeof navigator !== "undefined" ? navigator.platform : null,
-        osVersion: undefined,
-        modelName: undefined,
-        manufacturer: undefined,
-        deviceType: "UNKNOWN",
-        isDevice: true,
+        ...deviceInfo,
         gameMode,
         continent,
       })

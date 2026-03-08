@@ -16,21 +16,38 @@ function generateUUID(): string {
 }
 
 /**
- * Returns a stable device UUID persisted in localStorage.
- * Used by both earthunt and wordclimb to identify anonymous users
- * when calling the backend `/launch` endpoint.
+ * Returns a stable device UUID: on native uses Capacitor Device.getId(),
+ * on web uses localStorage. Used by earthunt (and optionally wordclimb)
+ * to identify anonymous users when calling the backend `/launch` endpoint.
  */
 export function useDeviceUUID() {
   const [uuid, setUuid] = useState<string | null>(null)
 
   useEffect(() => {
     if (typeof window === "undefined") return
-    let id = localStorage.getItem(STORAGE_KEY)
-    if (!id) {
-      id = generateUUID()
-      localStorage.setItem(STORAGE_KEY, id)
+
+    const resolve = async () => {
+      try {
+        const { Capacitor } = await import("@capacitor/core").catch(() => ({ Capacitor: null }))
+        const { Device } = await import("@capacitor/device").catch(() => ({ Device: null }))
+        if (Capacitor?.isNativePlatform() && Device) {
+          const { identifier } = await Device.getId()
+          setUuid(identifier)
+          return
+        }
+      } catch {
+        // fall through to web path
+      }
+
+      let id = localStorage.getItem(STORAGE_KEY)
+      if (!id) {
+        id = generateUUID()
+        localStorage.setItem(STORAGE_KEY, id)
+      }
+      setUuid(id)
     }
-    setUuid(id)
+
+    resolve()
   }, [])
 
   const getUUID = useCallback((): string => {
