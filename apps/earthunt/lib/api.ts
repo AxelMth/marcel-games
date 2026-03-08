@@ -6,7 +6,6 @@
  */
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
-  process.env.NEXT_PUBLIC_BASE_URL ||
   "https://earthunt-api.fly.dev"
 
 export type GameMode = "WORLD" | "CONTINENTS" | "LEVEL_OF_THE_DAY"

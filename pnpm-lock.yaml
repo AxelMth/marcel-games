@@ -228,6 +228,9 @@ importers:
       typescript:
         specifier: 5.7.3
         version: 5.7.3
+      xmlbuilder:
+        specifier: ^15.1.1
+        version: 15.1.1
 
   apps/wordclimb:
     dependencies:
