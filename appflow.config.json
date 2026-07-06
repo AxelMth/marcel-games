@@ -3,16 +3,16 @@
     {
       "appId": "64ef723b",
       "root": "apps/earthunt",
-      "dependencyInstallCommand": "cd ../.. && pnpm install",
-      "webBuildCommand": "pnpm run build",
+      "dependencyInstallCommand": "corepack enable && cd ../.. && pnpm install",
+      "webBuildCommand": "pnpm run build && npx cap sync",
       "iosPath": "ios",
       "androidPath": "android"
     },
     {
       "appId": "860819d5",
       "root": "apps/wordclimb",
-      "dependencyInstallCommand": "cd ../.. && pnpm install",
-      "webBuildCommand": "pnpm run build",
+      "dependencyInstallCommand": "corepack enable && cd ../.. && pnpm install",
+      "webBuildCommand": "pnpm run build && npx cap sync",
       "iosPath": "ios",
       "androidPath": "android"
     }

@@ -9,6 +9,15 @@ on:
       - "turbo.json"
       - "pnpm-workspace.yaml"
       - "package.json"
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "turbo.json"
+      - "pnpm-workspace.yaml"
+      - "package.json"
 
 jobs:
   build-lint-deploy:
@@ -43,10 +52,14 @@ jobs:
       - name: Build all apps
         run: pnpm build
 
+      # Live Updates (OTA) are deployed to Production ONLY on push to main.
+      # Pull requests run lint + build above as a gate but never deploy.
       - name: Install Appflow CLI
+        if: github.event_name != 'pull_request'
         run: curl -sL https://ionic.io/get-appflow-cli | bash
 
       - name: Build & deploy Live Update for earthunt
+        if: github.event_name != 'pull_request'
         working-directory: ${{ github.workspace }}
         run: |
           BUILD_ID=$(appflow build web --token="$IONIC_TOKEN" --app-id="$APPFLOW_ID_EARTHUNT" --commit="$GITHUB_SHA" --json | jq -r '.buildId')
@@ -55,10 +68,10 @@ jobs:
           APPFLOW_ID_EARTHUNT: ${{ secrets.APPFLOW_ID_EARTHUNT }}
 
       - name: Build & deploy Live Update for wordclimb
+        if: github.event_name != 'pull_request'
         working-directory: ${{ github.workspace }}
         run: |
           BUILD_ID=$(appflow build web --token="$IONIC_TOKEN" --app-id="$APPFLOW_ID_WORDCLIMB" --commit="$GITHUB_SHA" --json | jq -r '.buildId')
           appflow deploy web --token="$IONIC_TOKEN" --app-id="$APPFLOW_ID_WORDCLIMB" --build-id="$BUILD_ID" --destination="Production"
         env:
           APPFLOW_ID_WORDCLIMB: ${{ secrets.APPFLOW_ID_WORDCLIMB }}
-

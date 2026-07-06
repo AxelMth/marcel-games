@@ -15,6 +15,7 @@ import {
 import { useApp } from "@/lib/app-context"
 import { t } from "@/lib/i18n"
 import { getProfile, type ProfileResponse } from "@/lib/api"
+import { LegalModal } from "@/components/wordclimb/legal-modal"
 
 type GameModeFilter = "all" | "WORLD" | "CONTINENTS" | "LEVEL_OF_THE_DAY"
 
@@ -43,6 +44,7 @@ export function StatsScreen() {
   const [error, setError] = useState<string | null>(null)
   const [gameModeFilter, setGameModeFilter] =
     useState<GameModeFilter>("all")
+  const [legalOpen, setLegalOpen] = useState(false)
 
   useEffect(() => {
     if (!userId) {
@@ -227,7 +229,19 @@ export function StatsScreen() {
 
           </>
         )}
+
+        <footer className="mt-auto pt-6 text-center">
+          <button
+            type="button"
+            onClick={() => setLegalOpen(true)}
+            className="text-xs font-medium text-[#0A3D62]/70 underline underline-offset-2"
+          >
+            {t(locale, "legalOpen")}
+          </button>
+        </footer>
       </div>
+
+      {legalOpen && <LegalModal onClose={() => setLegalOpen(false)} />}
     </div>
   )
 }

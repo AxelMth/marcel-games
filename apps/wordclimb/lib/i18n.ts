@@ -54,6 +54,11 @@ export const translations = {
     profileNoHistory: "No games yet.",
     profileBack: "Back",
     filterAll: "All",
+    legalOpen: "Privacy & Terms",
+    legalPrivacyTitle: "Privacy Policy",
+    legalTermsTitle: "Terms of Use",
+    legalLastUpdated: "Last updated",
+    legalClose: "Close",
   },
   fr: {
     appName: "WordClimb",
@@ -108,6 +113,11 @@ export const translations = {
     profileNoHistory: "Aucune partie pour l'instant.",
     profileBack: "Retour",
     filterAll: "Tous",
+    legalOpen: "Confidentialite & CGU",
+    legalPrivacyTitle: "Politique de confidentialite",
+    legalTermsTitle: "Conditions d'utilisation",
+    legalLastUpdated: "Derniere mise a jour",
+    legalClose: "Fermer",
   },
 } as const
 

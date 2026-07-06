@@ -1,36 +1,39 @@
 # Marcel Games Monorepo
 
 A pnpm + Turborepo monorepo containing two Capacitor mobile apps built with
-Next.js and a shared Gin API server.
+Next.js 16, shared UI/lib packages, and a Go + Gin API server per app.
 
 ## Structure
 
 ```
 marcel-games/
 ├── apps/
-│   ├── earthunt/           # Next.js 16 + Capacitor app (port 3001)
-│   └── wordclimb/          # Next.js 16 + Capacitor app (port 3002)
+│   ├── earthunt/           # Next.js 16 + Capacitor app (dev port 3001) — uses Mapbox + AdMob
+│   └── wordclimb/          # Next.js 16 + Capacitor app (dev port 3000) — ad-free word game
 ├── packages/
 │   ├── ui/                 # Shared React component library
-│   └── lib/                # Shared hooks, storage, haptics utilities
-├── server/                 # Go 1.23 + Gin API (marcel-games-api)
-│   ├── cmd/api/main.go
-│   ├── internal/
-│   │   ├── config/
-│   │   ├── database/
-│   │   ├── handlers/
-│   │   ├── middleware/
-│   │   └── router/
-│   ├── migrations/
-│   ├── Dockerfile
-│   └── fly.toml
-└── .github/workflows/      # CI/CD pipelines
+│   └── lib/                # Shared hooks, storage, haptics, AdMob, device utilities
+├── server/
+│   ├── earthunt/           # Go 1.23 + Gin API → Fly.io app `earthunt-api`
+│   │   ├── cmd/api/main.go
+│   │   ├── cmd/populate-level-of-the-day/
+│   │   ├── internal/{config,handlers,...}
+│   │   ├── schema.prisma
+│   │   ├── Dockerfile
+│   │   └── fly.toml
+│   └── wordclimb/          # Same shape → Fly.io app `wordclimb-api`
+├── appflow.config.json     # Ionic AppFlow build config (per app)
+└── .github/workflows/      # CI/CD pipelines (see Deployment below)
 ```
+
+Each game runs its **own** API + Postgres database as a separate Fly.io app. The
+client picks the backend via `NEXT_PUBLIC_API_BASE_URL` (distinct domain per app);
+there is no Host-header-based routing.
 
 ## Prerequisites
 
 - Node.js >= 20
-- pnpm >= 9
+- pnpm >= 9 (via `corepack enable`)
 - Go >= 1.23
 - [flyctl](https://fly.io/docs/hands-on/install-flyctl/) (for server deploys)
 - Android Studio / Xcode (for native builds)
@@ -38,61 +41,67 @@ marcel-games/
 ## Getting started
 
 ```bash
-# Install all JS dependencies
 pnpm install
 
 # Start both apps in dev mode
 pnpm dev
 
-# Start only one app
-pnpm dev:earthunt
-pnpm dev:wordclimb
+# Or one app
+pnpm dev:earthunt   # http://localhost:3001
+pnpm dev:wordclimb  # http://localhost:3000
 ```
+
+For earthunt, copy `apps/earthunt/.env.example` to `.env.local` and add a Mapbox
+token, or the map will not render. See [`.github/SECRETS.md`](.github/SECRETS.md).
 
 ### Server (local)
 
 ```bash
-cd server
-cp .env.example .env   # then fill in your values
-go run ./cmd/api
+cd server/earthunt
+cp .env.example .env   # set DATABASE_URL
+go run ./cmd/api       # listens on :8080
 ```
 
 ## Building for mobile
 
 ```bash
-# Build the static Next.js export and sync to native projects
-pnpm cap:sync:earthunt
-pnpm cap:sync:wordclimb
+# Static export + sync into the native projects (runs `next build && npx cap sync`)
+pnpm --filter @marcel-games/earthunt mobile
+pnpm --filter @marcel-games/wordclimb mobile
 
-# Open in Xcode / Android Studio
-pnpm --filter @marcel-games/earthunt cap:open:ios
-pnpm --filter @marcel-games/earthunt cap:open:android
+# Open the native projects
+npx --prefix apps/earthunt cap open ios
+npx --prefix apps/earthunt cap open android
 ```
+
+The native `ios/` and `android/` projects are committed to git (AppFlow builds
+from them). Web assets are statically exported to `out/` (`output: "export"`) and
+embedded via Capacitor `webDir: "out"`.
 
 ## Deployment
 
-| Target    | Trigger                          | Workflow                      |
-| --------- | -------------------------------- | ----------------------------- |
-| Server    | Push to `main` touching `server/` | `server-deploy.yml` → Fly.io |
-| Earthunt  | Push to `main` touching `apps/earthunt/` or `packages/` | `earthunt-mobile.yml` |
-| WordClimb | Push to `main` touching `apps/wordclimb/` or `packages/` | `wordclimb-mobile.yml` |
+| Target | Trigger | Workflow | What it does |
+| --- | --- | --- | --- |
+| Servers | Push to `main` touching `server/**` | `server-ci.yml` | Test + `flyctl deploy` to `earthunt-api` / `wordclimb-api` |
+| Apps (OTA) | Push to `main` touching `apps/**` or `packages/**` | `apps-ci.yml` | Lint/build, then AppFlow **Live Update** (OTA) to the Production channel |
+| Level-of-the-day | Daily cron | `plotd-earthunt.yml`, `plotd-wordclimb.yml` | Populate the daily level in each DB |
 
-See `.github/SECRETS.md` for required repository secrets.
+**Store binaries** (the `.ipa` / `.aab` you submit to the App Store / Play Store)
+are built by **AppFlow native builds**, triggered from the AppFlow dashboard/CLI —
+not by these workflows. See `appflow.config.json` and [`.github/SECRETS.md`](.github/SECRETS.md).
+
+See [`.github/SECRETS.md`](.github/SECRETS.md) for all required secrets and env vars.
 
 ## API routes
 
-All routes are prefixed `/api/v1` and the server selects the correct database
-based on the `Host` request header.
+The server is anonymous and device-identity based (no auth/JWT). All routes are at
+the root path; the base URL differs per game.
 
-| Method | Path                      | Auth | Description                    |
-| ------ | ------------------------- | ---- | ------------------------------ |
-| GET    | `/health`                 | No   | Health check (pings the DB)    |
-| POST   | `/api/v1/auth/signup`     | No   | Register a new user            |
-| POST   | `/api/v1/auth/signin`     | No   | Sign in, returns JWT           |
-| GET    | `/api/v1/profile/me`      | JWT  | Get own profile                |
-| PATCH  | `/api/v1/profile/me`      | JWT  | Update username / avatar       |
-| GET    | `/api/v1/leaderboard`     | No   | Top 50 scores for this app     |
-| POST   | `/api/v1/leaderboard`     | JWT  | Upsert personal best           |
-| POST   | `/api/v1/scores`          | JWT  | Submit a score (upserts best)  |
-| GET    | `/api/v1/scores/me`       | JWT  | Get personal best              |
-| GET    | `/api/v1/scores/me/history` | JWT | Paginated score history      |
+| Method | Path | Description |
+| --- | --- | --- |
+| POST | `/launch` | Register/identify a device, returns a `userId` |
+| GET | `/progress` | Get a user's progress (`?userId=`) |
+| GET | `/profile` | Get a user's profile + stats (`?userId=`) |
+| GET | `/level` | Get the current level (`?userId=&gameMode=&continent=&level=`) |
+| POST | `/level` | Finish a level, returns the next level |
+| POST | `/end-level` | Deprecated alias of `POST /level` |

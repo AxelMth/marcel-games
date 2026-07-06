@@ -103,6 +103,13 @@ export const translations = {
       bestRankInMode: "Best rank in this mode",
       globalRankInMode: "Global rank in this mode",
     },
+    legal: {
+      open: "Privacy & Terms",
+      privacyTitle: "Privacy Policy",
+      termsTitle: "Terms of Use",
+      lastUpdated: "Last updated",
+      close: "Close",
+    },
   },
   fr: {
     app: {
@@ -205,6 +212,13 @@ export const translations = {
       level: "Niveau",
       bestRankInMode: "Meilleur rang dans ce mode",
       globalRankInMode: "Rang global dans ce mode",
+    },
+    legal: {
+      open: "Confidentialité & CGU",
+      privacyTitle: "Politique de confidentialité",
+      termsTitle: "Conditions d'utilisation",
+      lastUpdated: "Dernière mise à jour",
+      close: "Fermer",
     },
   },
 } as const

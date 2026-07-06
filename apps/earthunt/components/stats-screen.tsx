@@ -10,6 +10,7 @@ import {
 import { useGameStore } from "@/lib/game-store"
 import { useLanguage } from "@/components/language-provider"
 import { ScreenHeader } from "@/components/screen-header"
+import { LegalModal } from "@/components/legal-modal"
 import { ToggleGroup, ToggleGroupItem } from "@marcel-games/ui"
 import { getProfile, type ProfileResponse, type GameHistoryEntry } from "@/lib/api"
 
@@ -63,6 +64,7 @@ export function StatsScreen() {
   const [error, setError] = useState<string | null>(null)
   const [gameModeFilter, setGameModeFilter] =
     useState<GameModeFilter>("WORLD")
+  const [legalOpen, setLegalOpen] = useState(false)
 
   useEffect(() => {
     if (!userId) {
@@ -254,7 +256,19 @@ export function StatsScreen() {
             </div>
           </>
         )}
+
+        <footer className="mt-auto pt-6 text-center">
+          <button
+            type="button"
+            onClick={() => setLegalOpen(true)}
+            className="text-xs font-medium text-[#0f2b3c]/60 underline underline-offset-2"
+          >
+            {t("legal.open")}
+          </button>
+        </footer>
       </div>
+
+      <LegalModal open={legalOpen} onOpenChange={setLegalOpen} />
     </main>
   )
 }

@@ -10,12 +10,10 @@ const config: CapacitorConfig = {
       channel: 'Production',
       autoUpdateMethod: 'background',
       maxVersions: 2
-    },
-    AdMob: {
-      // App IDs are set in AndroidManifest.xml and Info.plist (same as earthunt app.json)
-      androidAppId: 'ca-app-pub-6271901101573718~9313598215',
-      iosAppId: 'ca-app-pub-6271901101573718~5878435021'
     }
+    // No AdMob: WordClimb ships ad-free (the @capacitor-community/admob plugin
+    // is not a dependency of this app). If ads are added later, install the
+    // plugin and re-add the AdMob config + native app IDs here.
   }
 };
 
