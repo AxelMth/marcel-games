@@ -8,7 +8,11 @@ const config: CapacitorConfig = {
     LiveUpdates: {
       appId: '860819d5',
       channel: 'Production',
-      autoUpdateMethod: 'background',
+      // 'none' (was 'background'): the automatic launch-time native sync can raise
+      // an uncaught exception on restricted networks (e.g. App Store review),
+      // crashing the app on launch. With 'none' no sync runs at launch. To
+      // re-enable OTA later, call LiveUpdates.sync() from JS after load, guarded.
+      autoUpdateMethod: 'none',
       maxVersions: 2
     }
     // No AdMob: WordClimb ships ad-free (the @capacitor-community/admob plugin
