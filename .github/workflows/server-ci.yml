@@ -21,7 +21,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [earthunt, wordclimb]
+        # wordclimb is deliberately absent: its server is still earthunt's code
+        # copy-pasted, with only schema.prisma converted to word ladders. It
+        # references Continent and CountryCodes, which no longer exist in its
+        # schema, so `go build ./cmd/api` fails — 238 geography references
+        # across 7 files. That breakage predates this workflow and was hidden
+        # because CI pointed at a directory with no go.mod and never ran.
+        # Add wordclimb back once its server is actually ported (Phase 2).
+        app: [earthunt]
 
     defaults:
       run:
@@ -63,8 +70,8 @@ jobs:
         include:
           - app: earthunt
             token_secret: FLY_EARTHUNT_API_TOKEN
-          - app: wordclimb
-            token_secret: FLY_WORDCLIMB_API_TOKEN
+          # No wordclimb deploy either: it does not compile (see the test job).
+          # Deploying it would just fail at the Docker build step.
 
     steps:
       - name: Checkout repository
