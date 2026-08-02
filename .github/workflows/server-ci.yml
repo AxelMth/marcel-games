@@ -11,9 +11,21 @@ on:
     paths:
       - "server/**"
 
+# Both servers are independent Go modules under server/<app>/. There is no
+# go.mod at server/ itself, so every step must run inside one of them — the
+# previous single-job version used `working-directory: server` and failed at
+# `go mod download` before ever reaching the tests.
 jobs:
-  build-test-deploy:
+  test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [earthunt, wordclimb]
+
+    defaults:
+      run:
+        working-directory: server/${{ matrix.app }}
 
     steps:
       - name: Checkout repository
@@ -22,39 +34,47 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.23.0"
+          go-version-file: server/${{ matrix.app }}/go.mod
+          cache-dependency-path: server/${{ matrix.app }}/go.sum
 
       - name: Download Go modules
-        working-directory: server
         run: go mod download
 
+      # db/client.go references the Prisma-generated client, which is not
+      # committed; without this step the whole module fails to build.
       - name: Generate Prisma client
-        working-directory: server
         run: go run github.com/steebchen/prisma-client-go generate
 
       - name: Build API binary
-        working-directory: server
         run: go build ./cmd/api
 
       - name: Run Go tests
-        working-directory: server
         run: go test ./...
 
+  deploy:
+    if: github.event_name == 'push'
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      # Deploy one at a time so a failure does not leave the two APIs on
+      # different revisions.
+      max-parallel: 1
+      matrix:
+        include:
+          - app: earthunt
+            token_secret: FLY_EARTHUNT_API_TOKEN
+          - app: wordclimb
+            token_secret: FLY_WORDCLIMB_API_TOKEN
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Set up Flyctl
-        if: github.event_name == 'push'
         uses: superfly/flyctl-actions/setup-flyctl@master
 
-      - name: Deploy Earthunt API
-        if: github.event_name == 'push'
-        working-directory: server
+      - name: Deploy ${{ matrix.app }} API
+        working-directory: server/${{ matrix.app }}
         env:
-          FLY_API_TOKEN: ${{ secrets.FLY_EARTHUNT_API_TOKEN }}
-        run: flyctl deploy --config fly.earthunt.toml --remote-only
-
-      - name: Deploy Wordclimb API
-        if: github.event_name == 'push'
-        working-directory: server
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_WORDCLIMB_API_TOKEN }}
-        run: flyctl deploy --config fly.wordclimb.toml --remote-only
-
+          FLY_API_TOKEN: ${{ secrets[matrix.token_secret] }}
+        run: flyctl deploy --remote-only

@@ -8,6 +8,8 @@
     "export": "next build",
     "start": "next start --port 3001",
     "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "mobile": "next build && npx cap sync",
     "ios:env": "node scripts/generate-env-xcconfig.mjs",
     "assets": "capacitor-assets generate",

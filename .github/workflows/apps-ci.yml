@@ -46,6 +46,9 @@ jobs:
       - name: Lint apps and packages
         run: pnpm lint
 
+      - name: Run unit tests
+        run: pnpm test
+
       - name: Build all apps
         run: pnpm build
         env:

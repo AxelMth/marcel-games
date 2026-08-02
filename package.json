@@ -6,6 +6,7 @@
     "dev": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
+    "test": "turbo run test",
     "cap:sync": "turbo run cap:sync",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "dev:earthunt": "turbo run dev --filter=@marcel-games/earthunt",
@@ -16,11 +17,19 @@
     "cap:sync:wordclimb": "turbo run cap:sync --filter=@marcel-games/wordclimb"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@vitejs/plugin-react": "^6.0.5",
+    "@vitest/coverage-v8": "^4.1.10",
     "eslint-plugin-react-hooks": "^7.1.1",
+    "jsdom": "^30.0.1",
     "prettier": "^3.4.2",
     "turbo": "^2.3.3",
     "typescript": "5.7.3",
-    "typescript-eslint": "^8.65.0"
+    "typescript-eslint": "^8.65.0",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^4.1.10"
   },
   "engines": {
     "node": ">=20",
