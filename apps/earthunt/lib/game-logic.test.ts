@@ -110,24 +110,43 @@ describe("level ids", () => {
     expect(getContinentLevelId("EUROPE", 3)).toBe("continent-EUROPE-level-3")
   })
 
-  it("builds a daily id from the local date", () => {
+  it("builds a daily id from the UTC date", () => {
     vi.useFakeTimers()
-    vi.setSystemTime(new Date(2026, 7, 2, 12, 0, 0))
+    vi.setSystemTime(new Date("2026-08-02T12:00:00Z"))
     expect(getDailyLevelId()).toBe("daily-2026-08-02")
   })
 
   it("pads single-digit months and days", () => {
     vi.useFakeTimers()
-    vi.setSystemTime(new Date(2026, 0, 5, 12, 0, 0))
+    vi.setSystemTime(new Date("2026-01-05T12:00:00Z"))
     expect(getDailyLevelId()).toBe("daily-2026-01-05")
   })
 
-  it("changes from one day to the next", () => {
+  it("rolls over at midnight UTC", () => {
     vi.useFakeTimers()
-    vi.setSystemTime(new Date(2026, 7, 2, 23, 59, 0))
-    const today = getDailyLevelId()
-    vi.setSystemTime(new Date(2026, 7, 3, 0, 1, 0))
-    expect(getDailyLevelId()).not.toBe(today)
+    vi.setSystemTime(new Date("2026-08-02T23:59:00Z"))
+    expect(getDailyLevelId()).toBe("daily-2026-08-02")
+
+    vi.setSystemTime(new Date("2026-08-03T00:01:00Z"))
+    expect(getDailyLevelId()).toBe("daily-2026-08-03")
+  })
+
+  it("does not roll over at local midnight ahead of UTC", () => {
+    // The server rotates the puzzle at midnight UTC. A player in Paris at
+    // 00:30 local (22:30 UTC the previous day) is still on yesterday's
+    // challenge, so the id must not have advanced — otherwise the hint keys
+    // and the puzzle would belong to different days.
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date("2026-08-02T22:30:00Z"))
+    expect(getDailyLevelId()).toBe("daily-2026-08-02")
+  })
+
+  it("does not lag behind at local evening west of UTC", () => {
+    // New York at 20:00 local on 2 August is already 3 August in UTC, and the
+    // server is already serving the new puzzle.
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date("2026-08-03T00:30:00Z"))
+    expect(getDailyLevelId()).toBe("daily-2026-08-03")
   })
 
   afterEach(() => {
