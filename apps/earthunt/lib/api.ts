@@ -157,11 +157,12 @@ export async function getLevel(params: {
 }
 
 export async function getProfile(userId: string): Promise<ProfileResponse> {
-  const res = await fetch(
+  const res = await fetchWithTimeout(
     `${API_BASE_URL}/profile?${new URLSearchParams({ userId })}`,
-    { method: "GET", headers: { "Content-Type": "application/json" } }
+    { method: "GET", headers: { "Content-Type": "application/json" } },
+    REQUEST_TIMEOUT_MS
   )
-  if (!res.ok) throw new Error(`Get profile failed: ${res.status}`)
+  if (!res.ok) throw new ApiHttpError(`Get profile failed: ${res.status}`, res.status)
   return res.json()
 }
 

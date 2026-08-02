@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { getCountriesByContinent } from "./countries"
 import { buildOfflineLevelParams } from "./game-logic"
+import { setPersistedHint } from "./hint-storage"
 import { useGameStore } from "./game-store"
 
 const store = () => useGameStore.getState()
@@ -169,6 +170,58 @@ describe("game store", () => {
     it("returns null when no game is in progress", () => {
       store().goHome()
       expect(store().consumeHintFirstLetter("en")).toBeNull()
+    })
+
+    describe("resuming a level", () => {
+      // The hints survive in localStorage but the store is memory-only. Without
+      // rebuilding the counter, a player who quits mid-level and comes back is
+      // scored as if they had used no hint at all.
+      it("counts hints paid for in a previous session", () => {
+        const params = buildOfflineLevelParams("world", 2)
+        setPersistedHint("world", 2, "", params.countryCodes[0], "letter", "F")
+        setPersistedHint("world", 2, "", params.countryCodes[0], "map", true)
+
+        store().setGameFromLevel(params)
+
+        expect(store().hintsUsed).toBe(2)
+      })
+
+      it("starts at zero when nothing was ever paid for", () => {
+        store().setGameFromLevel(buildOfflineLevelParams("world", 2))
+        expect(store().hintsUsed).toBe(0)
+      })
+
+      it("keeps counting on top of the restored total", () => {
+        const params = buildOfflineLevelParams("world", 2)
+        setPersistedHint("world", 2, "", params.countryCodes[0], "letter", "F")
+        store().setGameFromLevel(params)
+
+        store().consumeHintFullName("en")
+
+        expect(store().hintsUsed).toBe(2)
+      })
+
+      it("does not import hints from a different level", () => {
+        setPersistedHint("world", 9, "", "FRA", "letter", "F")
+        store().setGameFromLevel(buildOfflineLevelParams("world", 2))
+        expect(store().hintsUsed).toBe(0)
+      })
+
+      it("restores the count for a continent level too", () => {
+        const params = buildOfflineLevelParams("continent", 3, "EUROPE")
+        setPersistedHint(
+          "continent",
+          3,
+          "EUROPE",
+          params.countryCodes[0],
+          "name",
+          "Italie"
+        )
+
+        store().setGameFromLevel(params)
+
+        expect(store().hintsUsed).toBe(1)
+      })
     })
   })
 

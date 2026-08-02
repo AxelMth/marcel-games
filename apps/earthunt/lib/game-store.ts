@@ -2,6 +2,7 @@ import { create } from "zustand"
 import type { Country, Continent, CountryLocale } from "./countries"
 import { getCountriesByCodes, getCountryName } from "./countries"
 import { createGameConfig, matchCountry, type GameConfig } from "./game-logic"
+import { countPersistedHints } from "./hint-storage"
 
 export type Screen = "home" | "continent-select" | "game" | "success" | "stats"
 
@@ -195,7 +196,14 @@ export const useGameStore = create<GameState>((set, get) => ({
         elapsedTime: 0,
         lastGuessResult: null,
         highlightedCountry: null,
-        hintsUsed: 0,
+        // Same reason as setGameFromLevel: a level the player already
+        // part-played must keep counting the hints they paid for.
+        hintsUsed: countPersistedHints(
+          mode,
+          pendingNextLevel,
+          continent ?? "",
+          pendingNextCountryCodes
+        ),
         pendingNextLevel: null,
         pendingNextCountryCodes: null,
       })
@@ -215,7 +223,12 @@ export const useGameStore = create<GameState>((set, get) => ({
         elapsedTime: 0,
         lastGuessResult: null,
         highlightedCountry: null,
-        hintsUsed: 0,
+        hintsUsed: countPersistedHints(
+          "world",
+          newLevel,
+          "",
+          config.missingCountries.map((c) => c.code)
+        ),
       })
     } else if (state.gameConfig.mode === "continent" && state.gameConfig.continent) {
       const continent = state.gameConfig.continent
@@ -231,7 +244,12 @@ export const useGameStore = create<GameState>((set, get) => ({
         elapsedTime: 0,
         lastGuessResult: null,
         highlightedCountry: null,
-        hintsUsed: 0,
+        hintsUsed: countPersistedHints(
+          "continent",
+          newLevel,
+          continent,
+          config.missingCountries.map((c) => c.code)
+        ),
       })
     } else {
       set({ screen: "home" })
@@ -261,7 +279,10 @@ export const useGameStore = create<GameState>((set, get) => ({
       elapsedTime: 0,
       lastGuessResult: null,
       highlightedCountry: null,
-      hintsUsed: 0,
+      // Hints outlive the app (localStorage) but this counter does not. Rebuild
+      // it, or a resumed level is scored as if no hint had ever been taken —
+      // three stars despite the help, and a false hintsUsed sent to the server.
+      hintsUsed: countPersistedHints(mode, level, continent ?? "", countryCodes),
       gameError: null,
       worldLevelWasFromApiLoad: mode === "world",
     })
