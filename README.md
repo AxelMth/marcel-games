@@ -102,8 +102,11 @@ to publish a brand-new listing. Generate it once, then back up both the `.jks`
 and its passwords in a password manager (never in this repo — `*.jks` and
 `keystore.properties` are gitignored):
 
+`keytool` ships with the JDK, but the `openjdk@21` formula is keg-only — it is
+not on `PATH`, so call it through `JAVA_HOME` (exported above):
+
 ```bash
-keytool -genkeypair -v -keystore apps/earthunt/android/upload-keystore.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000
+"$JAVA_HOME/bin/keytool" -genkeypair -v -keystore apps/earthunt/android/upload-keystore.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000
 ```
 
 Copy `apps/earthunt/android/keystore.properties.example` to
