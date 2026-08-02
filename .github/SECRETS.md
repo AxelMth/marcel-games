@@ -16,9 +16,24 @@ Set these in **Settings → Secrets and variables → Actions**.
 | `FLY_EARTHUNT_API_TOKEN` | `server-ci.yml` | `flyctl deploy` token for `earthunt-api` |
 | `FLY_WORDCLIMB_API_TOKEN` | `server-ci.yml` | `flyctl deploy` token for `wordclimb-api` |
 
-> Note: `apps-ci.yml` deploys OTA Live Updates to the **Production** channel only
-> on push to `main` (and manual `workflow_dispatch`). Pull requests run lint + build
-> as a gate but do not deploy.
+> Note: `IONIC_TOKEN` / `APPFLOW_ID_*` are no longer read by `apps-ci.yml` — the
+> OTA Live Update steps were removed with the `@capacitor/live-updates` plugin.
+> They stay listed here because AppFlow still builds the store binaries; the CLI
+> is just no longer invoked from CI.
+
+## Android upload key (local / never in git)
+
+Play requires a signed bundle. The upload key has **no recovery path**: losing it
+means you can never publish an update to the listing again.
+
+| Item | Where it lives | Notes |
+| --- | --- | --- |
+| `upload-keystore.jks` | `apps/earthunt/android/` (gitignored) | Back up off-machine — a password manager, not this repo |
+| `keystore.properties` | `apps/earthunt/android/` (gitignored) | From `keystore.properties.example`; holds the two passwords + alias |
+
+For CI, pass the same four values as `ORG_GRADLE_PROJECT_*` environment
+variables instead of the file, and inject the keystore from a base64 secret.
+See the "Building an Android release locally" section of the README.
 
 ## AppFlow build environment variables
 
