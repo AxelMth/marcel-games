@@ -28,7 +28,38 @@ export default defineConfig({
   projects: [
     // Both locales run the whole suite: the language comes from
     // navigator.language, and a missing translation only shows up this way.
-    { name: "iphone-fr", use: { ...IPHONE, locale: "fr-FR" } },
-    { name: "iphone-en", use: { ...IPHONE, locale: "en-US" } },
+    {
+      name: "iphone-fr",
+      testIgnore: /screenshots\.spec\.ts/,
+      use: { ...IPHONE, locale: "fr-FR" },
+    },
+    {
+      name: "iphone-en",
+      testIgnore: /screenshots\.spec\.ts/,
+      use: { ...IPHONE, locale: "en-US" },
+    },
+    // Store screenshots. 1290x2796 is the App Store 6.9" requirement; the
+    // viewport is in CSS pixels at dsf 3, so 430x932 renders at exactly that.
+    // Skipped unless SCREENSHOTS=1 (see screenshots.spec.ts).
+    {
+      name: "screenshots-fr",
+      testMatch: /screenshots\.spec\.ts/,
+      use: {
+        ...IPHONE,
+        locale: "fr-FR",
+        viewport: { width: 430, height: 932 },
+        deviceScaleFactor: 3,
+      },
+    },
+    {
+      name: "screenshots-en",
+      testMatch: /screenshots\.spec\.ts/,
+      use: {
+        ...IPHONE,
+        locale: "en-US",
+        viewport: { width: 430, height: 932 },
+        deviceScaleFactor: 3,
+      },
+    },
   ],
 })

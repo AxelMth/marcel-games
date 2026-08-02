@@ -12,6 +12,7 @@
     "test:watch": "vitest",
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
+    "screenshots": "NEXT_PUBLIC_SCREENSHOT_MODE=1 next build && SCREENSHOTS=1 playwright test --project=screenshots-fr --project=screenshots-en",
     "mobile": "next build && npx cap sync",
     "ios:env": "node scripts/generate-env-xcconfig.mjs",
     "assets": "capacitor-assets generate",

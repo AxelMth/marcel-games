@@ -13,6 +13,15 @@ process.env.NEXT_PUBLIC_API_BASE_URL = "http://api.invalid"
 const PRISTINE_STORE_STATE = useGameStore.getState()
 
 beforeEach(() => {
+  // jsdom 30 does not provide localStorage on Node 25+, which otherwise makes
+  // every single test fail with an opaque "Cannot read properties of
+  // undefined". See .nvmrc — the project runs on Node 22.
+  if (typeof window.localStorage === "undefined") {
+    throw new Error(
+      `jsdom did not provide localStorage on Node ${process.version}. ` +
+        "Use the Node version in .nvmrc (nvm use)."
+    )
+  }
   window.localStorage.clear()
   window.sessionStorage.clear()
   useGameStore.setState(PRISTINE_STORE_STATE, true)
