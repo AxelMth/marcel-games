@@ -37,7 +37,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version-file: ".nvmrc"
           cache: "pnpm"
 
       - name: Install dependencies
@@ -46,12 +46,31 @@ jobs:
       - name: Lint apps and packages
         run: pnpm lint
 
+      - name: Run unit tests
+        run: pnpm test
+
       - name: Build all apps
         run: pnpm build
         env:
           # Dummy token so the earthunt production-build guard passes in CI.
           # Store builds run on AppFlow with the real token from its dashboard.
           NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: ci-placeholder
+
+      # WebKit only: the app runs inside WKWebView on iOS, so this is the engine
+      # that matters. The suite serves the static export built above.
+      - name: Install Playwright WebKit
+        run: pnpm --filter @marcel-games/earthunt exec playwright install --with-deps webkit
+
+      - name: Run end-to-end tests
+        run: pnpm --filter @marcel-games/earthunt e2e
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/earthunt/playwright-report/
+          retention-days: 7
 
 # Live Updates (OTA) deploy steps were removed along with the
 # @capacitor/live-updates plugin: no JS ever called LiveUpdates.sync(), so the

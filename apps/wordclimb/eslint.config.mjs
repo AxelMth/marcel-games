@@ -10,6 +10,8 @@ export default [
       "**/ios/**",
       "**/android/**",
       "**/next-env.d.ts",
+      "**/playwright-report/**",
+      "**/test-results/**",
     ],
   },
   {
