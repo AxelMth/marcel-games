@@ -68,24 +68,46 @@ export type ProfileResponse = {
 }
 
 const PROGRESS_TIMEOUT_MS = 10_000
+// Level and launch calls block the "start game" tap. Without a timeout, a
+// sleeping Fly machine or a restricted network reads as an app freeze — the
+// offline fallback can only kick in if these calls give up.
+const REQUEST_TIMEOUT_MS = 8_000
 
-export async function getProgress(userId: string): Promise<ProgressResponse> {
+/**
+ * Thrown when the server responded with a non-2xx status. Distinguishes
+ * "the server rejected this" (don't retry) from network failures (retry later)
+ * when replaying queued offline results.
+ */
+export class ApiHttpError extends Error {
+  status: number
+  constructor(message: string, status: number) {
+    super(message)
+    this.status = status
+  }
+}
+
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeoutMs: number
+): Promise<Response> {
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), PROGRESS_TIMEOUT_MS)
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
   try {
-    const res = await fetch(
-      `${API_BASE_URL}/progress?${new URLSearchParams({ userId })}`,
-      {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        signal: controller.signal,
-      }
-    )
-    if (!res.ok) throw new Error(`Get progress failed: ${res.status}`)
-    return res.json()
+    return await fetch(url, { ...init, signal: controller.signal })
   } finally {
     clearTimeout(timeoutId)
   }
+}
+
+export async function getProgress(userId: string): Promise<ProgressResponse> {
+  const res = await fetchWithTimeout(
+    `${API_BASE_URL}/progress?${new URLSearchParams({ userId })}`,
+    { method: "GET", headers: { "Content-Type": "application/json" } },
+    PROGRESS_TIMEOUT_MS
+  )
+  if (!res.ok) throw new ApiHttpError(`Get progress failed: ${res.status}`, res.status)
+  return res.json()
 }
 
 export async function postLaunch(body: {
@@ -100,12 +122,16 @@ export async function postLaunch(body: {
   gameMode: GameMode
   continent: Continent | ""
 }): Promise<LaunchResponse> {
-  const res = await fetch(`${API_BASE_URL}/launch`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  })
-  if (!res.ok) throw new Error(`Launch failed: ${res.status}`)
+  const res = await fetchWithTimeout(
+    `${API_BASE_URL}/launch`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    },
+    REQUEST_TIMEOUT_MS
+  )
+  if (!res.ok) throw new ApiHttpError(`Launch failed: ${res.status}`, res.status)
   return res.json()
 }
 
@@ -121,11 +147,12 @@ export async function getLevel(params: {
   })
   if (params.continent) search.set("continent", params.continent)
   if (params.level != null) search.set("level", String(params.level))
-  const res = await fetch(`${API_BASE_URL}/level?${search}`, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-  })
-  if (!res.ok) throw new Error(`Get level failed: ${res.status}`)
+  const res = await fetchWithTimeout(
+    `${API_BASE_URL}/level?${search}`,
+    { method: "GET", headers: { "Content-Type": "application/json" } },
+    REQUEST_TIMEOUT_MS
+  )
+  if (!res.ok) throw new ApiHttpError(`Get level failed: ${res.status}`, res.status)
   return res.json()
 }
 
@@ -147,11 +174,15 @@ export async function postFinishLevel(body: {
   continent: Continent | ""
   countryCodes: string[]
 }): Promise<FinishLevelResponse> {
-  const res = await fetch(`${API_BASE_URL}/level`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  })
-  if (!res.ok) throw new Error(`Finish level failed: ${res.status}`)
+  const res = await fetchWithTimeout(
+    `${API_BASE_URL}/level`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    },
+    REQUEST_TIMEOUT_MS
+  )
+  if (!res.ok) throw new ApiHttpError(`Finish level failed: ${res.status}`, res.status)
   return res.json()
 }

@@ -8,11 +8,11 @@ import {
 } from "@marcel-games/ui"
 import { useLanguage } from "@/components/language-provider"
 
-// TODO(legal): replace with your real support email and host this policy at a
-// public URL (the App Store / Play Store listings both require a privacy policy
-// URL). Have the text reviewed before submission — this is an honest starting
+// The same policy is published at legal/earthunt-privacy-and-terms.md and
+// hosted via the legal-pages workflow; both store listings require that public
+// URL. Have the text reviewed before submission — it is an honest starting
 // draft, not legal advice.
-const CONTACT_EMAIL = "aujoulator1995@gmail.com"
+const CONTACT_EMAIL = "ceo@axelmathi.eu"
 const LAST_UPDATED = "2026-06-30"
 
 interface LegalModalProps {

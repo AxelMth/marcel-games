@@ -51,7 +51,7 @@ export function GameScreen() {
           normalizeCountryName(c.nameFr).includes(normalized)
       )
       .slice(0, 5)
-  }, [input, lang])
+  }, [input])
 
   if (!gameConfig) return null
 

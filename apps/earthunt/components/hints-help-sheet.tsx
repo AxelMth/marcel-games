@@ -36,11 +36,11 @@ export function HintsHelpSheet({
   const {
     gameConfig,
     foundCountries,
-    useHintFirstLetter,
-    useHintShowOnMap,
-    useHintFullName,
+    consumeHintFirstLetter,
+    consumeHintShowOnMap,
+    consumeHintFullName,
   } = useGameStore()
-  const { showRewardedAd } = useRewardedAd({ isRandom: true })
+  const { showRewardedAd } = useRewardedAd()
   const [localResult, setLocalResult] = useState<{
     letter?: string
     map?: boolean
@@ -78,7 +78,7 @@ export function HintsHelpSheet({
   }, [localResult, persistedHints])
 
   const handleFirstLetter = () => {
-    const letter = useHintFirstLetter(lang)
+    const letter = consumeHintFirstLetter(lang)
     if (letter && gameConfig && firstMissingCode) {
       const result = tReplace("hintsHelp.startsWith", { letter })
       setPersistedHint(
@@ -95,7 +95,7 @@ export function HintsHelpSheet({
 
   const handleShowOnMap = () => {
     showRewardedAd(() => {
-      const code = useHintShowOnMap()
+      const code = consumeHintShowOnMap()
       if (code && gameConfig && firstMissingCode) {
         setPersistedHint(
           gameConfig.mode,
@@ -113,7 +113,7 @@ export function HintsHelpSheet({
 
   const handleFullName = () => {
     showRewardedAd(() => {
-      const name = useHintFullName(lang)
+      const name = consumeHintFullName(lang)
       if (name && gameConfig && firstMissingCode) {
         setPersistedHint(
           gameConfig.mode,

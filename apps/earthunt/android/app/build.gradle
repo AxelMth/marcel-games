@@ -1,5 +1,16 @@
 apply plugin: 'com.android.application'
 
+// Upload-key credentials. keystore.properties is gitignored and never
+// committed: losing the key means never being able to update the app on Play,
+// and leaking it lets anyone ship as us. Copy keystore.properties.example and
+// fill it in, or set the same four values as ORG_GRADLE_PROJECT_* env vars in CI.
+def keystorePropsFile = rootProject.file("keystore.properties")
+def keystoreProps = new Properties()
+if (keystorePropsFile.exists()) {
+    keystoreProps.load(new FileInputStream(keystorePropsFile))
+}
+def hasUploadKey = keystoreProps.containsKey("storeFile")
+
 android {
     namespace = "com.marcelgames.earthunt"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +18,9 @@ android {
         applicationId "com.marcelgames.earthunt"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
+        // Play only requires versionCode to increase; it is independent of iOS.
         versionCode 1
-        versionName "1.0"
+        versionName "2.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,10 +28,37 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (hasUploadKey) {
+            release {
+                storeFile rootProject.file(keystoreProps["storeFile"])
+                storePassword keystoreProps["storePassword"]
+                keyAlias keystoreProps["keyAlias"]
+                keyPassword keystoreProps["keyPassword"]
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            // Without this the release bundle is unsigned and Play rejects the
+            // upload. Left unset (and loudly reported at build time) when no
+            // keystore.properties exists, rather than silently shipping debug keys.
+            if (hasUploadKey) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+}
+
+tasks.matching { it.name == "bundleRelease" || it.name == "assembleRelease" }.configureEach {
+    doFirst {
+        if (!hasUploadKey) {
+            throw new GradleException(
+                "No upload key: create android/keystore.properties from " +
+                "keystore.properties.example (see README) before building a release."
+            )
         }
     }
 }

@@ -78,6 +78,50 @@ The native `ios/` and `android/` projects are committed to git (AppFlow builds
 from them). Web assets are statically exported to `out/` (`output: "export"`) and
 embedded via Capacitor `webDir: "out"`.
 
+### Building an Android release locally
+
+Toolchain (once per machine — no Android Studio needed):
+
+```bash
+brew install openjdk@21 && brew install --cask android-commandlinetools
+```
+
+Then point Gradle at the SDK and install the platform:
+
+```bash
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21
+export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools
+yes | sdkmanager --licenses
+sdkmanager --install "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+echo "sdk.dir=$ANDROID_HOME" > apps/earthunt/android/local.properties
+```
+
+**Upload key.** Play requires a signed bundle, and the upload key has no
+recovery path: lose it and you can never update the app again — you would have
+to publish a brand-new listing. Generate it once, then back up both the `.jks`
+and its passwords in a password manager (never in this repo — `*.jks` and
+`keystore.properties` are gitignored):
+
+`keytool` ships with the JDK, but the `openjdk@21` formula is keg-only — it is
+not on `PATH`, so call it through `JAVA_HOME` (exported above):
+
+```bash
+"$JAVA_HOME/bin/keytool" -genkeypair -v -keystore apps/earthunt/android/upload-keystore.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000
+```
+
+Copy `apps/earthunt/android/keystore.properties.example` to
+`keystore.properties` and fill in the passwords you just chose. Then build the
+bundle to upload:
+
+```bash
+pnpm --filter @marcel-games/earthunt mobile
+cd apps/earthunt/android && ./gradlew bundleRelease
+```
+
+The `.aab` lands in `app/build/outputs/bundle/release/`. `bundleRelease` fails
+fast with an explicit message if `keystore.properties` is missing, rather than
+silently producing an unsigned or debug-signed bundle that Play would reject.
+
 ## Deployment
 
 | Target | Trigger | Workflow | What it does |

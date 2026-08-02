@@ -7,3 +7,6 @@ node_modules
 # Turbo
 .turbo
 */**/.turbo
+
+# TypeScript incremental build cache
+*.tsbuildinfo

@@ -9,6 +9,7 @@
     "start": "next start --port 3001",
     "lint": "eslint .",
     "mobile": "next build && npx cap sync",
+    "ios:env": "node scripts/generate-env-xcconfig.mjs",
     "assets": "capacitor-assets generate",
     "add:ios": "npx cap add ios",
     "add:android": "npx cap add android"
@@ -20,7 +21,6 @@
     "@capacitor/core": "^8.1.0",
     "@capacitor/device": "^8.0.1",
     "@capacitor/ios": "^8.1.0",
-    "@capacitor/live-updates": "^0.5.0",
     "@capacitor/preferences": "^8.0.1",
     "@capacitor/status-bar": "^8.0.1",
     "@marcel-games/lib": "workspace:*",

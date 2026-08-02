@@ -1,5 +1,5 @@
 {
-  "originHash" : "b0c0ae99e5685a2a48f332f940d0288656c96e0a2b7f2d94c386c247db246ade",
+  "originHash" : "14b5e9db0f0dc0f6f629c29fa7e5585c5cfef76ef5e8d484d2c03b8871af0535",
   "pins" : [
     {
       "identity" : "capacitor-swift-pm",
@@ -8,15 +8,6 @@
       "state" : {
         "revision" : "1f324fe7bdbdc8c5cc28bea48a231545a8c2e823",
         "version" : "8.1.0"
-      }
-    },
-    {
-      "identity" : "ionic-live-updates-releases",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/ionic-team/ionic-live-updates-releases.git",
-      "state" : {
-        "revision" : "abfe9cc9d15acfffb7ca8a1b443eb1e41efef1fd",
-        "version" : "0.5.7"
       }
     },
     {

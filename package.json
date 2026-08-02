@@ -16,9 +16,11 @@
     "cap:sync:wordclimb": "turbo run cap:sync --filter=@marcel-games/wordclimb"
   },
   "devDependencies": {
-    "turbo": "^2.3.3",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "prettier": "^3.4.2",
-    "typescript": "5.7.3"
+    "turbo": "^2.3.3",
+    "typescript": "5.7.3",
+    "typescript-eslint": "^8.65.0"
   },
   "engines": {
     "node": ">=20",

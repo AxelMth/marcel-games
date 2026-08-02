@@ -5,19 +5,14 @@ const config: CapacitorConfig = {
   appName: 'wordclimb',
   webDir: 'out',
   plugins: {
-    LiveUpdates: {
-      appId: '860819d5',
-      channel: 'Production',
-      // 'none' (was 'background'): the automatic launch-time native sync can raise
-      // an uncaught exception on restricted networks (e.g. App Store review),
-      // crashing the app on launch. With 'none' no sync runs at launch. To
-      // re-enable OTA later, call LiveUpdates.sync() from JS after load, guarded.
-      autoUpdateMethod: 'none',
-      maxVersions: 2
-    }
-    // No AdMob: WordClimb ships ad-free (the @capacitor-community/admob plugin
-    // is not a dependency of this app). If ads are added later, install the
-    // plugin and re-add the AdMob config + native app IDs here.
+    // No LiveUpdates: the plugin was configured here but never installed
+    // natively, and it runs launch-time native code with fatalError paths even
+    // when autoUpdateMethod is 'none'. Removed for the same reason as earthunt.
+    //
+    // AdMob is not wired yet. When ads land, install
+    // @capacitor-community/admob and set GADApplicationIdentifier in
+    // Info.plist plus APPLICATION_ID in AndroidManifest.xml — those native keys
+    // are what the SDK actually reads, and omitting them crashes at launch.
   }
 };
 

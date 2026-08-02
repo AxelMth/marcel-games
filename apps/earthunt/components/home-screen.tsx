@@ -10,6 +10,7 @@ import { useLevelApi } from "@/hooks/use-level"
 import { getProgress } from "@/lib/api"
 import { getProgressCache, setProgressCache } from "@/lib/progress-cache"
 import { countries } from "@/lib/countries"
+import { buildOfflineLevelParams } from "@/lib/game-logic"
 import { ScreenHeader } from "@/components/screen-header"
 
 const modes = [
@@ -155,6 +156,13 @@ export function HomeScreen() {
     setSelectedIndex(Math.max(0, Math.min(modes.length - 1, index)))
   }, [getScrollStep, scrollPadding])
 
+  // Offline fallback: generate the level locally instead of blocking the
+  // player behind an error. Same deterministic generator, same store action.
+  const startOffline = (mode: "world" | "daily") => {
+    const level = mode === "world" ? (progress?.worldLevel ?? 1) : 1
+    setGameFromLevel(buildOfflineLevelParams(mode, level))
+  }
+
   const startFromApi = async (mode: "world" | "daily") => {
     setLoadingGame(true)
     setGameError(null)
@@ -166,7 +174,7 @@ export function HomeScreen() {
         if (uid) setUserId(uid)
       }
       if (!uid) {
-        setGameError(t("errors.couldNotStartGame"))
+        startOffline(mode)
         return
       }
       const data = await loadLevel({
@@ -181,8 +189,8 @@ export function HomeScreen() {
         allCountries: countries,
       })
     } catch (e) {
-      console.error(e)
-        setGameError(e instanceof Error ? e.message : t("errors.failedToLoad"))
+      console.error("Level load failed, starting offline:", e)
+      startOffline(mode)
     } finally {
       setLoadingGame(false)
     }
@@ -204,7 +212,9 @@ export function HomeScreen() {
   }
 
   return (
-    <main className="flex min-h-svh flex-col items-center px-0 py-6 pb-20">
+    // max-w-xl keeps the phone-first layout from stretching into a mostly-empty
+    // column on iPad; mx-auto centres it so the width reads as deliberate.
+    <main className="mx-auto flex min-h-svh w-full max-w-xl flex-col items-center px-0 py-6 pb-20">
       <ScreenHeader title="app.title" subtitle="app.subtitle" onCogClick={() => goToStats()} />
       {gameError && (
         <p className="mb-4 px-5 text-center text-sm font-medium text-red-600">

@@ -91,7 +91,7 @@ export function StatsScreen() {
         : t("home.daily")
 
   return (
-    <main className="flex min-h-svh flex-col px-0 py-6 pb-20">
+    <main className="mx-auto flex min-h-svh w-full max-w-xl flex-col px-0 py-6 pb-20">
       <ScreenHeader
         title="profile.stats"
         showBackButton
