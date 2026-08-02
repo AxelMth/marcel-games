@@ -7,9 +7,14 @@ apply plugin: 'com.android.application'
 def keystorePropsFile = rootProject.file("keystore.properties")
 def keystoreProps = new Properties()
 if (keystorePropsFile.exists()) {
-    keystoreProps.load(new FileInputStream(keystorePropsFile))
+    keystorePropsFile.withInputStream { keystoreProps.load(it) }
 }
-def hasUploadKey = keystoreProps.containsKey("storeFile")
+// All four are required. A partially filled file (a missing keyPassword is the
+// classic one) otherwise reaches bundletool as a null and surfaces as a bare
+// NullPointerException in signReleaseBundle, which says nothing about the cause.
+def REQUIRED_KEY_PROPS = ["storeFile", "storePassword", "keyAlias", "keyPassword"]
+def missingKeyProps = REQUIRED_KEY_PROPS.findAll { !keystoreProps.getProperty(it)?.trim() }
+def hasUploadKey = keystorePropsFile.exists() && missingKeyProps.isEmpty()
 
 android {
     namespace = "com.marcelgames.earthunt"
@@ -55,9 +60,12 @@ android {
 tasks.matching { it.name == "bundleRelease" || it.name == "assembleRelease" }.configureEach {
     doFirst {
         if (!hasUploadKey) {
+            def reason = keystorePropsFile.exists()
+                ? "android/keystore.properties is missing or has empty: ${missingKeyProps.join(', ')}"
+                : "android/keystore.properties does not exist"
             throw new GradleException(
-                "No upload key: create android/keystore.properties from " +
-                "keystore.properties.example (see README) before building a release."
+                "Cannot sign the release: ${reason}. Copy " +
+                "keystore.properties.example and fill in all four values (see README)."
             )
         }
     }
