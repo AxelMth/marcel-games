@@ -1,3 +1,5 @@
-// Env.xcconfig is generated from .env by scripts/generate-env-xcconfig.mjs. For first-time clone, run that script or force-add a stub: git add -f ios/Env.xcconfig
-#include "Env.xcconfig"
+// Env.xcconfig is generated from .env by scripts/generate-env-xcconfig.mjs
+// (wired as the "ios:env" npm script). The optional include keeps a fresh
+// clone buildable before the script has ever run.
+#include? "Env.xcconfig"
 CAPACITOR_DEBUG = true

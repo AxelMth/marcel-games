@@ -17,7 +17,11 @@ function getAdId(ids: AdIds): string {
 }
 
 export interface UseRewardedAdOptions {
-  /** When true, 50% chance to skip the ad and call successCallback immediately. */
+  /**
+   * When true, 50% chance to skip the ad and call successCallback immediately.
+   * Defaults to false: skipping the ad forfeits the revenue of half the
+   * rewarded impressions while granting the reward anyway.
+   */
   isRandom?: boolean
 }
 
@@ -29,7 +33,7 @@ export function useRewardedAd(
   adIds: AdIds,
   options: UseRewardedAdOptions = {}
 ) {
-  const { isRandom = true } = options
+  const { isRandom = false } = options
   const preparedRef = useRef(false)
   const isNative =
     typeof window !== "undefined" && Capacitor.isNativePlatform()

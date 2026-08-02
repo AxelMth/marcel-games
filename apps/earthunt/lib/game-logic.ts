@@ -90,8 +90,40 @@ export function createGameConfig(
   }
 }
 
+/**
+ * Builds the same params shape as a GET /level response, from the local
+ * deterministic generator. Used as the offline fallback when the API is
+ * unreachable, so screens can feed it straight into setGameFromLevel.
+ */
+export function buildOfflineLevelParams(
+  mode: "world" | "continent" | "daily",
+  level: number,
+  continent?: Continent
+): {
+  mode: "world" | "continent" | "daily"
+  level: number
+  continent?: Continent
+  countryCodes: string[]
+  allCountries: Country[]
+} {
+  const config = createGameConfig(mode, level, continent)
+  return {
+    mode,
+    level,
+    continent,
+    countryCodes: config.missingCountries.map((c) => c.code),
+    allCountries: config.allCountries,
+  }
+}
+
 export function normalizeCountryName(name: string): string {
-  return name.trim().toLowerCase().replace(/[^a-z\s-]/g, "")
+  // Fold diacritics before stripping so "Brésil" and "Bresil" both become "bresil".
+  return name
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/[^a-z\s-]/g, "")
 }
 
 export function matchCountry(input: string, countriesList: Country[]): Country | null {

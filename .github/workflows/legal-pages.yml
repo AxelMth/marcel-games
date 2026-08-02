@@ -1,0 +1,41 @@
+# Publishes legal/ (privacy policies & terms) to GitHub Pages.
+# The App Store and Play Store listings require a PUBLIC privacy-policy URL;
+# the markdown lived in the repo but was never hosted anywhere.
+#
+# One-time setup: repo Settings → Pages → Source: "GitHub Actions".
+# Resulting URLs (once enabled):
+#   https://<owner>.github.io/<repo>/earthunt-privacy-and-terms
+#   https://<owner>.github.io/<repo>/wordclimb-privacy-and-terms
+name: Publish legal pages
+
+on:
+  push:
+    branches: [main]
+    paths: ["legal/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./legal
+          destination: ./_site
+      - uses: actions/upload-pages-artifact@v3
+      - id: deployment
+        uses: actions/deploy-pages@v4

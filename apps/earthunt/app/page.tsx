@@ -12,6 +12,7 @@ import { askForTrackingPermission } from "@/lib/app-tracking-transparency"
 import { useLaunch } from "@/hooks/use-launch"
 import { getProgress } from "@/lib/api"
 import { getProgressCache, setProgressCache } from "@/lib/progress-cache"
+import { flushPendingResults } from "@/lib/pending-results"
 
 const SPLASH_STORAGE_KEY = "splash-done"
 
@@ -33,6 +34,8 @@ export default function Page() {
       const uid = await launch("WORLD", "")
       if (uid) setUserId(uid)
       if (uid) {
+        // Replay any level results completed while offline (fire and forget).
+        flushPendingResults(uid).catch(() => {})
         try {
           const p = await getProgress(uid)
           const next = {
@@ -43,6 +46,7 @@ export default function Page() {
           setProgress(next)
           setProgressCache(next)
         } catch (progressError) {
+          console.error("Progress fetch failed, using cache:", progressError)
           const cached =
             typeof window !== "undefined" ? getProgressCache() : null
           if (cached) {
@@ -51,9 +55,9 @@ export default function Page() {
               continentLevels: cached.continentLevels ?? {},
               dailyCompleted: cached.dailyCompleted,
             })
-          } else {
-            throw progressError
           }
+          // No cache: a fresh install with no network. Continue with defaults
+          // (level 1 everywhere) — the offline level generator takes over.
         }
       }
     } catch (e) {

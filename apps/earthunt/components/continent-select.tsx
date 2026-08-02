@@ -10,6 +10,7 @@ import { useLevelApi } from "@/hooks/use-level"
 import { getProgress } from "@/lib/api"
 import { getProgressCache, setProgressCache } from "@/lib/progress-cache"
 import { getCountriesByContinent, type Continent } from "@/lib/countries"
+import { buildOfflineLevelParams } from "@/lib/game-logic"
 import { ScreenHeader } from "@/components/screen-header"
 import { ProfileModal } from "@/components/profile-modal"
 
@@ -110,6 +111,13 @@ export function ContinentSelect() {
     setSelectedIndex(Math.max(0, Math.min(CONTINENT_OPTIONS.length - 1, index)))
   }, [getScrollStep])
 
+  // Offline fallback: local deterministic level at the player's cached
+  // progress for this continent, instead of an error screen.
+  const startOffline = (continent: Continent) => {
+    const level = progress?.continentLevels?.[continent] ?? 1
+    setGameFromLevel(buildOfflineLevelParams("continent", level, continent))
+  }
+
   const startContinentFromApi = async (continent: Continent) => {
     setLoadingGame(true)
     setGameError(null)
@@ -121,7 +129,7 @@ export function ContinentSelect() {
         if (uid) setUserId(uid)
       }
       if (!uid) {
-        setGameError(t("errors.couldNotStartGame"))
+        startOffline(continent)
         return
       }
       const data = await loadLevel({
@@ -138,15 +146,15 @@ export function ContinentSelect() {
         allCountries,
       })
     } catch (e) {
-      console.error(e)
-        setGameError(e instanceof Error ? e.message : t("errors.failedToLoad"))
+      console.error("Level load failed, starting offline:", e)
+      startOffline(continent)
     } finally {
       setLoadingGame(false)
     }
   }
 
   return (
-    <main className="flex min-h-svh flex-col px-0 py-6">
+    <main className="mx-auto flex min-h-svh w-full max-w-xl flex-col px-0 py-6">
       <ScreenHeader
         title="app.title"
         subtitle="app.subtitle"

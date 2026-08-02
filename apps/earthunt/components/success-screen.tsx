@@ -10,6 +10,8 @@ import { useInterstitialAd } from "@/hooks/use-interstitial-ad"
 import { NUMBER_OF_LEVELS_BETWEEN_ADS } from "@/lib/ad-constants"
 import { getStars } from "@/lib/stars"
 import { setProgressCache } from "@/lib/progress-cache"
+import { enqueuePendingResult } from "@/lib/pending-results"
+import type { Continent as ApiContinent } from "@/lib/api"
 
 const CARD_DELAY_MS = 120
 const MODE_LABEL_DELAY_MS = 500
@@ -48,61 +50,104 @@ export function SuccessScreen() {
   }, [screen])
 
   useEffect(() => {
-    if (!gameConfig || !userId || hasPostedFinish.current) return
+    if (!gameConfig || hasPostedFinish.current) return
     hasPostedFinish.current = true
     const gameMode = MODE_TO_GAME_MODE[gameConfig.mode]
     const countryCodes = foundCountries.map((c) => c.code)
     // WORLD and LEVEL_OF_THE_DAY use WORLD as continent; CONTINENTS uses the selected continent
-    const continent =
+    const continent: ApiContinent =
       gameConfig.mode === "world" || gameConfig.mode === "daily"
         ? "WORLD"
         : (gameConfig.continent ?? "WORLD")
-    finishLevel({
-      userId,
+    const payload = {
       attempts,
       timeSpent: elapsedTime,
       hintsUsed,
       gameMode,
       continent,
       countryCodes,
-    })
+    }
+
+    const applyProgress = (nextLevel: number) => {
+      const current = progress ?? {
+        worldLevel: 1,
+        continentLevels: {} as Record<string, number>,
+        dailyCompleted: false,
+      }
+      let updated: { worldLevel: number; continentLevels: Record<string, number>; dailyCompleted: boolean }
+      if (gameConfig.mode === "world") {
+        updated = {
+          worldLevel: nextLevel,
+          continentLevels: current.continentLevels ?? {},
+          dailyCompleted: current.dailyCompleted ?? false,
+        }
+      } else if (gameConfig.mode === "continent" && gameConfig.continent) {
+        updated = {
+          worldLevel: current.worldLevel ?? 1,
+          continentLevels: { ...(current.continentLevels ?? {}), [gameConfig.continent]: nextLevel },
+          dailyCompleted: current.dailyCompleted ?? false,
+        }
+      } else {
+        updated = {
+          worldLevel: current.worldLevel ?? 1,
+          continentLevels: current.continentLevels ?? {},
+          dailyCompleted: true,
+        }
+      }
+      setProgress(updated)
+      setProgressCache(updated)
+    }
+
+    // Offline path: queue the result for replay on next launch and advance
+    // local progress so the player is never blocked. nextLevel() falls back to
+    // the local generator when no pending level is set.
+    const finishOffline = () => {
+      enqueuePendingResult(payload)
+      applyProgress(gameConfig.level + 1)
+    }
+
+    if (!userId) {
+      finishOffline()
+      return
+    }
+
+    finishLevel({ userId, ...payload })
       .then((res) => {
         setPendingNextLevel(res.nextLevel, res.nextCountryCodes)
-        const current = progress ?? {
-          worldLevel: 1,
-          continentLevels: {} as Record<string, number>,
-          dailyCompleted: false,
-        }
-        let updated: { worldLevel: number; continentLevels: Record<string, number>; dailyCompleted: boolean }
-        if (gameConfig.mode === "world") {
-          updated = {
-            worldLevel: res.nextLevel,
-            continentLevels: current.continentLevels ?? {},
-            dailyCompleted: current.dailyCompleted ?? false,
-          }
-        } else if (gameConfig.mode === "continent" && gameConfig.continent) {
-          updated = {
-            worldLevel: current.worldLevel ?? 1,
-            continentLevels: { ...(current.continentLevels ?? {}), [gameConfig.continent]: res.nextLevel },
-            dailyCompleted: current.dailyCompleted ?? false,
-          }
-        } else {
-          updated = {
-            worldLevel: current.worldLevel ?? 1,
-            continentLevels: current.continentLevels ?? {},
-            dailyCompleted: true,
-          }
-        }
-        setProgress(updated)
-        setProgressCache(updated)
+        applyProgress(res.nextLevel)
       })
-      .catch((e) => console.error("Finish level failed:", e))
+      .catch((e) => {
+        console.error("Finish level failed, queueing offline result:", e)
+        finishOffline()
+      })
   }, [gameConfig, userId, progress, foundCountries, attempts, elapsedTime, hintsUsed, finishLevel, setPendingNextLevel, setProgress])
 
   // Preload interstitial when success screen mounts (for "Next Level" tap)
   useEffect(() => {
     if (gameConfig?.mode !== "daily") preload()
   }, [gameConfig?.mode, preload])
+
+  const [visibleCards, setVisibleCards] = useState([false, false, false, false])
+  const [modeLabelVisible, setModeLabelVisible] = useState(false)
+  const [actionsVisible, setActionsVisible] = useState(false)
+
+  useEffect(() => {
+    const timers: ReturnType<typeof setTimeout>[] = []
+    ;[0, 1, 2, 3].forEach((i) => {
+      timers.push(
+        setTimeout(() => {
+          setVisibleCards((prev) => {
+            const next = [...prev]
+            next[i] = true
+            return next
+          })
+        }, i * CARD_DELAY_MS)
+      )
+    })
+    timers.push(setTimeout(() => setModeLabelVisible(true), MODE_LABEL_DELAY_MS))
+    timers.push(setTimeout(() => setActionsVisible(true), ACTIONS_DELAY_MS))
+    return () => timers.forEach((t) => clearTimeout(t))
+  }, [])
 
   const handleNextLevel = async () => {
     if (!gameConfig) return
@@ -144,34 +189,12 @@ export function SuccessScreen() {
   const rating = { stars, label: ratingLabels[stars] ?? t("success.wellDone") }
   const canNextLevel = gameConfig.mode !== "daily"
 
-  const [visibleCards, setVisibleCards] = useState([false, false, false, false])
-  const [modeLabelVisible, setModeLabelVisible] = useState(false)
-  const [actionsVisible, setActionsVisible] = useState(false)
-
-  useEffect(() => {
-    const timers: ReturnType<typeof setTimeout>[] = []
-    ;[0, 1, 2, 3].forEach((i) => {
-      timers.push(
-        setTimeout(() => {
-          setVisibleCards((prev) => {
-            const next = [...prev]
-            next[i] = true
-            return next
-          })
-        }, i * CARD_DELAY_MS)
-      )
-    })
-    timers.push(setTimeout(() => setModeLabelVisible(true), MODE_LABEL_DELAY_MS))
-    timers.push(setTimeout(() => setActionsVisible(true), ACTIONS_DELAY_MS))
-    return () => timers.forEach((t) => clearTimeout(t))
-  }, [])
-
   const animateClass = "transition-all duration-300 ease-out"
   const hiddenClass = "translate-y-2 opacity-0"
   const visibleClass = "translate-y-0 opacity-100"
 
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center px-4 py-8">
+    <main className="mx-auto flex min-h-svh w-full max-w-xl flex-col items-center justify-center px-4 py-8">
       {/* Logo */}
       <Image
         src="/images/earthunt.png"

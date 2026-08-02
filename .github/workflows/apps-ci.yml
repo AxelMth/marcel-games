@@ -1,4 +1,4 @@
-name: Apps CI & Appflow Live Updates
+name: Apps CI
 
 on:
   workflow_dispatch:
@@ -20,28 +20,25 @@ on:
       - "package.json"
 
 jobs:
-  build-lint-deploy:
+  build-and-lint:
     runs-on: ubuntu-latest
-
-    env:
-      IONIC_TOKEN: ${{ secrets.IONIC_TOKEN }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Enable corepack
-        run: corepack enable
+      # corepack must run before setup-node's cache: "pnpm", which needs the
+      # pnpm binary on PATH to locate the store directory.
+      - name: Enable corepack and pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.15.0 --activate
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "pnpm"
-
-      - name: Install pnpm
-        run: |
-          corepack prepare pnpm@9.15.0 --activate
 
       - name: Install dependencies
         run: pnpm install
@@ -51,27 +48,13 @@ jobs:
 
       - name: Build all apps
         run: pnpm build
-
-      # Live Updates (OTA) are deployed to Production ONLY on push to main.
-      # Pull requests run lint + build above as a gate but never deploy.
-      - name: Install Appflow CLI
-        if: github.event_name != 'pull_request'
-        run: curl -sL https://ionic.io/get-appflow-cli | bash
-
-      - name: Build & deploy Live Update for earthunt
-        if: github.event_name != 'pull_request'
-        working-directory: ${{ github.workspace }}
-        run: |
-          BUILD_ID=$(appflow build web --token="$IONIC_TOKEN" --app-id="$APPFLOW_ID_EARTHUNT" --commit="$GITHUB_SHA" --json | jq -r '.buildId')
-          appflow deploy web --token="$IONIC_TOKEN" --app-id="$APPFLOW_ID_EARTHUNT" --build-id="$BUILD_ID" --destination="Production"
         env:
-          APPFLOW_ID_EARTHUNT: ${{ secrets.APPFLOW_ID_EARTHUNT }}
+          # Dummy token so the earthunt production-build guard passes in CI.
+          # Store builds run on AppFlow with the real token from its dashboard.
+          NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: ci-placeholder
 
-      - name: Build & deploy Live Update for wordclimb
-        if: github.event_name != 'pull_request'
-        working-directory: ${{ github.workspace }}
-        run: |
-          BUILD_ID=$(appflow build web --token="$IONIC_TOKEN" --app-id="$APPFLOW_ID_WORDCLIMB" --commit="$GITHUB_SHA" --json | jq -r '.buildId')
-          appflow deploy web --token="$IONIC_TOKEN" --app-id="$APPFLOW_ID_WORDCLIMB" --build-id="$BUILD_ID" --destination="Production"
-        env:
-          APPFLOW_ID_WORDCLIMB: ${{ secrets.APPFLOW_ID_WORDCLIMB }}
+# Live Updates (OTA) deploy steps were removed along with the
+# @capacitor/live-updates plugin: no JS ever called LiveUpdates.sync(), so the
+# deploys had no effect, and the plugin itself was launch-crash risk in the
+# store binaries. Store builds are triggered manually from the AppFlow
+# dashboard (see appflow.config.json).

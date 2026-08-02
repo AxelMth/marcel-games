@@ -65,9 +65,9 @@ interface GameState {
 
   // Game actions
   submitGuess: (input: string, locale: CountryLocale) => GuessResult
-  useHintFirstLetter: (locale: CountryLocale) => string | null
-  useHintShowOnMap: () => string | null
-  useHintFullName: (locale: CountryLocale) => string | null
+  consumeHintFirstLetter: (locale: CountryLocale) => string | null
+  consumeHintShowOnMap: () => string | null
+  consumeHintFullName: (locale: CountryLocale) => string | null
   clearHighlight: () => void
   clearLastGuess: () => void
   tick: () => void
@@ -332,7 +332,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     return result
   },
 
-  useHintFirstLetter: (locale: CountryLocale) => {
+  consumeHintFirstLetter: (locale: CountryLocale) => {
     const state = get()
     if (!state.gameConfig) return null
     const remaining = state.gameConfig.missingCountries.filter(
@@ -343,7 +343,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     return getCountryName(remaining[0], locale)[0]
   },
 
-  useHintShowOnMap: () => {
+  consumeHintShowOnMap: () => {
     const state = get()
     if (!state.gameConfig) return null
     const remaining = state.gameConfig.missingCountries.filter(
@@ -360,7 +360,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     return remaining[0].code
   },
 
-  useHintFullName: (locale: CountryLocale) => {
+  consumeHintFullName: (locale: CountryLocale) => {
     const state = get()
     if (!state.gameConfig) return null
     const remaining = state.gameConfig.missingCountries.filter(
