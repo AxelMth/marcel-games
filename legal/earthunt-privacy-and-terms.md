@@ -34,7 +34,7 @@ locally stored data.
 **Children.** EartHunt is intended for a general audience and is not directed at
 children under 13.
 
-**Contact.** Questions? Contact us at `aujoulator1995@gmail.com`.
+**Contact.** Questions? Contact us at `ceo@axelmathi.eu`.
 
 ## Terms of Use
 
