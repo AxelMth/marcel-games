@@ -43,6 +43,43 @@ test.describe("stats", () => {
     await expect(page.getByText(`${t.level} 3`)).toBeHidden()
   })
 
+  test("shows a per-mode rank that actually follows the selected mode", async ({
+    page,
+    t,
+  }) => {
+    // The card used to render stats.globalRank, a daily-only figure, under all
+    // three tabs. The mocked history ranks World 1st and Continent 4th.
+    await page.goto("/")
+    await page.getByRole("button", { name: t.settings }).click()
+
+    const card = page.locator("div").filter({ hasText: t.bestRankInMode }).last()
+    // Rank 1 renders a medal, whose accessible name is the assertion target.
+    await expect(card.getByLabel("1st place")).toBeVisible()
+
+    await page.getByRole("radio").nth(1).click()
+    await expect(card).toContainText("#4")
+  })
+
+  test("says so plainly when a mode has no ranking yet", async ({ page, t }) => {
+    await stubMapbox(page)
+    await skipSplash(page)
+    // Server returns 0 when it has nothing to rank; "#0" reads as a real last place.
+    await page.route("**/profile**", (route) =>
+      route.fulfill({
+        json: {
+          gameHistory: [],
+          stats: { dailyLevelsCompleted: 0, lastLevelRank: 0, globalRank: 0 },
+        },
+      })
+    )
+
+    await page.goto("/")
+    await page.getByRole("button", { name: t.settings }).click()
+
+    await expect(page.getByText(t.notRanked).first()).toBeVisible()
+    await expect(page.getByText("#0")).toBeHidden()
+  })
+
   test("comes back to the carousel", async ({ page, t }) => {
     await page.goto("/")
     await page.getByRole("button", { name: t.settings }).click()

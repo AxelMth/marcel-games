@@ -7,7 +7,7 @@ import { useGameStore } from "@/lib/game-store"
 import { useLanguage } from "@/components/language-provider"
 import { useLevelApi } from "@/hooks/use-level"
 import { useInterstitialAd } from "@/hooks/use-interstitial-ad"
-import { shouldShowInterstitial } from "@/lib/ad-cadence"
+import { resolveInterstitial } from "@/lib/ad-cadence"
 import { getStars } from "@/lib/stars"
 import { setProgressCache } from "@/lib/progress-cache"
 import { enqueuePendingResult } from "@/lib/pending-results"
@@ -37,8 +37,8 @@ export function SuccessScreen() {
     progress,
     setProgress,
     setPendingNextLevel,
-    worldLevelWasFromApiLoad,
-    clearWorldLevelWasFromApiLoad,
+    adExemptionAvailable,
+    consumeAdExemption,
   } = useGameStore()
   const { finishLevel } = useLevelApi()
   const { preload, show } = useInterstitialAd()
@@ -151,14 +151,12 @@ export function SuccessScreen() {
 
   const handleNextLevel = async () => {
     if (!gameConfig) return
-    const showAd = shouldShowInterstitial({
+    const { show: showAd, consumesExemption } = resolveInterstitial({
       mode: gameConfig.mode,
       level: gameConfig.level,
-      worldLevelWasFromApiLoad,
+      exemptionAvailable: adExemptionAvailable,
     })
-    // The first-world-level exemption is one-shot: clear it so the rest of the
-    // session obeys the normal cadence. Only world starts ever set it.
-    if (worldLevelWasFromApiLoad) clearWorldLevelWasFromApiLoad()
+    if (consumesExemption) consumeAdExemption()
     if (showAd) {
       try {
         await show()

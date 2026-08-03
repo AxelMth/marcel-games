@@ -1,5 +1,9 @@
-import { describe, expect, it } from "vitest"
-import { getPersistedHints, setPersistedHint } from "./hint-storage"
+import { describe, expect, it, vi } from "vitest"
+import {
+  countPersistedHints,
+  getPersistedHints,
+  setPersistedHint,
+} from "./hint-storage"
 
 const FRA = "FRA"
 
@@ -98,17 +102,97 @@ describe("hint storage", () => {
     })
   })
 
-  describe("known defect: the daily key carries no date", () => {
-    // getDailyLevelId() changes every day but the hint key is always
-    // `daily-1-world-{code}`, so a hint paid for yesterday silently unlocks
-    // today's challenge whenever the same country comes up first.
-    it("reuses yesterday's hint for today's daily challenge", () => {
+  describe("countPersistedHints", () => {
+    const LEVEL = ["FRA", "ITA", "ESP"]
+
+    it("counts nothing when no hint was ever taken", () => {
+      expect(countPersistedHints("world", 1, "", LEVEL)).toBe(0)
+    })
+
+    it("counts each hint type separately", () => {
+      setPersistedHint("world", 1, "", FRA, "letter", "F")
+      setPersistedHint("world", 1, "", FRA, "map", true)
+      setPersistedHint("world", 1, "", FRA, "name", "France")
+      expect(countPersistedHints("world", 1, "", LEVEL)).toBe(3)
+    })
+
+    it("sums across every country of the level, not just the first", () => {
+      // A previous session may have been killed after buying hints on several
+      // countries; hintsUsed is a per-level figure.
+      setPersistedHint("world", 1, "", "FRA", "letter", "F")
+      setPersistedHint("world", 1, "", "ITA", "letter", "I")
+      setPersistedHint("world", 1, "", "ESP", "name", "Espagne")
+      expect(countPersistedHints("world", 1, "", LEVEL)).toBe(3)
+    })
+
+    it("ignores countries that are not part of this level", () => {
+      setPersistedHint("world", 1, "", "DEU", "letter", "D")
+      expect(countPersistedHints("world", 1, "", LEVEL)).toBe(0)
+    })
+
+    it("ignores hints stored for another level", () => {
+      setPersistedHint("world", 2, "", FRA, "letter", "F")
+      expect(countPersistedHints("world", 1, "", LEVEL)).toBe(0)
+    })
+
+    it("does not count a stored false value", () => {
+      window.localStorage.setItem(
+        "earthunt-hints-world-1-world-FRA",
+        JSON.stringify({ map: false })
+      )
+      expect(countPersistedHints("world", 1, "", LEVEL)).toBe(0)
+    })
+
+    it("survives a corrupt entry", () => {
+      window.localStorage.setItem("earthunt-hints-world-1-world-ITA", "{not json")
+      setPersistedHint("world", 1, "", FRA, "letter", "F")
+      expect(countPersistedHints("world", 1, "", LEVEL)).toBe(1)
+    })
+  })
+
+  describe("the daily challenge is scoped to its day", () => {
+    // The daily level number is always 1, so without the date in the key a hint
+    // paid for yesterday silently unlocks today's challenge whenever the same
+    // country happens to come up first again.
+    it("does not carry yesterday's hint into today", () => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date(2026, 7, 2, 12, 0, 0))
       setPersistedHint("daily", 1, "", FRA, "name", "France")
+      expect(getPersistedHints("daily", 1, "", FRA)).toEqual({ name: "France" })
 
-      // A new day: same mode, same hardcoded level 1, same first missing country.
-      const todaysHints = getPersistedHints("daily", 1, "", FRA)
+      vi.setSystemTime(new Date(2026, 7, 3, 12, 0, 0))
+      expect(getPersistedHints("daily", 1, "", FRA)).toBeNull()
 
-      expect(todaysHints).toEqual({ name: "France" })
+      vi.useRealTimers()
+    })
+
+    it("keeps a hint available for the rest of the same day", () => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date(2026, 7, 2, 8, 0, 0))
+      setPersistedHint("daily", 1, "", FRA, "letter", 'Commence par "F"')
+
+      vi.setSystemTime(new Date(2026, 7, 2, 23, 30, 0))
+      expect(getPersistedHints("daily", 1, "", FRA)).toEqual({
+        letter: 'Commence par "F"',
+      })
+
+      vi.useRealTimers()
+    })
+
+    it("leaves world and continent hints unaffected by the date", () => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date(2026, 7, 2, 12, 0, 0))
+      setPersistedHint("world", 3, "", FRA, "name", "France")
+      setPersistedHint("continent", 3, "EUROPE", "ITA", "name", "Italie")
+
+      // A level you are part-way through must survive midnight.
+      vi.setSystemTime(new Date(2026, 7, 5, 12, 0, 0))
+      expect(getPersistedHints("world", 3, "", FRA)).toEqual({ name: "France" })
+      expect(getPersistedHints("continent", 3, "EUROPE", "ITA")).toEqual({
+        name: "Italie",
+      })
+
+      vi.useRealTimers()
     })
   })
 })
