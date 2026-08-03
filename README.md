@@ -101,6 +101,14 @@ pnpm --filter @marcel-games/earthunt ios:export
 is inlined), rebuilds the static export and syncs it into the native project.
 The `.ipa` lands in `apps/earthunt/build/ipa/`.
 
+Signing is automatic, which means the *archive* is signed with the development
+identity and the *export* re-signs it for distribution using the `method` in
+`ios/ExportOptions.plist`. Do not "fix" the archive by forcing
+`CODE_SIGN_IDENTITY = "Apple Distribution"` in Release: with automatic signing
+Xcode rejects it outright — *"App is automatically signed for development, but
+a conflicting code signing identity Apple Distribution has been manually
+specified."*
+
 Upload it with Apple's Transporter app, or from the terminal with an App Store
 Connect API key:
 
