@@ -1,3 +1,8 @@
+---
+title: "EartHunt — Confidentialité & conditions"
+description: "Politique de confidentialité et conditions d'utilisation d'EartHunt."
+---
+
 # EartHunt — Privacy Policy & Terms of Use
 
 _Last updated: 2026-06-30_

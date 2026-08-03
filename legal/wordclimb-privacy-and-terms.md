@@ -1,3 +1,8 @@
+---
+title: "WordClimb — Confidentialité & conditions"
+description: "Politique de confidentialité et conditions d'utilisation de WordClimb."
+---
+
 # WordClimb — Privacy Policy & Terms of Use
 
 _Last updated: 2026-06-30_
