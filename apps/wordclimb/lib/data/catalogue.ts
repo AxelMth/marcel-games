@@ -1453,1455 +1453,348 @@ export const CATALOGUE: Record<"en" | "fr", Level[]> = {
   fr: [
   {
     "id": 1,
-    "beginWord": "alu",
-    "endWord": "emu",
+    "beginWord": "acme",
+    "endWord": "airs",
     "wordLadder": [
-      "elu"
+      "aime",
+      "aire"
     ]
   },
   {
     "id": 2,
-    "beginWord": "ble",
-    "endWord": "ils",
+    "beginWord": "acre",
+    "endWord": "ange",
     "wordLadder": [
-      "ile"
+      "acte",
+      "ante"
     ]
   },
   {
     "id": 3,
-    "beginWord": "aleas",
-    "endWord": "arias",
+    "beginWord": "agee",
+    "endWord": "amas",
     "wordLadder": [
-      "alias"
+      "ages",
+      "ames"
     ]
   },
   {
     "id": 4,
-    "beginWord": "bidon",
-    "endWord": "bisou",
+    "beginWord": "aide",
+    "endWord": "apte",
     "wordLadder": [
-      "bison"
+      "aire",
+      "apre"
     ]
   },
   {
     "id": 5,
-    "beginWord": "blanc",
-    "endWord": "franc",
+    "beginWord": "anse",
+    "endWord": "arme",
     "wordLadder": [
-      "flanc"
+      "aise",
+      "aime"
     ]
   },
   {
     "id": 6,
-    "beginWord": "cieux",
-    "endWord": "voeux",
+    "beginWord": "boom",
+    "endWord": "boxe",
     "wordLadder": [
-      "vieux"
+      "boum",
+      "boue"
     ]
   },
   {
     "id": 7,
-    "beginWord": "epais",
-    "endWord": "etats",
+    "beginWord": "bord",
+    "endWord": "boys",
     "wordLadder": [
-      "etais"
+      "bond",
+      "bons"
     ]
   },
   {
     "id": 8,
-    "beginWord": "fatal",
-    "endWord": "naval",
+    "beginWord": "caca",
+    "endWord": "cela",
     "wordLadder": [
-      "natal"
+      "coca",
+      "cola"
     ]
   },
   {
     "id": 9,
-    "beginWord": "geant",
-    "endWord": "niant",
+    "beginWord": "chah",
+    "endWord": "chez",
     "wordLadder": [
-      "neant"
+      "char",
+      "cher"
     ]
   },
   {
     "id": 10,
-    "beginWord": "jadis",
-    "endWord": "ravis",
+    "beginWord": "choc",
+    "endWord": "trop",
     "wordLadder": [
-      "radis"
+      "croc",
+      "troc"
     ]
   },
   {
     "id": 11,
-    "beginWord": "japon",
-    "endWord": "juron",
+    "beginWord": "clef",
+    "endWord": "clou",
     "wordLadder": [
-      "jupon"
+      "cles",
+      "clos"
     ]
   },
   {
     "id": 12,
-    "beginWord": "legal",
-    "endWord": "metal",
+    "beginWord": "jack",
+    "endWord": "rock",
     "wordLadder": [
-      "letal"
+      "back",
+      "bock"
     ]
   },
   {
     "id": 13,
-    "beginWord": "nerfs",
-    "endWord": "oeufs",
+    "beginWord": "jete",
+    "endWord": "jura",
     "wordLadder": [
-      "neufs"
+      "jute",
+      "jure"
     ]
   },
   {
     "id": 14,
-    "beginWord": "raide",
-    "endWord": "rails",
+    "beginWord": "manu",
+    "endWord": "meme",
     "wordLadder": [
-      "raids"
+      "menu",
+      "mene"
     ]
   },
   {
     "id": 15,
-    "beginWord": "score",
-    "endWord": "sport",
+    "beginWord": "marc",
+    "endWord": "mecs",
     "wordLadder": [
-      "spore"
+      "mars",
+      "mers"
     ]
   },
   {
     "id": 16,
-    "beginWord": "abimer",
-    "endWord": "animes",
+    "beginWord": "mark",
+    "endWord": "mets",
     "wordLadder": [
-      "animer"
+      "mars",
+      "mers"
     ]
   },
   {
     "id": 17,
-    "beginWord": "acides",
-    "endWord": "avises",
+    "beginWord": "mary",
+    "endWord": "mois",
     "wordLadder": [
-      "avides"
+      "mars",
+      "mais"
     ]
   },
   {
     "id": 18,
-    "beginWord": "acteur",
-    "endWord": "autour",
+    "beginWord": "midi",
+    "endWord": "mise",
     "wordLadder": [
-      "auteur"
+      "mini",
+      "mine"
     ]
   },
   {
     "id": 19,
-    "beginWord": "allais",
-    "endWord": "allant",
+    "beginWord": "miel",
+    "endWord": "nier",
     "wordLadder": [
-      "allait"
+      "fiel",
+      "fier"
     ]
   },
   {
     "id": 20,
-    "beginWord": "amical",
-    "endWord": "amoral",
+    "beginWord": "neuf",
+    "endWord": "yeux",
     "wordLadder": [
-      "amiral"
+      "veuf",
+      "veux"
     ]
   },
   {
     "id": 21,
-    "beginWord": "aprete",
-    "endWord": "arrets",
+    "beginWord": "noms",
+    "endWord": "noye",
     "wordLadder": [
-      "arrete"
+      "nous",
+      "noue"
     ]
   },
   {
     "id": 22,
-    "beginWord": "banque",
-    "endWord": "vasque",
+    "beginWord": "nuit",
+    "endWord": "ouie",
     "wordLadder": [
-      "basque"
+      "suit",
+      "suie"
     ]
   },
   {
     "id": 23,
-    "beginWord": "barons",
-    "endWord": "tatons",
+    "beginWord": "parc",
+    "endWord": "perm",
     "wordLadder": [
-      "batons"
+      "pari",
+      "peri"
     ]
   },
   {
     "id": 24,
-    "beginWord": "battre",
-    "endWord": "battus",
+    "beginWord": "paru",
+    "endWord": "pole",
     "wordLadder": [
-      "battue"
+      "pare",
+      "pale"
     ]
   },
   {
     "id": 25,
-    "beginWord": "belier",
-    "endWord": "renier",
+    "beginWord": "pays",
+    "endWord": "pics",
     "wordLadder": [
-      "relier"
+      "pans",
+      "pins"
     ]
   },
   {
     "id": 26,
-    "beginWord": "boiter",
-    "endWord": "bottes",
+    "beginWord": "pope",
+    "endWord": "rapt",
     "wordLadder": [
-      "boites"
+      "pape",
+      "rape"
     ]
   },
   {
     "id": 27,
-    "beginWord": "boiton",
-    "endWord": "mouton",
+    "beginWord": "pots",
+    "endWord": "rets",
     "wordLadder": [
-      "bouton"
+      "mots",
+      "mets"
     ]
   },
   {
     "id": 28,
-    "beginWord": "bouffe",
-    "endWord": "touffu",
+    "beginWord": "rosa",
+    "endWord": "roui",
     "wordLadder": [
-      "touffe"
+      "rose",
+      "roue"
     ]
   },
   {
     "id": 29,
-    "beginWord": "cagnes",
-    "endWord": "pannes",
+    "beginWord": "tetu",
+    "endWord": "velo",
     "wordLadder": [
-      "cannes"
+      "vetu",
+      "veto"
     ]
   },
   {
     "id": 30,
-    "beginWord": "chiper",
-    "endWord": "choyer",
+    "beginWord": "trek",
+    "endWord": "tuee",
     "wordLadder": [
-      "choper"
+      "tres",
+      "tues"
     ]
   },
   {
     "id": 31,
-    "beginWord": "cingle",
-    "endWord": "jungle",
+    "beginWord": "acere",
+    "endWord": "alene",
     "wordLadder": [
-      "jingle"
+      "amere",
+      "amene"
     ]
   },
   {
     "id": 32,
-    "beginWord": "citees",
-    "endWord": "dotees",
+    "beginWord": "acide",
+    "endWord": "bribe",
     "wordLadder": [
-      "cotees"
+      "aride",
+      "bride"
     ]
   },
   {
     "id": 33,
-    "beginWord": "dechet",
-    "endWord": "secret",
+    "beginWord": "aider",
+    "endWord": "ainee",
     "wordLadder": [
-      "decret"
+      "aimer",
+      "aimee"
     ]
   },
   {
     "id": 34,
-    "beginWord": "decore",
-    "endWord": "dehors",
+    "beginWord": "aides",
+    "endWord": "allee",
     "wordLadder": [
-      "decors"
+      "ailes",
+      "alles"
     ]
   },
   {
     "id": 35,
-    "beginWord": "dedire",
-    "endWord": "retire",
+    "beginWord": "aigle",
+    "endWord": "digne",
     "wordLadder": [
-      "redire"
+      "sigle",
+      "signe"
     ]
   },
   {
     "id": 36,
-    "beginWord": "defend",
-    "endWord": "depens",
+    "beginWord": "aigri",
+    "endWord": "aille",
     "wordLadder": [
-      "depend"
+      "aigre",
+      "aigle"
     ]
   },
   {
     "id": 37,
-    "beginWord": "depart",
-    "endWord": "report",
+    "beginWord": "aines",
+    "endWord": "allez",
     "wordLadder": [
-      "repart"
+      "ailes",
+      "alles"
     ]
   },
   {
     "id": 38,
-    "beginWord": "dessin",
-    "endWord": "festin",
+    "beginWord": "algue",
+    "endWord": "angle",
     "wordLadder": [
-      "destin"
+      "aigue",
+      "aigle"
     ]
   },
   {
     "id": 39,
-    "beginWord": "ecrire",
-    "endWord": "ecrits",
-    "wordLadder": [
-      "ecrite"
-    ]
-  },
-  {
-    "id": 40,
-    "beginWord": "egarer",
-    "endWord": "etayer",
-    "wordLadder": [
-      "egayer"
-    ]
-  },
-  {
-    "id": 41,
-    "beginWord": "espace",
-    "endWord": "espere",
-    "wordLadder": [
-      "espece"
-    ]
-  },
-  {
-    "id": 42,
-    "beginWord": "essaie",
-    "endWord": "essuye",
-    "wordLadder": [
-      "essaye"
-    ]
-  },
-  {
-    "id": 43,
-    "beginWord": "etable",
-    "endWord": "stalle",
-    "wordLadder": [
-      "stable"
-    ]
-  },
-  {
-    "id": 44,
-    "beginWord": "faites",
-    "endWord": "suites",
-    "wordLadder": [
-      "fuites"
-    ]
-  },
-  {
-    "id": 45,
-    "beginWord": "faudra",
-    "endWord": "voudra",
-    "wordLadder": [
-      "vaudra"
-    ]
-  },
-  {
-    "id": 46,
-    "beginWord": "ferons",
-    "endWord": "seront",
-    "wordLadder": [
-      "serons"
-    ]
-  },
-  {
-    "id": 47,
-    "beginWord": "fleuri",
-    "endWord": "pleurs",
-    "wordLadder": [
-      "fleurs"
-    ]
-  },
-  {
-    "id": 48,
-    "beginWord": "guelte",
-    "endWord": "muette",
-    "wordLadder": [
-      "guette"
-    ]
-  },
-  {
-    "id": 49,
-    "beginWord": "habile",
-    "endWord": "habits",
-    "wordLadder": [
-      "habite"
-    ]
-  },
-  {
-    "id": 50,
-    "beginWord": "hanche",
-    "endWord": "marche",
-    "wordLadder": [
-      "manche"
-    ]
-  },
-  {
-    "id": 51,
-    "beginWord": "inapte",
-    "endWord": "inerte",
-    "wordLadder": [
-      "inepte"
-    ]
-  },
-  {
-    "id": 52,
-    "beginWord": "infame",
-    "endWord": "intime",
-    "wordLadder": [
-      "infime"
-    ]
-  },
-  {
-    "id": 53,
-    "beginWord": "joints",
-    "endWord": "pointu",
-    "wordLadder": [
-      "points"
-    ]
-  },
-  {
-    "id": 54,
-    "beginWord": "jouait",
-    "endWord": "jouent",
-    "wordLadder": [
-      "jouant"
-    ]
-  },
-  {
-    "id": 55,
-    "beginWord": "libere",
-    "endWord": "misere",
-    "wordLadder": [
-      "lisere"
-    ]
-  },
-  {
-    "id": 56,
-    "beginWord": "maigre",
-    "endWord": "naitre",
-    "wordLadder": [
-      "maitre"
-    ]
-  },
-  {
-    "id": 57,
-    "beginWord": "mirage",
-    "endWord": "visage",
-    "wordLadder": [
-      "virage"
-    ]
-  },
-  {
-    "id": 58,
-    "beginWord": "parait",
-    "endWord": "payant",
-    "wordLadder": [
-      "payait"
-    ]
-  },
-  {
-    "id": 59,
-    "beginWord": "recule",
-    "endWord": "refuse",
-    "wordLadder": [
-      "recuse"
-    ]
-  },
-  {
-    "id": 60,
-    "beginWord": "reglee",
-    "endWord": "regner",
-    "wordLadder": [
-      "regler"
-    ]
-  },
-  {
-    "id": 61,
-    "beginWord": "sinuer",
-    "endWord": "situes",
-    "wordLadder": [
-      "situer"
-    ]
-  },
-  {
-    "id": 62,
-    "beginWord": "uriner",
-    "endWord": "usines",
-    "wordLadder": [
-      "usiner"
-    ]
-  },
-  {
-    "id": 63,
-    "beginWord": "abregee",
-    "endWord": "abroger",
-    "wordLadder": [
-      "abreger"
-    ]
-  },
-  {
-    "id": 64,
-    "beginWord": "absence",
-    "endWord": "absents",
-    "wordLadder": [
-      "absente"
-    ]
-  },
-  {
-    "id": 65,
-    "beginWord": "achetee",
-    "endWord": "acheves",
-    "wordLadder": [
-      "achevee"
-    ]
-  },
-  {
-    "id": 66,
-    "beginWord": "adaptee",
-    "endWord": "adoptes",
-    "wordLadder": [
-      "adoptee"
-    ]
-  },
-  {
-    "id": 67,
-    "beginWord": "affiler",
-    "endWord": "enfiler",
-    "wordLadder": [
-      "effiler"
-    ]
-  },
-  {
-    "id": 68,
-    "beginWord": "allegee",
-    "endWord": "allegro",
-    "wordLadder": [
-      "allegre"
-    ]
-  },
-  {
-    "id": 69,
-    "beginWord": "apposer",
-    "endWord": "opposes",
-    "wordLadder": [
-      "opposer"
-    ]
-  },
-  {
-    "id": 70,
-    "beginWord": "arrimer",
-    "endWord": "arrives",
-    "wordLadder": [
-      "arriver"
-    ]
-  },
-  {
-    "id": 71,
-    "beginWord": "assumer",
-    "endWord": "assures",
-    "wordLadder": [
-      "assurer"
-    ]
-  },
-  {
-    "id": 72,
-    "beginWord": "bagarre",
-    "endWord": "bizarre",
-    "wordLadder": [
-      "bigarre"
-    ]
-  },
-  {
-    "id": 73,
-    "beginWord": "baigner",
-    "endWord": "soigner",
-    "wordLadder": [
-      "saigner"
-    ]
-  },
-  {
-    "id": 74,
-    "beginWord": "berceau",
-    "endWord": "cerveau",
-    "wordLadder": [
-      "cerceau"
-    ]
-  },
-  {
-    "id": 75,
-    "beginWord": "bouchee",
-    "endWord": "touches",
-    "wordLadder": [
-      "touchee"
-    ]
-  },
-  {
-    "id": 76,
-    "beginWord": "caserne",
-    "endWord": "taverne",
-    "wordLadder": [
-      "caverne"
-    ]
-  },
-  {
-    "id": 77,
-    "beginWord": "cassant",
-    "endWord": "passent",
-    "wordLadder": [
-      "passant"
-    ]
-  },
-  {
-    "id": 78,
-    "beginWord": "cendres",
-    "endWord": "rentres",
-    "wordLadder": [
-      "centres"
-    ]
-  },
-  {
-    "id": 79,
-    "beginWord": "cessent",
-    "endWord": "restent",
-    "wordLadder": [
-      "ressent"
-    ]
-  },
-  {
-    "id": 80,
-    "beginWord": "confiee",
-    "endWord": "convier",
-    "wordLadder": [
-      "confier"
-    ]
-  },
-  {
-    "id": 81,
-    "beginWord": "costume",
-    "endWord": "couture",
-    "wordLadder": [
-      "coutume"
-    ]
-  },
-  {
-    "id": 82,
-    "beginWord": "coupees",
-    "endWord": "souples",
-    "wordLadder": [
-      "couples"
-    ]
-  },
-  {
-    "id": 83,
-    "beginWord": "decence",
-    "endWord": "semence",
-    "wordLadder": [
-      "demence"
-    ]
-  },
-  {
-    "id": 84,
-    "beginWord": "dechets",
-    "endWord": "secrets",
-    "wordLadder": [
-      "decrets"
-    ]
-  },
-  {
-    "id": 85,
-    "beginWord": "deposee",
-    "endWord": "reposer",
-    "wordLadder": [
-      "deposer"
-    ]
-  },
-  {
-    "id": 86,
-    "beginWord": "dessine",
-    "endWord": "destins",
-    "wordLadder": [
-      "destine"
-    ]
-  },
-  {
-    "id": 87,
-    "beginWord": "detient",
-    "endWord": "revient",
-    "wordLadder": [
-      "retient"
-    ]
-  },
-  {
-    "id": 88,
-    "beginWord": "domaine",
-    "endWord": "romains",
-    "wordLadder": [
-      "romaine"
-    ]
-  },
-  {
-    "id": 89,
-    "beginWord": "doublee",
-    "endWord": "roubles",
-    "wordLadder": [
-      "doubles"
-    ]
-  },
-  {
-    "id": 90,
-    "beginWord": "draguer",
-    "endWord": "drogues",
-    "wordLadder": [
-      "droguer"
-    ]
-  },
-  {
-    "id": 91,
-    "beginWord": "dressee",
-    "endWord": "tresser",
-    "wordLadder": [
-      "dresser"
-    ]
-  },
-  {
-    "id": 92,
-    "beginWord": "envolee",
-    "endWord": "envoyes",
-    "wordLadder": [
-      "envoyee"
-    ]
-  },
-  {
-    "id": 93,
-    "beginWord": "espacer",
-    "endWord": "especes",
-    "wordLadder": [
-      "espaces"
-    ]
-  },
-  {
-    "id": 94,
-    "beginWord": "fermees",
-    "endWord": "formels",
-    "wordLadder": [
-      "formees"
-    ]
-  },
-  {
-    "id": 95,
-    "beginWord": "figuier",
-    "endWord": "figures",
-    "wordLadder": [
-      "figurer"
-    ]
-  },
-  {
-    "id": 96,
-    "beginWord": "fournee",
-    "endWord": "tournes",
-    "wordLadder": [
-      "tournee"
-    ]
-  },
-  {
-    "id": 97,
-    "beginWord": "gagnait",
-    "endWord": "gagnent",
-    "wordLadder": [
-      "gagnant"
-    ]
-  },
-  {
-    "id": 98,
-    "beginWord": "gardait",
-    "endWord": "gardent",
-    "wordLadder": [
-      "gardant"
-    ]
-  },
-  {
-    "id": 99,
-    "beginWord": "glacier",
-    "endWord": "gravier",
-    "wordLadder": [
-      "gracier"
-    ]
-  },
-  {
-    "id": 100,
-    "beginWord": "greffer",
-    "endWord": "griffes",
-    "wordLadder": [
-      "greffes"
-    ]
-  },
-  {
-    "id": 101,
-    "beginWord": "haillon",
-    "endWord": "maillot",
-    "wordLadder": [
-      "maillon"
-    ]
-  },
-  {
-    "id": 102,
-    "beginWord": "haineux",
-    "endWord": "laiteux",
-    "wordLadder": [
-      "laineux"
-    ]
-  },
-  {
-    "id": 103,
-    "beginWord": "inciter",
-    "endWord": "invites",
-    "wordLadder": [
-      "inviter"
-    ]
-  },
-  {
-    "id": 104,
-    "beginWord": "inculpe",
-    "endWord": "insulte",
-    "wordLadder": [
-      "inculte"
-    ]
-  },
-  {
-    "id": 105,
-    "beginWord": "langues",
-    "endWord": "longuet",
-    "wordLadder": [
-      "longues"
-    ]
-  },
-  {
-    "id": 106,
-    "beginWord": "laniere",
-    "endWord": "miniere",
-    "wordLadder": [
-      "maniere"
-    ]
-  },
-  {
-    "id": 107,
-    "beginWord": "manager",
-    "endWord": "menages",
-    "wordLadder": [
-      "menager"
-    ]
-  },
-  {
-    "id": 108,
-    "beginWord": "nourrie",
-    "endWord": "pourrir",
-    "wordLadder": [
-      "nourrir"
-    ]
-  },
-  {
-    "id": 109,
-    "beginWord": "offrait",
-    "endWord": "offrent",
-    "wordLadder": [
-      "offrant"
-    ]
-  },
-  {
-    "id": 110,
-    "beginWord": "oubliee",
-    "endWord": "publies",
-    "wordLadder": [
-      "publiee"
-    ]
-  },
-  {
-    "id": 111,
-    "beginWord": "ouvrait",
-    "endWord": "ouvrent",
-    "wordLadder": [
-      "ouvrant"
-    ]
-  },
-  {
-    "id": 112,
-    "beginWord": "paginer",
-    "endWord": "potiner",
-    "wordLadder": [
-      "patiner"
-    ]
-  },
-  {
-    "id": 113,
-    "beginWord": "peloter",
-    "endWord": "pilotes",
-    "wordLadder": [
-      "piloter"
-    ]
-  },
-  {
-    "id": 114,
-    "beginWord": "pendant",
-    "endWord": "vendent",
-    "wordLadder": [
-      "vendant"
-    ]
-  },
-  {
-    "id": 115,
-    "beginWord": "pouvais",
-    "endWord": "pouvant",
-    "wordLadder": [
-      "pouvait"
-    ]
-  },
-  {
-    "id": 116,
-    "beginWord": "prenait",
-    "endWord": "pronant",
-    "wordLadder": [
-      "prenant"
-    ]
-  },
-  {
-    "id": 117,
-    "beginWord": "probite",
-    "endWord": "profits",
-    "wordLadder": [
-      "profite"
-    ]
-  },
-  {
-    "id": 118,
-    "beginWord": "radiner",
-    "endWord": "raviver",
-    "wordLadder": [
-      "raviner"
-    ]
-  },
-  {
-    "id": 119,
-    "beginWord": "recours",
-    "endWord": "sejours",
-    "wordLadder": [
-      "secours"
-    ]
-  },
-  {
-    "id": 120,
-    "beginWord": "regarde",
-    "endWord": "retards",
-    "wordLadder": [
-      "retarde"
-    ]
-  },
-  {
-    "id": 121,
-    "beginWord": "reussie",
-    "endWord": "roussir",
-    "wordLadder": [
-      "reussir"
-    ]
-  },
-  {
-    "id": 122,
-    "beginWord": "sorcier",
-    "endWord": "soulier",
-    "wordLadder": [
-      "soucier"
-    ]
-  },
-  {
-    "id": 123,
-    "beginWord": "suffira",
-    "endWord": "suffixe",
-    "wordLadder": [
-      "suffire"
-    ]
-  },
-  {
-    "id": 124,
-    "beginWord": "suivait",
-    "endWord": "suivent",
-    "wordLadder": [
-      "suivant"
-    ]
-  },
-  {
-    "id": 125,
-    "beginWord": "tombait",
-    "endWord": "tombent",
-    "wordLadder": [
-      "tombant"
-    ]
-  },
-  {
-    "id": 126,
-    "beginWord": "trainee",
-    "endWord": "traitre",
-    "wordLadder": [
-      "traitee"
-    ]
-  },
-  {
-    "id": 127,
-    "beginWord": "urgence",
-    "endWord": "urgents",
-    "wordLadder": [
-      "urgente"
-    ]
-  },
-  {
-    "id": 128,
-    "beginWord": "accusait",
-    "endWord": "accusent",
-    "wordLadder": [
-      "accusant"
-    ]
-  },
-  {
-    "id": 129,
-    "beginWord": "ajoutait",
-    "endWord": "ajoutent",
-    "wordLadder": [
-      "ajoutant"
-    ]
-  },
-  {
-    "id": 130,
-    "beginWord": "arrivait",
-    "endWord": "arrivent",
-    "wordLadder": [
-      "arrivant"
-    ]
-  },
-  {
-    "id": 131,
-    "beginWord": "assurait",
-    "endWord": "assurent",
-    "wordLadder": [
-      "assurant"
-    ]
-  },
-  {
-    "id": 132,
-    "beginWord": "attendre",
-    "endWord": "attendus",
-    "wordLadder": [
-      "attendue"
-    ]
-  },
-  {
-    "id": 133,
-    "beginWord": "ceinture",
-    "endWord": "pointure",
-    "wordLadder": [
-      "peinture"
-    ]
-  },
-  {
-    "id": 134,
-    "beginWord": "centaine",
-    "endWord": "certains",
-    "wordLadder": [
-      "certaine"
-    ]
-  },
-  {
-    "id": 135,
-    "beginWord": "citation",
-    "endWord": "rotation",
-    "wordLadder": [
-      "cotation"
-    ]
-  },
-  {
-    "id": 136,
-    "beginWord": "comptait",
-    "endWord": "comptent",
-    "wordLadder": [
-      "comptant"
-    ]
-  },
-  {
-    "id": 137,
-    "beginWord": "confirme",
-    "endWord": "conforte",
-    "wordLadder": [
-      "conforme"
-    ]
-  },
-  {
-    "id": 138,
-    "beginWord": "couchant",
-    "endWord": "touchent",
-    "wordLadder": [
-      "touchant"
-    ]
-  },
-  {
-    "id": 139,
-    "beginWord": "decidait",
-    "endWord": "decident",
-    "wordLadder": [
-      "decidant"
-    ]
-  },
-  {
-    "id": 140,
-    "beginWord": "defoncer",
-    "endWord": "renoncer",
-    "wordLadder": [
-      "denoncer"
-    ]
-  },
-  {
-    "id": 141,
-    "beginWord": "deformer",
-    "endWord": "reformes",
-    "wordLadder": [
-      "reformer"
-    ]
-  },
-  {
-    "id": 142,
-    "beginWord": "degriser",
-    "endWord": "deguises",
-    "wordLadder": [
-      "deguiser"
-    ]
-  },
-  {
-    "id": 143,
-    "beginWord": "delecter",
-    "endWord": "detester",
-    "wordLadder": [
-      "detecter"
-    ]
-  },
-  {
-    "id": 144,
-    "beginWord": "delirant",
-    "endWord": "desirent",
-    "wordLadder": [
-      "desirant"
-    ]
-  },
-  {
-    "id": 145,
-    "beginWord": "departir",
-    "endWord": "repartis",
-    "wordLadder": [
-      "repartir"
-    ]
-  },
-  {
-    "id": 146,
-    "beginWord": "deplacee",
-    "endWord": "replacer",
-    "wordLadder": [
-      "deplacer"
-    ]
-  },
-  {
-    "id": 147,
-    "beginWord": "deportee",
-    "endWord": "reporter",
-    "wordLadder": [
-      "reportee"
-    ]
-  },
-  {
-    "id": 148,
-    "beginWord": "designee",
-    "endWord": "resigner",
-    "wordLadder": [
-      "designer"
-    ]
-  },
-  {
-    "id": 149,
-    "beginWord": "dessinee",
-    "endWord": "destines",
-    "wordLadder": [
-      "destinee"
-    ]
-  },
-  {
-    "id": 150,
-    "beginWord": "detruire",
-    "endWord": "detruits",
-    "wordLadder": [
-      "detruite"
-    ]
-  },
-  {
-    "id": 151,
-    "beginWord": "discutee",
-    "endWord": "disputer",
-    "wordLadder": [
-      "disputee"
-    ]
-  },
-  {
-    "id": 152,
-    "beginWord": "emporter",
-    "endWord": "importes",
-    "wordLadder": [
-      "importer"
-    ]
-  },
-  {
-    "id": 153,
-    "beginWord": "estimait",
-    "endWord": "estiment",
-    "wordLadder": [
-      "estimant"
-    ]
-  },
-  {
-    "id": 154,
-    "beginWord": "evaluent",
-    "endWord": "evoquent",
-    "wordLadder": [
-      "evoluent"
-    ]
-  },
-  {
-    "id": 155,
-    "beginWord": "existait",
-    "endWord": "existent",
-    "wordLadder": [
-      "existant"
-    ]
-  },
-  {
-    "id": 156,
-    "beginWord": "faudrait",
-    "endWord": "voudrait",
-    "wordLadder": [
-      "vaudrait"
-    ]
-  },
-  {
-    "id": 157,
-    "beginWord": "ignorait",
-    "endWord": "ignorent",
-    "wordLadder": [
-      "ignorant"
-    ]
-  },
-  {
-    "id": 158,
-    "beginWord": "inscrire",
-    "endWord": "inscrits",
-    "wordLadder": [
-      "inscrite"
-    ]
-  },
-  {
-    "id": 159,
-    "beginWord": "jaquette",
-    "endWord": "roquette",
-    "wordLadder": [
-      "raquette"
-    ]
-  },
-  {
-    "id": 160,
-    "beginWord": "materiel",
-    "endWord": "paternel",
-    "wordLadder": [
-      "maternel"
-    ]
-  },
-  {
-    "id": 161,
-    "beginWord": "montrait",
-    "endWord": "montrent",
-    "wordLadder": [
-      "montrant"
-    ]
-  },
-  {
-    "id": 162,
-    "beginWord": "occupait",
-    "endWord": "occupent",
-    "wordLadder": [
-      "occupant"
-    ]
-  },
-  {
-    "id": 163,
-    "beginWord": "opposait",
-    "endWord": "opposent",
-    "wordLadder": [
-      "opposant"
-    ]
-  },
-  {
-    "id": 164,
-    "beginWord": "original",
-    "endWord": "origines",
-    "wordLadder": [
-      "originel"
-    ]
-  },
-  {
-    "id": 165,
-    "beginWord": "oubliant",
-    "endWord": "publient",
-    "wordLadder": [
-      "publiant"
-    ]
-  },
-  {
-    "id": 166,
-    "beginWord": "paisible",
-    "endWord": "possible",
-    "wordLadder": [
-      "passible"
-    ]
-  },
-  {
-    "id": 167,
-    "beginWord": "passager",
-    "endWord": "paysages",
-    "wordLadder": [
-      "passages"
-    ]
-  },
-  {
-    "id": 168,
-    "beginWord": "patience",
-    "endWord": "patients",
-    "wordLadder": [
-      "patiente"
-    ]
-  },
-  {
-    "id": 169,
-    "beginWord": "preferee",
-    "endWord": "proferer",
-    "wordLadder": [
-      "preferer"
-    ]
-  },
-  {
-    "id": 170,
-    "beginWord": "preposer",
-    "endWord": "proposes",
-    "wordLadder": [
-      "proposer"
-    ]
-  },
-  {
-    "id": 171,
-    "beginWord": "presence",
-    "endWord": "presents",
-    "wordLadder": [
-      "presente"
-    ]
-  },
-  {
-    "id": 172,
-    "beginWord": "prudence",
-    "endWord": "prudents",
-    "wordLadder": [
-      "prudente"
-    ]
-  },
-  {
-    "id": 173,
-    "beginWord": "quittait",
-    "endWord": "quittent",
-    "wordLadder": [
-      "quittant"
-    ]
-  },
-  {
-    "id": 174,
-    "beginWord": "realisee",
-    "endWord": "realites",
-    "wordLadder": [
-      "realises"
-    ]
-  },
-  {
-    "id": 175,
-    "beginWord": "recolter",
-    "endWord": "revolver",
-    "wordLadder": [
-      "revolter"
-    ]
-  },
-  {
-    "id": 176,
-    "beginWord": "refusait",
-    "endWord": "refusent",
-    "wordLadder": [
-      "refusant"
-    ]
-  },
-  {
-    "id": 177,
-    "beginWord": "remarque",
-    "endWord": "retorque",
-    "wordLadder": [
-      "remorque"
-    ]
-  },
-  {
-    "id": 178,
-    "beginWord": "semblait",
-    "endWord": "semblent",
-    "wordLadder": [
-      "semblant"
-    ]
-  },
-  {
-    "id": 179,
-    "beginWord": "soutiens",
-    "endWord": "souvient",
-    "wordLadder": [
-      "souviens"
-    ]
-  },
-  {
-    "id": 180,
-    "beginWord": "violence",
-    "endWord": "violents",
-    "wordLadder": [
-      "violente"
-    ]
-  },
-  {
-    "id": 181,
-    "beginWord": "anche",
-    "endWord": "entre",
-    "wordLadder": [
-      "ancre",
-      "encre"
-    ]
-  },
-  {
-    "id": 182,
     "beginWord": "astre",
     "endWord": "ouvre",
     "wordLadder": [
@@ -2910,495 +1803,453 @@ export const CATALOGUE: Record<"en" | "fr", Level[]> = {
     ]
   },
   {
-    "id": 183,
-    "beginWord": "benin",
-    "endWord": "vetir",
+    "id": 40,
+    "beginWord": "avais",
+    "endWord": "ayant",
     "wordLadder": [
-      "venin",
-      "venir"
+      "avait",
+      "avant"
     ]
   },
   {
-    "id": 184,
-    "beginWord": "bocal",
-    "endWord": "royal",
+    "id": 41,
+    "beginWord": "badge",
+    "endWord": "barbu",
     "wordLadder": [
-      "local",
-      "loyal"
+      "barge",
+      "barbe"
     ]
   },
   {
-    "id": 185,
-    "beginWord": "chope",
-    "endWord": "glose",
+    "id": 42,
+    "beginWord": "bains",
+    "endWord": "coins",
     "wordLadder": [
-      "clope",
-      "close"
+      "mains",
+      "moins"
     ]
   },
   {
-    "id": 186,
-    "beginWord": "coeur",
-    "endWord": "tueur",
+    "id": 43,
+    "beginWord": "barde",
+    "endWord": "beige",
     "wordLadder": [
-      "soeur",
-      "sueur"
+      "barge",
+      "berge"
     ]
   },
   {
-    "id": 187,
-    "beginWord": "allees",
-    "endWord": "altier",
+    "id": 44,
+    "beginWord": "baser",
+    "endWord": "cafes",
     "wordLadder": [
-      "allies",
-      "allier"
+      "bases",
+      "cases"
     ]
   },
   {
-    "id": 188,
-    "beginWord": "amande",
-    "endWord": "amenes",
+    "id": 45,
+    "beginWord": "batir",
+    "endWord": "palis",
     "wordLadder": [
-      "amende",
-      "amenee"
+      "patir",
+      "palir"
     ]
   },
   {
-    "id": 189,
-    "beginWord": "baisse",
-    "endWord": "suisse",
+    "id": 46,
+    "beginWord": "bette",
+    "endWord": "jeter",
     "wordLadder": [
-      "caisse",
-      "cuisse"
+      "jette",
+      "jetee"
     ]
   },
   {
-    "id": 190,
-    "beginWord": "bateau",
-    "endWord": "rideau",
+    "id": 47,
+    "beginWord": "biler",
+    "endWord": "caler",
     "wordLadder": [
-      "rateau",
-      "radeau"
+      "beler",
+      "celer"
     ]
   },
   {
-    "id": 191,
-    "beginWord": "chiant",
-    "endWord": "orient",
+    "id": 48,
+    "beginWord": "bonds",
+    "endWord": "bouee",
     "wordLadder": [
-      "criant",
-      "crient"
+      "bonde",
+      "boude"
     ]
   },
   {
-    "id": 192,
-    "beginWord": "concis",
-    "endWord": "connut",
+    "id": 49,
+    "beginWord": "bonne",
+    "endWord": "bonus",
     "wordLadder": [
-      "concus",
-      "connus"
+      "bonde",
+      "bonds"
     ]
   },
   {
-    "id": 193,
-    "beginWord": "epicer",
-    "endWord": "exiles",
+    "id": 50,
+    "beginWord": "brame",
+    "endWord": "grace",
     "wordLadder": [
-      "epiler",
-      "exiler"
+      "trame",
+      "trace"
     ]
   },
   {
-    "id": 194,
-    "beginWord": "faible",
-    "endWord": "veille",
+    "id": 51,
+    "beginWord": "brule",
+    "endWord": "drame",
     "wordLadder": [
-      "faille",
-      "vaille"
+      "brume",
+      "brame"
     ]
   },
   {
-    "id": 195,
-    "beginWord": "glande",
-    "endWord": "orange",
+    "id": 52,
+    "beginWord": "butte",
+    "endWord": "metre",
     "wordLadder": [
-      "grande",
-      "grange"
+      "bette",
+      "mette"
     ]
   },
   {
-    "id": 196,
-    "beginWord": "gradin",
-    "endWord": "gratos",
+    "id": 53,
+    "beginWord": "capes",
+    "endWord": "gages",
     "wordLadder": [
-      "gratin",
-      "gratis"
+      "sapes",
+      "sages"
     ]
   },
   {
-    "id": 197,
-    "beginWord": "motion",
-    "endWord": "ration",
+    "id": 54,
+    "beginWord": "casse",
+    "endWord": "disse",
     "wordLadder": [
-      "notion",
-      "nation"
+      "lasse",
+      "lisse"
     ]
   },
   {
-    "id": 198,
-    "beginWord": "notait",
-    "endWord": "voyant",
+    "id": 55,
+    "beginWord": "ceder",
+    "endWord": "haler",
     "wordLadder": [
-      "notant",
-      "votant"
+      "celer",
+      "heler"
     ]
   },
   {
-    "id": 199,
-    "beginWord": "oignon",
-    "endWord": "rognon",
+    "id": 56,
+    "beginWord": "amie",
+    "endWord": "axee",
     "wordLadder": [
-      "pignon",
-      "pognon"
+      "amis",
+      "ames",
+      "axes"
     ]
   },
   {
-    "id": 200,
-    "beginWord": "pesait",
-    "endWord": "posent",
+    "id": 57,
+    "beginWord": "asse",
+    "endWord": "aube",
     "wordLadder": [
-      "posait",
-      "posant"
+      "aise",
+      "aine",
+      "aune"
     ]
   },
   {
-    "id": 201,
-    "beginWord": "savais",
-    "endWord": "savent",
+    "id": 58,
+    "beginWord": "avis",
+    "endWord": "obus",
     "wordLadder": [
-      "savait",
-      "savant"
+      "anis",
+      "anus",
+      "abus"
     ]
   },
   {
-    "id": 202,
-    "beginWord": "bailler",
-    "endWord": "taillis",
+    "id": 59,
+    "beginWord": "bath",
+    "endWord": "bete",
     "wordLadder": [
-      "tailler",
-      "tailles"
+      "bats",
+      "buts",
+      "bute"
     ]
   },
   {
-    "id": 203,
-    "beginWord": "blanche",
-    "endWord": "tronche",
+    "id": 60,
+    "beginWord": "bati",
+    "endWord": "bure",
     "wordLadder": [
-      "branche",
-      "tranche"
+      "bats",
+      "buts",
+      "bute"
     ]
   },
   {
-    "id": 204,
-    "beginWord": "bourges",
-    "endWord": "courtes",
+    "id": 61,
+    "beginWord": "beau",
+    "endWord": "deca",
     "wordLadder": [
-      "bourses",
-      "courses"
+      "veau",
+      "vecu",
+      "decu"
     ]
   },
   {
-    "id": 205,
-    "beginWord": "chasser",
-    "endWord": "clauses",
+    "id": 62,
+    "beginWord": "cave",
+    "endWord": "city",
     "wordLadder": [
-      "classer",
-      "classes"
+      "came",
+      "cime",
+      "cite"
     ]
   },
   {
-    "id": 206,
-    "beginWord": "comites",
-    "endWord": "dompter",
+    "id": 63,
+    "beginWord": "cent",
+    "endWord": "cerf",
     "wordLadder": [
-      "comptes",
-      "compter"
+      "sent",
+      "sert",
+      "serf"
     ]
   },
   {
-    "id": 207,
-    "beginWord": "content",
-    "endWord": "souvent",
+    "id": 64,
+    "beginWord": "emis",
+    "endWord": "unes",
     "wordLadder": [
-      "coutent",
-      "couvent"
+      "amis",
+      "anis",
+      "unis"
     ]
   },
   {
-    "id": 208,
-    "beginWord": "decolle",
-    "endWord": "deroute",
+    "id": 65,
+    "beginWord": "flux",
+    "endWord": "jean",
     "wordLadder": [
-      "decoule",
-      "deroule"
+      "feux",
+      "jeux",
+      "jeun"
     ]
   },
   {
-    "id": 209,
-    "beginWord": "detenir",
-    "endWord": "revetir",
+    "id": 66,
+    "beginWord": "jade",
+    "endWord": "jars",
     "wordLadder": [
-      "retenir",
-      "revenir"
+      "made",
+      "mare",
+      "mars"
     ]
   },
   {
-    "id": 210,
-    "beginWord": "ecoulee",
-    "endWord": "ecoutes",
+    "id": 67,
+    "beginWord": "nase",
+    "endWord": "noue",
     "wordLadder": [
-      "ecouler",
-      "ecouter"
+      "rase",
+      "rose",
+      "roue"
     ]
   },
   {
-    "id": 211,
-    "beginWord": "empaler",
-    "endWord": "expirer",
+    "id": 68,
+    "beginWord": "nuls",
+    "endWord": "ores",
     "wordLadder": [
-      "empiler",
-      "empirer"
+      "nues",
+      "tues",
+      "tres"
     ]
   },
   {
-    "id": 212,
-    "beginWord": "grouper",
-    "endWord": "trouves",
+    "id": 69,
+    "beginWord": "omis",
+    "endWord": "unie",
     "wordLadder": [
-      "groupes",
-      "troupes"
+      "amis",
+      "anis",
+      "unis"
     ]
   },
   {
-    "id": 213,
-    "beginWord": "heriter",
-    "endWord": "verites",
+    "id": 70,
+    "beginWord": "pans",
+    "endWord": "rail",
     "wordLadder": [
-      "meriter",
-      "merites"
+      "dans",
+      "dais",
+      "rais"
     ]
   },
   {
-    "id": 214,
-    "beginWord": "martial",
-    "endWord": "parties",
+    "id": 71,
+    "beginWord": "pape",
+    "endWord": "perd",
     "wordLadder": [
-      "partial",
-      "partiel"
+      "pare",
+      "pari",
+      "peri"
     ]
   },
   {
-    "id": 215,
-    "beginWord": "modeler",
-    "endWord": "moderne",
+    "id": 72,
+    "beginWord": "part",
+    "endWord": "pese",
     "wordLadder": [
-      "moderer",
-      "moderee"
+      "pare",
+      "pale",
+      "pele"
     ]
   },
   {
-    "id": 216,
-    "beginWord": "ravager",
-    "endWord": "rivales",
+    "id": 73,
+    "beginWord": "peau",
+    "endWord": "rend",
     "wordLadder": [
-      "ravages",
-      "rivages"
+      "veau",
+      "venu",
+      "vend"
     ]
   },
   {
-    "id": 217,
-    "beginWord": "blanches",
-    "endWord": "tranchet",
+    "id": 74,
+    "beginWord": "poli",
+    "endWord": "rape",
     "wordLadder": [
-      "branches",
-      "tranches"
+      "pole",
+      "pale",
+      "pape"
     ]
   },
   {
-    "id": 218,
-    "beginWord": "boursier",
-    "endWord": "fourrier",
+    "id": 75,
+    "beginWord": "rang",
+    "endWord": "secs",
     "wordLadder": [
-      "coursier",
-      "courrier"
+      "sang",
+      "sans",
+      "sens"
     ]
   },
   {
-    "id": 219,
-    "beginWord": "conduira",
-    "endWord": "conduits",
+    "id": 76,
+    "beginWord": "raye",
+    "endWord": "rene",
     "wordLadder": [
-      "conduire",
-      "conduite"
+      "rase",
+      "ruse",
+      "rune"
     ]
   },
   {
-    "id": 220,
-    "beginWord": "contente",
-    "endWord": "convenus",
+    "id": 77,
+    "beginWord": "repu",
+    "endWord": "rite",
     "wordLadder": [
-      "contenue",
-      "contenus"
+      "revu",
+      "reve",
+      "rive"
     ]
   },
   {
-    "id": 221,
-    "beginWord": "debander",
-    "endWord": "deranger",
+    "id": 78,
+    "beginWord": "roux",
+    "endWord": "soie",
     "wordLadder": [
-      "demander",
-      "demanger"
+      "roue",
+      "joue",
+      "joie"
     ]
   },
   {
-    "id": 222,
-    "beginWord": "decoller",
-    "endWord": "deroules",
+    "id": 79,
+    "beginWord": "seau",
+    "endWord": "tend",
     "wordLadder": [
-      "decouler",
-      "derouler"
+      "veau",
+      "venu",
+      "tenu"
     ]
   },
   {
-    "id": 223,
-    "beginWord": "defenses",
-    "endWord": "repenser",
+    "id": 80,
+    "beginWord": "sept",
+    "endWord": "soif",
     "wordLadder": [
-      "depenses",
-      "depenser"
+      "sent",
+      "sont",
+      "soit"
     ]
   },
   {
-    "id": 224,
-    "beginWord": "deflorer",
-    "endWord": "deployes",
+    "id": 81,
+    "beginWord": "tact",
+    "endWord": "yang",
     "wordLadder": [
-      "deplorer",
-      "deployer"
+      "tant",
+      "gant",
+      "gang"
     ]
   },
   {
-    "id": 225,
-    "beginWord": "depassee",
-    "endWord": "revasser",
+    "id": 82,
+    "beginWord": "time",
+    "endWord": "tirs",
     "wordLadder": [
-      "depasser",
-      "repasser"
+      "aime",
+      "aire",
+      "airs"
     ]
   },
   {
-    "id": 226,
-    "beginWord": "deprimer",
-    "endWord": "reprises",
+    "id": 83,
+    "beginWord": "tome",
+    "endWord": "tort",
     "wordLadder": [
-      "reprimer",
-      "repriser"
+      "dome",
+      "dore",
+      "dort"
     ]
   },
   {
-    "id": 227,
-    "beginWord": "detenait",
-    "endWord": "revenant",
+    "id": 84,
+    "beginWord": "tour",
+    "endWord": "voue",
     "wordLadder": [
-      "devenait",
-      "revenait"
+      "tous",
+      "nous",
+      "noue"
     ]
   },
   {
-    "id": 228,
-    "beginWord": "ecrivain",
-    "endWord": "ecrivent",
+    "id": 85,
+    "beginWord": "agent",
+    "endWord": "biens",
     "wordLadder": [
-      "ecrivait",
-      "ecrivant"
+      "aient",
+      "tient",
+      "tiens"
     ]
   },
   {
-    "id": 229,
-    "beginWord": "engendre",
-    "endWord": "entendus",
-    "wordLadder": [
-      "entendre",
-      "entendue"
-    ]
-  },
-  {
-    "id": 230,
-    "beginWord": "feuilles",
-    "endWord": "souiller",
-    "wordLadder": [
-      "fouilles",
-      "fouiller"
-    ]
-  },
-  {
-    "id": 231,
-    "beginWord": "imposait",
-    "endWord": "impotent",
-    "wordLadder": [
-      "imposant",
-      "imposent"
-    ]
-  },
-  {
-    "id": 232,
-    "beginWord": "laissait",
-    "endWord": "naissent",
-    "wordLadder": [
-      "laissant",
-      "laissent"
-    ]
-  },
-  {
-    "id": 233,
-    "beginWord": "manquait",
-    "endWord": "marquent",
-    "wordLadder": [
-      "marquait",
-      "marquant"
-    ]
-  },
-  {
-    "id": 234,
-    "beginWord": "precedee",
-    "endWord": "procedes",
-    "wordLadder": [
-      "preceder",
-      "proceder"
-    ]
-  },
-  {
-    "id": 235,
-    "beginWord": "produira",
-    "endWord": "produits",
-    "wordLadder": [
-      "produire",
-      "produite"
-    ]
-  },
-  {
-    "id": 236,
-    "beginWord": "traduira",
-    "endWord": "traduits",
-    "wordLadder": [
-      "traduire",
-      "traduite"
-    ]
-  },
-  {
-    "id": 237,
+    "id": 86,
     "beginWord": "agile",
-    "endWord": "evite",
+    "endWord": "edite",
     "wordLadder": [
       "agite",
       "alite",
@@ -3406,17 +2257,157 @@ export const CATALOGUE: Record<"en" | "fr", Level[]> = {
     ]
   },
   {
-    "id": 238,
-    "beginWord": "arabe",
-    "endWord": "vrais",
+    "id": 87,
+    "beginWord": "bagne",
+    "endWord": "salue",
     "wordLadder": [
-      "crabe",
-      "craie",
-      "vraie"
+      "bague",
+      "vague",
+      "value"
     ]
   },
   {
-    "id": 239,
+    "id": 88,
+    "beginWord": "belge",
+    "endWord": "garde",
+    "wordLadder": [
+      "berge",
+      "barge",
+      "barde"
+    ]
+  },
+  {
+    "id": 89,
+    "beginWord": "bonde",
+    "endWord": "chute",
+    "wordLadder": [
+      "boude",
+      "coude",
+      "coute"
+    ]
+  },
+  {
+    "id": 90,
+    "beginWord": "bords",
+    "endWord": "conne",
+    "wordLadder": [
+      "bonds",
+      "bonde",
+      "bonne"
+    ]
+  },
+  {
+    "id": 91,
+    "beginWord": "botte",
+    "endWord": "jetes",
+    "wordLadder": [
+      "bette",
+      "jette",
+      "jetee"
+    ]
+  },
+  {
+    "id": 92,
+    "beginWord": "bouts",
+    "endWord": "colle",
+    "wordLadder": [
+      "couts",
+      "coute",
+      "coule"
+    ]
+  },
+  {
+    "id": 93,
+    "beginWord": "brune",
+    "endWord": "palme",
+    "wordLadder": [
+      "brume",
+      "baume",
+      "paume"
+    ]
+  },
+  {
+    "id": 94,
+    "beginWord": "brute",
+    "endWord": "plume",
+    "wordLadder": [
+      "brume",
+      "baume",
+      "paume"
+    ]
+  },
+  {
+    "id": 95,
+    "beginWord": "calin",
+    "endWord": "felon",
+    "wordLadder": [
+      "salin",
+      "salon",
+      "selon"
+    ]
+  },
+  {
+    "id": 96,
+    "beginWord": "calme",
+    "endWord": "cause",
+    "wordLadder": [
+      "palme",
+      "paume",
+      "pause"
+    ]
+  },
+  {
+    "id": 97,
+    "beginWord": "casus",
+    "endWord": "laser",
+    "wordLadder": [
+      "cases",
+      "bases",
+      "baser"
+    ]
+  },
+  {
+    "id": 98,
+    "beginWord": "caves",
+    "endWord": "pages",
+    "wordLadder": [
+      "capes",
+      "sapes",
+      "sages"
+    ]
+  },
+  {
+    "id": 99,
+    "beginWord": "celle",
+    "endWord": "comte",
+    "wordLadder": [
+      "colle",
+      "coule",
+      "coute"
+    ]
+  },
+  {
+    "id": 100,
+    "beginWord": "cents",
+    "endWord": "fonte",
+    "wordLadder": [
+      "lents",
+      "lente",
+      "fente"
+    ]
+  },
+  {
+    "id": 101,
+    "beginWord": "cette",
+    "endWord": "tetes",
+    "wordLadder": [
+      "jette",
+      "jetee",
+      "jetes"
+    ]
+  },
+  {
+    "id": 102,
     "beginWord": "chaos",
     "endWord": "clefs",
     "wordLadder": [
@@ -3426,245 +2417,1348 @@ export const CATALOGUE: Record<"en" | "fr", Level[]> = {
     ]
   },
   {
-    "id": 240,
-    "beginWord": "aidant",
-    "endWord": "urgent",
+    "id": 103,
+    "beginWord": "citee",
+    "endWord": "dames",
     "wordLadder": [
-      "aident",
-      "ardent",
-      "argent"
+      "cites",
+      "dites",
+      "dates"
     ]
   },
   {
-    "id": 241,
-    "beginWord": "baiser",
-    "endWord": "trimer",
+    "id": 104,
+    "beginWord": "citer",
+    "endWord": "datas",
     "wordLadder": [
-      "briser",
-      "friser",
-      "frimer"
+      "cites",
+      "dites",
+      "dates"
     ]
   },
   {
-    "id": 242,
-    "beginWord": "beurre",
-    "endWord": "tourne",
+    "id": 105,
+    "beginWord": "clans",
+    "endWord": "plage",
     "wordLadder": [
-      "bourre",
-      "bourbe",
-      "tourbe"
+      "plans",
+      "plats",
+      "plate"
     ]
   },
   {
-    "id": 243,
-    "beginWord": "crotte",
-    "endWord": "trouve",
+    "id": 106,
+    "beginWord": "codes",
+    "endWord": "datee",
     "wordLadder": [
-      "croute",
-      "croupe",
-      "troupe"
+      "cotes",
+      "dotes",
+      "dates"
     ]
   },
   {
-    "id": 244,
-    "beginWord": "cuivre",
-    "endWord": "survit",
+    "id": 107,
+    "beginWord": "colin",
+    "endWord": "folie",
     "wordLadder": [
-      "suivre",
-      "suivie",
-      "survie"
+      "colis",
+      "jolis",
+      "jolie"
     ]
   },
   {
-    "id": 245,
-    "beginWord": "pacage",
-    "endWord": "rivale",
+    "id": 108,
+    "beginWord": "combe",
+    "endWord": "corde",
     "wordLadder": [
-      "pavage",
-      "ravage",
-      "rivage"
+      "comte",
+      "coute",
+      "coude"
     ]
   },
   {
-    "id": 246,
-    "beginWord": "braquer",
-    "endWord": "truquer",
+    "id": 109,
+    "beginWord": "concu",
+    "endWord": "corse",
     "wordLadder": [
-      "craquer",
-      "croquer",
-      "troquer"
+      "connu",
+      "cornu",
+      "corne"
     ]
   },
   {
-    "id": 247,
-    "beginWord": "connais",
-    "endWord": "donnent",
+    "id": 110,
+    "beginWord": "conge",
+    "endWord": "fonde",
     "wordLadder": [
-      "connait",
-      "donnait",
-      "donnant"
+      "conne",
+      "bonne",
+      "bonde"
     ]
   },
   {
-    "id": 248,
-    "beginWord": "commence",
-    "endWord": "pompette",
+    "id": 111,
+    "beginWord": "bill",
+    "endWord": "cafe",
     "wordLadder": [
-      "commente",
-      "commette",
-      "pommette"
+      "bile",
+      "bise",
+      "base",
+      "case"
     ]
   },
   {
-    "id": 249,
-    "beginWord": "decelant",
-    "endWord": "relevent",
+    "id": 112,
+    "beginWord": "came",
+    "endWord": "cars",
     "wordLadder": [
-      "decevant",
-      "recevant",
-      "relevant"
+      "rame",
+      "rare",
+      "mare",
+      "mars"
     ]
   },
   {
-    "id": 250,
-    "beginWord": "becher",
-    "endWord": "vaches",
+    "id": 113,
+    "beginWord": "ceux",
+    "endWord": "coup",
     "wordLadder": [
-      "lecher",
-      "lacher",
-      "cacher",
-      "caches"
+      "peux",
+      "peur",
+      "pour",
+      "cour"
     ]
   },
   {
-    "id": 251,
-    "beginWord": "bloque",
-    "endWord": "truque",
+    "id": 114,
+    "beginWord": "clan",
+    "endWord": "crea",
     "wordLadder": [
-      "cloque",
-      "claque",
-      "craque",
-      "traque"
+      "cran",
+      "crin",
+      "crie",
+      "cree"
     ]
   },
   {
-    "id": 252,
-    "beginWord": "minces",
-    "endWord": "singes",
+    "id": 115,
+    "beginWord": "clin",
+    "endWord": "dais",
     "wordLadder": [
-      "pinces",
-      "pieces",
-      "pieges",
-      "sieges"
+      "coin",
+      "loin",
+      "lois",
+      "dois"
     ]
   },
   {
-    "id": 253,
-    "beginWord": "baisser",
-    "endWord": "suisses",
+    "id": 116,
+    "beginWord": "coma",
+    "endWord": "dans",
     "wordLadder": [
-      "laisser",
-      "laisses",
-      "caisses",
-      "cuisses"
+      "cola",
+      "cols",
+      "cons",
+      "dons"
     ]
   },
   {
-    "id": 254,
-    "beginWord": "decorer",
-    "endWord": "renover",
+    "id": 117,
+    "beginWord": "cout",
+    "endWord": "dame",
     "wordLadder": [
-      "devorer",
-      "devouer",
-      "denouer",
-      "renouer"
+      "bout",
+      "boue",
+      "doue",
+      "dome"
     ]
   },
   {
-    "id": 255,
-    "beginWord": "dormant",
-    "endWord": "servent",
+    "id": 118,
+    "beginWord": "cuve",
+    "endWord": "dira",
     "wordLadder": [
-      "dorment",
-      "forment",
-      "ferment",
-      "serment"
+      "cure",
+      "pure",
+      "pire",
+      "dire"
     ]
   },
   {
-    "id": 256,
+    "id": 119,
+    "beginWord": "dite",
+    "endWord": "donc",
+    "wordLadder": [
+      "dote",
+      "dore",
+      "dort",
+      "dont"
+    ]
+  },
+  {
+    "id": 120,
+    "beginWord": "doux",
+    "endWord": "elle",
+    "wordLadder": [
+      "doue",
+      "moue",
+      "mole",
+      "mlle"
+    ]
+  },
+  {
+    "id": 121,
+    "beginWord": "fard",
+    "endWord": "faut",
+    "wordLadder": [
+      "lard",
+      "laid",
+      "lait",
+      "fait"
+    ]
+  },
+  {
+    "id": 122,
+    "beginWord": "film",
+    "endWord": "gene",
+    "wordLadder": [
+      "file",
+      "fine",
+      "mine",
+      "mene"
+    ]
+  },
+  {
+    "id": 123,
+    "beginWord": "flot",
+    "endWord": "iles",
+    "wordLadder": [
+      "flou",
+      "clou",
+      "clos",
+      "cles"
+    ]
+  },
+  {
+    "id": 124,
+    "beginWord": "gant",
+    "endWord": "lacs",
+    "wordLadder": [
+      "gang",
+      "sang",
+      "sans",
+      "sacs"
+    ]
+  },
+  {
+    "id": 125,
+    "beginWord": "juge",
+    "endWord": "lice",
+    "wordLadder": [
+      "auge",
+      "aune",
+      "aine",
+      "line"
+    ]
+  },
+  {
+    "id": 126,
+    "beginWord": "maxi",
+    "endWord": "nage",
+    "wordLadder": [
+      "mali",
+      "male",
+      "pale",
+      "page"
+    ]
+  },
+  {
+    "id": 127,
+    "beginWord": "meuf",
+    "endWord": "sauf",
+    "wordLadder": [
+      "veuf",
+      "veut",
+      "vaut",
+      "saut"
+    ]
+  },
+  {
+    "id": 128,
+    "beginWord": "mimi",
+    "endWord": "pele",
+    "wordLadder": [
+      "mini",
+      "mine",
+      "mene",
+      "pene"
+    ]
+  },
+  {
+    "id": 129,
+    "beginWord": "mont",
+    "endWord": "naif",
+    "wordLadder": [
+      "sont",
+      "soit",
+      "sait",
+      "nait"
+    ]
+  },
+  {
+    "id": 130,
+    "beginWord": "mort",
+    "endWord": "nain",
+    "wordLadder": [
+      "sort",
+      "soit",
+      "sait",
+      "nait"
+    ]
+  },
+  {
+    "id": 131,
+    "beginWord": "muni",
+    "endWord": "pepe",
+    "wordLadder": [
+      "mini",
+      "mine",
+      "mene",
+      "pene"
+    ]
+  },
+  {
+    "id": 132,
+    "beginWord": "nets",
+    "endWord": "nous",
+    "wordLadder": [
+      "sets",
+      "sens",
+      "sons",
+      "sous"
+    ]
+  },
+  {
+    "id": 133,
+    "beginWord": "opte",
+    "endWord": "ride",
+    "wordLadder": [
+      "apte",
+      "apre",
+      "aire",
+      "rire"
+    ]
+  },
+  {
+    "id": 134,
+    "beginWord": "plan",
+    "endWord": "prie",
+    "wordLadder": [
+      "clan",
+      "cran",
+      "crin",
+      "crie"
+    ]
+  },
+  {
+    "id": 135,
+    "beginWord": "pres",
+    "endWord": "quel",
+    "wordLadder": [
+      "tres",
+      "tues",
+      "dues",
+      "duel"
+    ]
+  },
+  {
+    "id": 136,
+    "beginWord": "pull",
+    "endWord": "tige",
+    "wordLadder": [
+      "bull",
+      "bill",
+      "bile",
+      "bige"
+    ]
+  },
+  {
+    "id": 137,
+    "beginWord": "robe",
+    "endWord": "site",
+    "wordLadder": [
+      "role",
+      "dole",
+      "dote",
+      "dite"
+    ]
+  },
+  {
+    "id": 138,
+    "beginWord": "sine",
+    "endWord": "sure",
+    "wordLadder": [
+      "aine",
+      "aire",
+      "pire",
+      "pure"
+    ]
+  },
+  {
+    "id": 139,
+    "beginWord": "soir",
+    "endWord": "solo",
+    "wordLadder": [
+      "soit",
+      "sont",
+      "sons",
+      "sols"
+    ]
+  },
+  {
+    "id": 140,
+    "beginWord": "surs",
+    "endWord": "taie",
+    "wordLadder": [
+      "suis",
+      "sais",
+      "rais",
+      "raie"
+    ]
+  },
+  {
+    "id": 141,
+    "beginWord": "tain",
+    "endWord": "tari",
+    "wordLadder": [
+      "main",
+      "mais",
+      "mars",
+      "mari"
+    ]
+  },
+  {
+    "id": 142,
+    "beginWord": "tard",
+    "endWord": "vers",
+    "wordLadder": [
+      "tari",
+      "mari",
+      "mars",
+      "mers"
+    ]
+  },
+  {
+    "id": 143,
+    "beginWord": "taxi",
+    "endWord": "vole",
+    "wordLadder": [
+      "maxi",
+      "mali",
+      "male",
+      "mole"
+    ]
+  },
+  {
+    "id": 144,
+    "beginWord": "test",
+    "endWord": "vont",
+    "wordLadder": [
+      "lest",
+      "lent",
+      "dent",
+      "dont"
+    ]
+  },
+  {
+    "id": 145,
+    "beginWord": "toux",
+    "endWord": "vase",
+    "wordLadder": [
+      "roux",
+      "roue",
+      "rose",
+      "rase"
+    ]
+  },
+  {
+    "id": 146,
+    "beginWord": "vamp",
+    "endWord": "vise",
+    "wordLadder": [
+      "camp",
+      "came",
+      "case",
+      "vase"
+    ]
+  },
+  {
+    "id": 147,
+    "beginWord": "vice",
+    "endWord": "vifs",
+    "wordLadder": [
+      "lice",
+      "liee",
+      "lies",
+      "vies"
+    ]
+  },
+  {
+    "id": 148,
+    "beginWord": "vint",
+    "endWord": "yens",
+    "wordLadder": [
+      "vont",
+      "sont",
+      "sent",
+      "sens"
+    ]
+  },
+  {
+    "id": 149,
+    "beginWord": "abces",
+    "endWord": "aires",
+    "wordLadder": [
+      "acces",
+      "actes",
+      "aptes",
+      "apres"
+    ]
+  },
+  {
+    "id": 150,
+    "beginWord": "aigre",
+    "endWord": "fibre",
+    "wordLadder": [
+      "tigre",
+      "titre",
+      "litre",
+      "libre"
+    ]
+  },
+  {
+    "id": 151,
+    "beginWord": "aigue",
+    "endWord": "livre",
+    "wordLadder": [
+      "aigre",
+      "tigre",
+      "titre",
+      "litre"
+    ]
+  },
+  {
+    "id": 152,
+    "beginWord": "aisee",
+    "endWord": "allie",
+    "wordLadder": [
+      "aises",
+      "ailes",
+      "alles",
+      "allee"
+    ]
+  },
+  {
+    "id": 153,
+    "beginWord": "aloes",
+    "endWord": "annee",
+    "wordLadder": [
+      "alles",
+      "ailes",
+      "aines",
+      "ainee"
+    ]
+  },
+  {
+    "id": 154,
+    "beginWord": "alors",
+    "endWord": "dires",
+    "wordLadder": [
+      "aloes",
+      "alles",
+      "ailes",
+      "aires"
+    ]
+  },
+  {
+    "id": 155,
+    "beginWord": "alpes",
+    "endWord": "dites",
+    "wordLadder": [
+      "alles",
+      "ailes",
+      "aires",
+      "dires"
+    ]
+  },
+  {
+    "id": 156,
+    "beginWord": "aorte",
+    "endWord": "arene",
+    "wordLadder": [
+      "porte",
+      "poete",
+      "prete",
+      "arete"
+    ]
+  },
+  {
+    "id": 157,
+    "beginWord": "armee",
+    "endWord": "files",
+    "wordLadder": [
+      "aimee",
+      "ainee",
+      "aines",
+      "ailes"
+    ]
+  },
+  {
+    "id": 158,
+    "beginWord": "armer",
+    "endWord": "lires",
+    "wordLadder": [
+      "aimer",
+      "aider",
+      "aides",
+      "aires"
+    ]
+  },
+  {
+    "id": 159,
+    "beginWord": "armes",
+    "endWord": "mines",
+    "wordLadder": [
+      "armee",
+      "aimee",
+      "ainee",
+      "aines"
+    ]
+  },
+  {
+    "id": 160,
+    "beginWord": "asile",
+    "endWord": "elime",
+    "wordLadder": [
+      "agile",
+      "agite",
+      "alite",
+      "elite"
+    ]
+  },
+  {
+    "id": 161,
+    "beginWord": "avare",
+    "endWord": "grene",
+    "wordLadder": [
+      "avere",
+      "amere",
+      "amene",
+      "arene"
+    ]
+  },
+  {
+    "id": 162,
+    "beginWord": "balte",
+    "endWord": "fente",
+    "wordLadder": [
+      "halte",
+      "hante",
+      "sante",
+      "sente"
+    ]
+  },
+  {
+    "id": 163,
+    "beginWord": "basee",
+    "endWord": "baume",
+    "wordLadder": [
+      "basse",
+      "passe",
+      "pause",
+      "paume"
+    ]
+  },
+  {
+    "id": 164,
+    "beginWord": "bebes",
+    "endWord": "beler",
+    "wordLadder": [
+      "betes",
+      "fetes",
+      "feter",
+      "feler"
+    ]
+  },
+  {
+    "id": 165,
+    "beginWord": "biere",
+    "endWord": "crise",
+    "wordLadder": [
+      "fiere",
+      "frere",
+      "frire",
+      "frise"
+    ]
+  },
+  {
+    "id": 166,
     "beginWord": "aber",
-    "endWord": "unit",
+    "endWord": "abus",
     "wordLadder": [
       "amer",
       "ames",
       "amis",
       "anis",
-      "unis"
+      "anus"
     ]
   },
   {
-    "id": 257,
-    "beginWord": "cabale",
-    "endWord": "solive",
+    "id": 167,
+    "beginWord": "acne",
+    "endWord": "alle",
     "wordLadder": [
-      "cabane",
-      "cabine",
-      "sabine",
-      "saline",
-      "salive"
+      "aine",
+      "mine",
+      "mene",
+      "mele",
+      "mlle"
     ]
   },
   {
-    "id": 258,
-    "beginWord": "fausser",
-    "endWord": "tousser",
+    "id": 168,
+    "beginWord": "aise",
+    "endWord": "aout",
     "wordLadder": [
-      "hausser",
-      "hausses",
-      "housses",
-      "pousses",
-      "pousser"
+      "dise",
+      "dose",
+      "doue",
+      "boue",
+      "bout"
     ]
   },
   {
-    "id": 259,
-    "beginWord": "parfait",
-    "endWord": "sortent",
+    "id": 169,
+    "beginWord": "auge",
+    "endWord": "baie",
     "wordLadder": [
-      "parlait",
-      "parlant",
-      "partant",
-      "portant",
-      "sortant"
+      "ange",
+      "anse",
+      "aise",
+      "bise",
+      "base"
     ]
   },
   {
-    "id": 260,
-    "beginWord": "blair",
-    "endWord": "trous",
+    "id": 170,
+    "beginWord": "bain",
+    "endWord": "banc",
     "wordLadder": [
-      "clair",
-      "chair",
-      "choir",
-      "choix",
-      "croix",
-      "crois",
-      "trois"
+      "sain",
+      "sais",
+      "sans",
+      "sang",
+      "bang"
     ]
   },
   {
-    "id": 261,
-    "beginWord": "debats",
-    "endWord": "severe",
+    "id": 171,
+    "beginWord": "bars",
+    "endWord": "bave",
     "wordLadder": [
-      "debuts",
-      "debute",
-      "depute",
-      "repute",
-      "repete",
-      "repere",
-      "revere"
+      "mars",
+      "mais",
+      "rais",
+      "raie",
+      "baie"
+    ]
+  },
+  {
+    "id": 172,
+    "beginWord": "best",
+    "endWord": "bons",
+    "wordLadder": [
+      "lest",
+      "lent",
+      "dent",
+      "dont",
+      "dons"
+    ]
+  },
+  {
+    "id": 173,
+    "beginWord": "bige",
+    "endWord": "bouc",
+    "wordLadder": [
+      "bise",
+      "dise",
+      "dose",
+      "doue",
+      "boue"
+    ]
+  },
+  {
+    "id": 174,
+    "beginWord": "bile",
+    "endWord": "boum",
+    "wordLadder": [
+      "bise",
+      "dise",
+      "dose",
+      "doue",
+      "boue"
+    ]
+  },
+  {
+    "id": 175,
+    "beginWord": "bond",
+    "endWord": "brut",
+    "wordLadder": [
+      "bons",
+      "tons",
+      "tous",
+      "tout",
+      "bout"
+    ]
+  },
+  {
+    "id": 176,
+    "beginWord": "brun",
+    "endWord": "cons",
+    "wordLadder": [
+      "brut",
+      "bout",
+      "tout",
+      "tous",
+      "tons"
+    ]
+  },
+  {
+    "id": 177,
+    "beginWord": "bull",
+    "endWord": "cake",
+    "wordLadder": [
+      "bill",
+      "bile",
+      "bise",
+      "base",
+      "case"
+    ]
+  },
+  {
+    "id": 178,
+    "beginWord": "camp",
+    "endWord": "cede",
+    "wordLadder": [
+      "came",
+      "cime",
+      "cite",
+      "cote",
+      "code"
+    ]
+  },
+  {
+    "id": 179,
+    "beginWord": "cils",
+    "endWord": "coin",
+    "wordLadder": [
+      "cols",
+      "vols",
+      "vois",
+      "lois",
+      "loin"
+    ]
+  },
+  {
+    "id": 180,
+    "beginWord": "cris",
+    "endWord": "doit",
+    "wordLadder": [
+      "pris",
+      "prix",
+      "poix",
+      "voix",
+      "voit"
+    ]
+  },
+  {
+    "id": 181,
+    "beginWord": "cube",
+    "endWord": "data",
+    "wordLadder": [
+      "cure",
+      "pure",
+      "pare",
+      "pate",
+      "date"
+    ]
+  },
+  {
+    "id": 182,
+    "beginWord": "cuir",
+    "endWord": "dort",
+    "wordLadder": [
+      "fuir",
+      "fuit",
+      "suit",
+      "soit",
+      "doit"
+    ]
+  },
+  {
+    "id": 183,
+    "beginWord": "defi",
+    "endWord": "fete",
+    "wordLadder": [
+      "demi",
+      "semi",
+      "seme",
+      "seve",
+      "feve"
+    ]
+  },
+  {
+    "id": 184,
+    "beginWord": "deja",
+    "endWord": "leve",
+    "wordLadder": [
+      "deca",
+      "decu",
+      "recu",
+      "revu",
+      "reve"
+    ]
+  },
+  {
+    "id": 185,
+    "beginWord": "dits",
+    "endWord": "dodo",
+    "wordLadder": [
+      "lits",
+      "lots",
+      "mots",
+      "moto",
+      "modo"
+    ]
+  },
+  {
+    "id": 186,
+    "beginWord": "dole",
+    "endWord": "dues",
+    "wordLadder": [
+      "role",
+      "rose",
+      "ruse",
+      "ruee",
+      "rues"
+    ]
+  },
+  {
+    "id": 187,
+    "beginWord": "duel",
+    "endWord": "fais",
+    "wordLadder": [
+      "dues",
+      "durs",
+      "murs",
+      "mars",
+      "mais"
+    ]
+  },
+  {
+    "id": 188,
+    "beginWord": "duos",
+    "endWord": "dupe",
+    "wordLadder": [
+      "durs",
+      "purs",
+      "pure",
+      "jure",
+      "jupe"
+    ]
+  },
+  {
+    "id": 189,
+    "beginWord": "ecus",
+    "endWord": "gele",
+    "wordLadder": [
+      "elus",
+      "elue",
+      "elle",
+      "mlle",
+      "mele"
+    ]
+  },
+  {
+    "id": 190,
+    "beginWord": "elan",
+    "endWord": "fois",
+    "wordLadder": [
+      "clan",
+      "clin",
+      "coin",
+      "loin",
+      "lois"
+    ]
+  },
+  {
+    "id": 191,
+    "beginWord": "fada",
+    "endWord": "faim",
+    "wordLadder": [
+      "fade",
+      "rade",
+      "raie",
+      "rais",
+      "fais"
+    ]
+  },
+  {
+    "id": 192,
+    "beginWord": "fado",
+    "endWord": "fait",
+    "wordLadder": [
+      "fade",
+      "rade",
+      "raie",
+      "rais",
+      "fais"
+    ]
+  },
+  {
+    "id": 193,
+    "beginWord": "fees",
+    "endWord": "fins",
+    "wordLadder": [
+      "nees",
+      "nues",
+      "vues",
+      "vies",
+      "vins"
+    ]
+  },
+  {
+    "id": 194,
+    "beginWord": "fera",
+    "endWord": "fond",
+    "wordLadder": [
+      "sera",
+      "sert",
+      "sort",
+      "sont",
+      "font"
+    ]
+  },
+  {
+    "id": 195,
+    "beginWord": "fers",
+    "endWord": "fous",
+    "wordLadder": [
+      "mers",
+      "mars",
+      "mais",
+      "fais",
+      "fois"
+    ]
+  },
+  {
+    "id": 196,
+    "beginWord": "feux",
+    "endWord": "gout",
+    "wordLadder": [
+      "peux",
+      "peur",
+      "pour",
+      "cour",
+      "cout"
+    ]
+  },
+  {
+    "id": 197,
+    "beginWord": "fief",
+    "endWord": "fige",
+    "wordLadder": [
+      "fier",
+      "lier",
+      "liee",
+      "line",
+      "fine"
+    ]
+  },
+  {
+    "id": 198,
+    "beginWord": "fiel",
+    "endWord": "file",
+    "wordLadder": [
+      "fier",
+      "lier",
+      "liee",
+      "line",
+      "fine"
+    ]
+  },
+  {
+    "id": 199,
+    "beginWord": "fils",
+    "endWord": "gain",
+    "wordLadder": [
+      "fins",
+      "vins",
+      "vans",
+      "vais",
+      "vain"
+    ]
+  },
+  {
+    "id": 200,
+    "beginWord": "fret",
+    "endWord": "hair",
+    "wordLadder": [
+      "pret",
+      "prit",
+      "prix",
+      "paix",
+      "pair"
+    ]
+  },
+  {
+    "id": 201,
+    "beginWord": "fute",
+    "endWord": "gage",
+    "wordLadder": [
+      "bute",
+      "bure",
+      "pure",
+      "pare",
+      "page"
+    ]
+  },
+  {
+    "id": 202,
+    "beginWord": "futs",
+    "endWord": "haie",
+    "wordLadder": [
+      "buts",
+      "bats",
+      "rats",
+      "rais",
+      "raie"
+    ]
+  },
+  {
+    "id": 203,
+    "beginWord": "gala",
+    "endWord": "hate",
+    "wordLadder": [
+      "gaza",
+      "gaze",
+      "gage",
+      "page",
+      "pate"
+    ]
+  },
+  {
+    "id": 204,
+    "beginWord": "gang",
+    "endWord": "huit",
+    "wordLadder": [
+      "sang",
+      "sans",
+      "sais",
+      "suis",
+      "suit"
+    ]
+  },
+  {
+    "id": 205,
+    "beginWord": "glue",
+    "endWord": "iris",
+    "wordLadder": [
+      "elue",
+      "elus",
+      "plus",
+      "plis",
+      "pris"
+    ]
+  },
+  {
+    "id": 206,
+    "beginWord": "grue",
+    "endWord": "made",
+    "wordLadder": [
+      "glue",
+      "elue",
+      "elle",
+      "mlle",
+      "male"
+    ]
+  },
+  {
+    "id": 207,
+    "beginWord": "have",
+    "endWord": "hier",
+    "wordLadder": [
+      "lave",
+      "lame",
+      "lime",
+      "liee",
+      "lier"
+    ]
+  },
+  {
+    "id": 208,
+    "beginWord": "inde",
+    "endWord": "joie",
+    "wordLadder": [
+      "iode",
+      "code",
+      "cote",
+      "vote",
+      "voie"
+    ]
+  },
+  {
+    "id": 209,
+    "beginWord": "inne",
+    "endWord": "noce",
+    "wordLadder": [
+      "inde",
+      "iode",
+      "code",
+      "cote",
+      "note"
+    ]
+  },
+  {
+    "id": 210,
+    "beginWord": "joua",
+    "endWord": "lama",
+    "wordLadder": [
+      "joue",
+      "doue",
+      "dome",
+      "dame",
+      "lame"
+    ]
+  },
+  {
+    "id": 211,
+    "beginWord": "joug",
+    "endWord": "laye",
+    "wordLadder": [
+      "joue",
+      "doue",
+      "dome",
+      "dame",
+      "lame"
+    ]
+  },
+  {
+    "id": 212,
+    "beginWord": "juan",
+    "endWord": "leur",
+    "wordLadder": [
+      "jean",
+      "jeun",
+      "jeux",
+      "peux",
+      "peur"
+    ]
+  },
+  {
+    "id": 213,
+    "beginWord": "juin",
+    "endWord": "peut",
+    "wordLadder": [
+      "juan",
+      "jean",
+      "jeun",
+      "jeux",
+      "peux"
+    ]
+  },
+  {
+    "id": 214,
+    "beginWord": "jury",
+    "endWord": "lies",
+    "wordLadder": [
+      "jure",
+      "pure",
+      "pire",
+      "lire",
+      "liee"
+    ]
+  },
+  {
+    "id": 215,
+    "beginWord": "laic",
+    "endWord": "laps",
+    "wordLadder": [
+      "lait",
+      "sait",
+      "sais",
+      "sacs",
+      "lacs"
+    ]
+  },
+  {
+    "id": 216,
+    "beginWord": "land",
+    "endWord": "loir",
+    "wordLadder": [
+      "laid",
+      "raid",
+      "rais",
+      "rois",
+      "lois"
+    ]
+  },
+  {
+    "id": 217,
+    "beginWord": "life",
+    "endWord": "logo",
+    "wordLadder": [
+      "liee",
+      "lies",
+      "lits",
+      "lots",
+      "loto"
+    ]
+  },
+  {
+    "id": 218,
+    "beginWord": "lima",
+    "endWord": "loue",
+    "wordLadder": [
+      "lama",
+      "lame",
+      "dame",
+      "dome",
+      "doue"
+    ]
+  },
+  {
+    "id": 219,
+    "beginWord": "lord",
+    "endWord": "main",
+    "wordLadder": [
+      "lard",
+      "laid",
+      "raid",
+      "rais",
+      "mais"
+    ]
+  },
+  {
+    "id": 220,
+    "beginWord": "luis",
+    "endWord": "mali",
+    "wordLadder": [
+      "suis",
+      "sais",
+      "mais",
+      "mars",
+      "mari"
     ]
   }
 ],
