@@ -78,6 +78,39 @@ The native `ios/` and `android/` projects are committed to git (AppFlow builds
 from them). Web assets are statically exported to `out/` (`output: "export"`) and
 embedded via Capacitor `webDir: "out"`.
 
+### Building for TestFlight (iOS)
+
+**One-time setup.** Signing certificates cannot be created from the command
+line: open Xcode → Settings → Accounts, sign in with the Apple Developer
+account, and select the team (`7H6S64378V`). Without this,
+`security find-identity -v -p codesigning` reports `0 valid identities` and
+every archive fails with *"No profiles for 'com.marcelgames.earthunt' were
+found"*.
+
+Also bump the build number in `ios/App/App.xcodeproj` before each upload:
+App Store Connect rejects a `CURRENT_PROJECT_VERSION` it has already seen for
+the same `MARKETING_VERSION`.
+
+```bash
+pnpm --filter @marcel-games/earthunt ios:prepare
+pnpm --filter @marcel-games/earthunt ios:archive
+pnpm --filter @marcel-games/earthunt ios:export
+```
+
+`ios:prepare` regenerates `Env.xcconfig` from `.env.local` (so the Mapbox token
+is inlined), rebuilds the static export and syncs it into the native project.
+The `.ipa` lands in `apps/earthunt/build/ipa/`.
+
+Upload it with Apple's Transporter app, or from the terminal with an App Store
+Connect API key:
+
+```bash
+xcrun altool --upload-app -f apps/earthunt/build/ipa/App.ipa -t ios --apiKey <KEY_ID> --apiIssuer <ISSUER_ID>
+```
+
+TestFlight then takes a few minutes to process the build before it appears on
+the device.
+
 ### Building an Android release locally
 
 Toolchain (once per machine — no Android Studio needed):

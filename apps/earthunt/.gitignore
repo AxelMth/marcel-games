@@ -15,3 +15,6 @@ node_modules/
 out/
 # Store screenshots are large binaries regenerated on demand.
 store-assets/
+
+# Local iOS archive and .ipa output
+build/
