@@ -10,6 +10,7 @@ import { normalizeCountryName } from "@/lib/game-logic"
 import { HelpBubble } from "@/components/help-bubble"
 import { useLanguage } from "@/components/language-provider"
 import { useKeyboardOffset } from "@/hooks/use-keyboard-offset"
+import { useNativeScrollLock } from "@/hooks/use-native-scroll-lock"
 
 import { GameIndicator } from "./game-indicator"
 import { WorldMap } from "./world-map"
@@ -37,6 +38,9 @@ export function GameScreen() {
   const inputRef = useRef<HTMLInputElement>(null)
   const { t, tReplace, lang } = useLanguage()
   const keyboardOffset = useKeyboardOffset()
+  // Only while the map is on screen: the lock belongs to the web view, so
+  // holding it app-wide would take scrolling away from the stats history.
+  useNativeScrollLock()
 
   useEffect(() => {
     const interval = setInterval(tick, 1000)
@@ -153,9 +157,18 @@ export function GameScreen() {
         }}
       />
 
-      {/* Guess feedback toast - only for correct guesses */}
+      {/* Guess feedback toast - only for correct guesses. It rides above the
+          search bar, so it has to clear the keyboard too: pressing Enter does
+          not blur the input, and a fixed offset would leave the confirmation
+          hidden behind the keyboard for its whole 2.5 s. */}
       {lastGuessResult?.type === "correct" && (
-        <div className="pointer-events-none absolute bottom-36 left-1/2 z-20 -translate-x-1/2">
+        <div
+          className="pointer-events-none absolute left-1/2 z-20 -translate-x-1/2"
+          style={{
+            bottom: keyboardOffset > 0 ? `calc(5rem + ${keyboardOffset}px)` : "9rem",
+            transition: "bottom 220ms ease-out",
+          }}
+        >
           <div className="rounded-xl bg-[#2ec4a0]/90 px-5 py-2.5 text-center text-sm font-bold text-white shadow-lg backdrop-blur-sm">
             {lastGuessResult.message}
           </div>
@@ -174,6 +187,10 @@ export function GameScreen() {
             keyboardOffset > 0
               ? `calc(0.5rem + ${keyboardOffset}px)`
               : "calc(1.5rem + env(safe-area-inset-bottom, 0px))",
+          // keyboardWillShow fires as the keyboard starts animating in, so
+          // matching its duration keeps the bar riding on top of it rather
+          // than snapping up ahead of it.
+          transition: "bottom 220ms ease-out",
         }}
         onAnimationEnd={() => {
           if (shouldShake) {

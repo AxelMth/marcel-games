@@ -10,17 +10,7 @@ func GetLevelCountryCodesForContinent(level int, continent constants.Continent) 
 	countriesForContinent := getCountriesForContinent(continent)
 	sorted := sortCountriesByArea(countriesForContinent)
 
-	countryCount := getNumberOfCountries(level)
-	countrySelectWindow := getCountrySelectWindow(level, len(sorted))
-	availableCountries := sorted[:countryCount+countrySelectWindow]
-
-	result := make([]string, 0, countryCount)
-	indices := rand.Perm(len(availableCountries))[:countryCount]
-	for _, idx := range indices {
-		result = append(result, availableCountries[idx].Code)
-	}
-
-	return result
+	return pickCountryCodes(sorted, level, nil)
 }
 
 func GetLevelCountryCodesForLevel(level int) []string {
@@ -34,13 +24,29 @@ func GetLevelCountryCodesForLevel(level int) []string {
 func GetLevelCountryCodesForLevelWithRand(level int, r *rand.Rand) []string {
 	sorted := sortCountriesByArea(constants.Countries)
 
-	countryCount := getNumberOfCountriesWithRand(level, r)
-	countrySelectWindow := getCountrySelectWindow(level, len(sorted))
-	availableCountries := sorted[:countryCount+countrySelectWindow]
+	return pickCountryCodes(sorted, level, r)
+}
+
+// pickCountryCodes draws a level's countries from a pool sorted hardest-last.
+//
+// Both the number of countries and the window they are drawn from grow with the
+// level, and neither was clamped to the pool: Oceania holds seven countries, so
+// from level 101 the slice bound exceeded it and the request panicked — a 500
+// that also fired from FinishLevelHandler, after the level had been recorded,
+// leaving that continent unplayable for the player. The world pool ran out the
+// same way past level 1000, and an unknown continent gives an empty pool at
+// every level.
+func pickCountryCodes(sorted []constants.Country, level int, r *rand.Rand) []string {
+	if len(sorted) == 0 {
+		return []string{}
+	}
+
+	countryCount := min(getNumberOfCountriesWithRand(level, r), len(sorted))
+	window := min(countryCount+getCountrySelectWindow(level, len(sorted)), len(sorted))
+	availableCountries := sorted[:window]
 
 	result := make([]string, 0, countryCount)
-	indices := permutation(r, len(availableCountries))[:countryCount]
-	for _, idx := range indices {
+	for _, idx := range permutation(r, len(availableCountries))[:countryCount] {
 		result = append(result, availableCountries[idx].Code)
 	}
 
