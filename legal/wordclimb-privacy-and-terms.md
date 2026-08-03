@@ -21,8 +21,11 @@ account and we do not collect your name, email address, or contacts.
 - **Device info** — brand, model and OS version, for diagnostics and compatibility.
 - **Anonymous usage analytics** help us improve the app.
 
-**No ads, no tracking.** WordClimb does not show ads and does not track you across
-other apps or websites.
+**Advertising.** We show ads through Google AdMob. On iOS we ask for your
+permission (App Tracking Transparency) before using your device's advertising
+identifier for personalized ads. If you decline, you still see ads, but they are
+not personalized. Google may process data as described in Google's Privacy
+Policy.
 
 **Your choices.** Uninstalling the app removes locally stored data.
 

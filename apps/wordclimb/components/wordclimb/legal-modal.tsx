@@ -39,9 +39,10 @@ const COPY: Record<"en" | "fr", { privacy: Section[]; terms: Section[] }> = {
         ],
       },
       {
-        heading: "No ads, no tracking",
+        heading: "Advertising",
         body: [
-          "WordClimb does not show ads and does not track you across other apps or websites.",
+          "We show ads through Google AdMob. On iOS we ask for your permission (App Tracking Transparency) before using your device's advertising identifier for personalized ads. If you decline, you still see ads, but they are not personalized.",
+          "Google may process data as described in Google's Privacy Policy.",
         ],
       },
       {
@@ -106,9 +107,10 @@ const COPY: Record<"en" | "fr", { privacy: Section[]; terms: Section[] }> = {
         ],
       },
       {
-        heading: "Pas de publicite, pas de suivi",
+        heading: "Publicite",
         body: [
-          "WordClimb n'affiche aucune publicite et ne vous suit pas a travers d'autres applications ou sites.",
+          "Nous affichons des publicites via Google AdMob. Sur iOS, nous demandons votre autorisation (App Tracking Transparency) avant d'utiliser l'identifiant publicitaire de votre appareil pour des publicites personnalisees. Si vous refusez, vous voyez toujours des publicites, mais non personnalisees.",
+          "Google peut traiter des donnees comme decrit dans la politique de confidentialite de Google.",
         ],
       },
       {

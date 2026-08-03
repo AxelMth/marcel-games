@@ -264,9 +264,18 @@ importers:
 
   apps/wordclimb:
     dependencies:
+      '@capacitor-community/admob':
+        specifier: ^8.0.0
+        version: 8.0.0
+      '@capacitor/core':
+        specifier: ^8.1.0
+        version: 8.1.0
       '@hookform/resolvers':
         specifier: ^3.9.1
         version: 3.10.0(react-hook-form@7.71.2(react@19.2.4))
+      '@marcel-games/lib':
+        specifier: workspace:^
+        version: link:../../packages/lib
       '@marcel-games/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -357,6 +366,9 @@ importers:
       autoprefixer:
         specifier: ^10.4.20
         version: 10.4.24(postcss@8.5.6)
+      capacitor-plugin-app-tracking-transparency:
+        specifier: ^3.0.0
+        version: 3.0.0(@capacitor/core@8.1.0)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
