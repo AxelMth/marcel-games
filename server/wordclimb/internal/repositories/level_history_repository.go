@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+// CreateOneLevelHistory records a finished level. wordLadder is the ladder the
+// player solved, full path included, and is part of the row's unique key
+// (@@unique([userId, level, gameMode, wordLadder]) in schema.prisma) so the same
+// puzzle cannot be recorded twice for a user.
 func CreateOneLevelHistory(
 	ctx context.Context,
 	userID string,
@@ -15,11 +19,10 @@ func CreateOneLevelHistory(
 	timeSpent int,
 	hintsUsed int,
 	gameMode string,
-	continent string,
-	countryCodes []string,
+	wordLadder []string,
 ) (*db.LevelHistoryModel, error) {
-	if continent == "" {
-		continent = "WORLD"
+	if wordLadder == nil {
+		wordLadder = []string{}
 	}
 	levelHistory, err := db.Client().LevelHistory.CreateOne(
 		db.LevelHistory.Level.Set(level),
@@ -27,23 +30,22 @@ func CreateOneLevelHistory(
 		db.LevelHistory.TimeSpent.Set(timeSpent),
 		db.LevelHistory.User.Link(db.User.ID.Equals(userID)),
 		db.LevelHistory.GameMode.Set(db.GameMode(gameMode)),
-		db.LevelHistory.Continent.Set(db.Continent(continent)),
-		db.LevelHistory.CountryCodes.Set(countryCodes),
+		db.LevelHistory.WordLadder.Set(wordLadder),
 		db.LevelHistory.HintsUsed.Set(hintsUsed),
 	).Exec(ctx)
 	return levelHistory, err
 }
 
+// GetLastLevelFromHistory returns the highest level the user reached in a mode,
+// or 0 when they have never played it.
 func GetLastLevelFromHistory(
 	ctx context.Context,
 	userID string,
 	gameMode string,
-	continent string,
 ) int {
 	levelHistory, err := db.Client().LevelHistory.FindFirst(
 		db.LevelHistory.UserID.Equals(userID),
 		db.LevelHistory.GameMode.Equals(db.GameMode(gameMode)),
-		db.LevelHistory.Continent.Equals(db.Continent(continent)),
 	).OrderBy(
 		db.LevelHistory.Level.Order(db.DESC),
 	).Exec(ctx)
@@ -257,16 +259,16 @@ func GetUserGlobalDailyRank(ctx context.Context, userID string) (int, error) {
 
 // GameHistoryEntry holds a single level history record for the profile API
 type GameHistoryEntry struct {
-	Level     int    `json:"level"`
-	GameMode  string `json:"gameMode"`
-	Continent string `json:"continent"`
-	Stars     int    `json:"stars"`
-	Rank      int    `json:"rank"`
+	Level      int      `json:"level"`
+	GameMode   string   `json:"gameMode"`
+	WordLadder []string `json:"wordLadder"`
+	Stars      int      `json:"stars"`
+	Rank       int      `json:"rank"`
 }
 
 // getRankForLevelEntry returns the user's rank for a given level history entry.
 // For LEVEL_OF_THE_DAY: scope by createdAt day.
-// For WORLD/CONTINENTS: scope by level, gameMode, continent.
+// For NORMAL/RANDOM: scope by level and gameMode.
 func getRankForLevelEntry(ctx context.Context, h db.LevelHistoryModel) (int, error) {
 	var dayStart, dayEnd time.Time
 	if string(h.GameMode) == "LEVEL_OF_THE_DAY" {
@@ -299,7 +301,6 @@ func getRankForLevelEntry(ctx context.Context, h db.LevelHistoryModel) (int, err
 		fewerAttempts, err = db.Client().LevelHistory.FindMany(
 			db.LevelHistory.Level.Equals(h.Level),
 			db.LevelHistory.GameMode.Equals(h.GameMode),
-			db.LevelHistory.Continent.Equals(h.Continent),
 			db.LevelHistory.Attempts.Lt(h.Attempts),
 		).Exec(ctx)
 		if err != nil {
@@ -308,7 +309,6 @@ func getRankForLevelEntry(ctx context.Context, h db.LevelHistoryModel) (int, err
 		sameAttemptsLessTime, err = db.Client().LevelHistory.FindMany(
 			db.LevelHistory.Level.Equals(h.Level),
 			db.LevelHistory.GameMode.Equals(h.GameMode),
-			db.LevelHistory.Continent.Equals(h.Continent),
 			db.LevelHistory.Attempts.Equals(h.Attempts),
 			db.LevelHistory.TimeSpent.Lt(h.TimeSpent),
 		).Exec(ctx)
@@ -345,18 +345,18 @@ func GetUserLevelHistory(ctx context.Context, userID string, limit int) ([]GameH
 		if limit > 0 && i >= limit {
 			break
 		}
-		countryCount := len(h.CountryCodes)
-		if countryCount == 0 {
-			countryCount = 1
+		wordCount := len(h.WordLadder)
+		if wordCount == 0 {
+			wordCount = 1
 		}
-		stars := domain.ComputeStars(h.Attempts, countryCount, h.HintsUsed)
+		stars := domain.ComputeStars(h.Attempts, wordCount, h.HintsUsed)
 		rank, _ := getRankForLevelEntry(ctx, h)
 		entries = append(entries, GameHistoryEntry{
-			Level:     h.Level,
-			GameMode:  string(h.GameMode),
-			Continent: string(h.Continent),
-			Stars:     stars,
-			Rank:      rank,
+			Level:      h.Level,
+			GameMode:   string(h.GameMode),
+			WordLadder: h.WordLadder,
+			Stars:      stars,
+			Rank:       rank,
 		})
 	}
 	return entries, nil

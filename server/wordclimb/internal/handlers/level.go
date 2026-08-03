@@ -3,26 +3,33 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"marcel-games-backend/internal/constants"
+	"marcel-games-backend/internal/domain"
 	"marcel-games-backend/internal/repositories"
 	"marcel-games-backend/pkg/utils"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
 type GetLevelInfo struct {
-	UserID string `form:"userId" binding:"required"`
-	// TODO: Add game mode validation
+	UserID   string `form:"userId" binding:"required"`
 	GameMode string `form:"gameMode" binding:"required"`
-	// TODO: Add continent validation
-	Continent string `form:"continent"`
+}
+
+// LevelPayload is a playable level. WordLadder is the full solution path, begin
+// and end words included, which is what utils.FindLadder returns. BeginWord and
+// EndWord are sent separately so the client does not have to slice the ladder.
+type LevelPayload struct {
+	BeginWord  string   `json:"beginWord"`
+	EndWord    string   `json:"endWord"`
+	WordLadder []string `json:"wordLadder"`
 }
 
 type GetLevelInfoResponse struct {
-	Level        int              `json:"level"`
-	CountryCodes []string         `json:"countryCodes"`
-	Stats        *DailyLevelStats `json:"stats,omitempty"`
+	Level int `json:"level"`
+	LevelPayload
+	Stats *DailyLevelStats `json:"stats,omitempty"`
 }
 
 type DailyLevelStats struct {
@@ -39,51 +46,35 @@ func GetLevelHandler(c *gin.Context) {
 		return
 	}
 
-	// Normalize continent for world/daily so it matches stored level history (same as FinishLevelHandler)
-	if req.Continent == "" && (req.GameMode == "WORLD" || req.GameMode == "LEVEL_OF_THE_DAY") {
-		req.Continent = "WORLD"
-	}
+	gameMode := domain.NormalizeGameMode(req.GameMode)
 
 	ctx := context.Background()
 
 	var currentLevel int
-	var countryCodes []string
+	var payload LevelPayload
 	var stats *DailyLevelStats
 
-	fmt.Println("req.GameMode", req.GameMode)
-	if req.GameMode == "LEVEL_OF_THE_DAY" {
-		// Check if user has already completed today's level
-		hasCompletedToday := repositories.HasUserCompletedTodaysLevel(ctx, req.UserID)
-		if hasCompletedToday {
-			// Return empty country codes if already completed
-			countryCodes = []string{}
-			currentLevel = 1 // Level of the day is always level 1
-		} else {
-			// Get today's country codes
-			countryCodes = repositories.GetLevelOfTheDayCountryCodes(ctx)
-			currentLevel = 1
+	if gameMode == domain.GameModeLevelOfTheDay {
+		// Level of the day is always level 1: there is a single puzzle per day.
+		currentLevel = 1
+
+		// An already-finished daily returns an empty payload so the client shows
+		// the "come back tomorrow" state instead of the puzzle again.
+		if !repositories.HasUserCompletedTodaysLevel(ctx, req.UserID) {
+			payload = levelOfTheDayPayload(ctx)
 		}
 
-		// Calculate daily level statistics
-		dailyLevelsCompleted := repositories.GetUserDailyLevelCount(ctx, req.UserID)
-		lastLevelRank, _ := repositories.GetUserRankForLastDailyLevel(ctx, req.UserID)
-		globalRank, _ := repositories.GetUserGlobalDailyRank(ctx, req.UserID)
-
-		stats = &DailyLevelStats{
-			DailyLevelsCompleted: dailyLevelsCompleted,
-			LastLevelRank:        lastLevelRank,
-			GlobalRank:           globalRank,
-		}
+		stats = buildDailyLevelStats(ctx, req.UserID)
 	} else {
 		// For other game modes, get the last level and increment
-		level := repositories.GetLastLevelFromHistory(ctx, req.UserID, req.GameMode, req.Continent)
+		level := repositories.GetLastLevelFromHistory(ctx, req.UserID, gameMode)
 		currentLevel = level + 1
-		countryCodes = getCountryCodes(req.GameMode, req.Continent, currentLevel)
+		payload = levelPayloadForNumber(currentLevel)
 	}
 
 	response := GetLevelInfoResponse{
 		Level:        currentLevel,
-		CountryCodes: countryCodes,
+		LevelPayload: payload,
 		Stats:        stats,
 	}
 
@@ -91,19 +82,20 @@ func GetLevelHandler(c *gin.Context) {
 }
 
 type FinishLevelInfo struct {
-	UserID       string   `json:"userId"`
-	Attempts     int      `json:"attempts"`
-	TimeSpent    int      `json:"timeSpent"`
-	HintsUsed    int      `json:"hintsUsed"`
-	GameMode     string   `json:"gameMode"`
-	Continent    string   `json:"continent"`
-	CountryCodes []string `json:"countryCodes"`
+	UserID     string   `json:"userId"`
+	Attempts   int      `json:"attempts"`
+	TimeSpent  int      `json:"timeSpent"`
+	HintsUsed  int      `json:"hintsUsed"`
+	GameMode   string   `json:"gameMode"`
+	WordLadder []string `json:"wordLadder"`
 }
 
 type FinishLevelResponse struct {
-	NextLevel        int              `json:"nextLevel"`
-	NextCountryCodes []string         `json:"nextCountryCodes"`
-	Stats            *DailyLevelStats `json:"stats,omitempty"`
+	NextLevel      int              `json:"nextLevel"`
+	NextBeginWord  string           `json:"nextBeginWord"`
+	NextEndWord    string           `json:"nextEndWord"`
+	NextWordLadder []string         `json:"nextWordLadder"`
+	Stats          *DailyLevelStats `json:"stats,omitempty"`
 }
 
 func FinishLevelHandler(c *gin.Context) {
@@ -119,14 +111,11 @@ func FinishLevelHandler(c *gin.Context) {
 		return
 	}
 
-	// Continent is required by DB enum; default to WORLD for world/daily modes when client sends empty
-	if req.Continent == "" {
-		req.Continent = "WORLD"
-	}
+	gameMode := domain.NormalizeGameMode(req.GameMode)
 
 	ctx := context.Background()
 
-	level := repositories.GetLastLevelFromHistory(ctx, req.UserID, req.GameMode, req.Continent)
+	level := repositories.GetLastLevelFromHistory(ctx, req.UserID, gameMode)
 
 	_, err := repositories.CreateOneLevelHistory(
 		ctx,
@@ -135,9 +124,8 @@ func FinishLevelHandler(c *gin.Context) {
 		req.Attempts,
 		req.TimeSpent,
 		req.HintsUsed,
-		req.GameMode,
-		req.Continent,
-		req.CountryCodes,
+		gameMode,
+		req.WordLadder,
 	)
 
 	if err != nil {
@@ -147,62 +135,99 @@ func FinishLevelHandler(c *gin.Context) {
 	}
 
 	var nextLevel int
-	var countryCodes []string
+	var payload LevelPayload
 	var stats *DailyLevelStats
 
-	if req.GameMode == "LEVEL_OF_THE_DAY" {
-		// For level of the day, return empty country codes after completion
+	if gameMode == domain.GameModeLevelOfTheDay {
+		// The daily puzzle is over until tomorrow, so there is no next level to
+		// hand back.
 		nextLevel = 1
-		countryCodes = []string{}
-
-		// Calculate updated daily level statistics after completion
-		dailyLevelsCompleted := repositories.GetUserDailyLevelCount(ctx, req.UserID)
-		lastLevelRank, _ := repositories.GetUserRankForLastDailyLevel(ctx, req.UserID)
-		globalRank, _ := repositories.GetUserGlobalDailyRank(ctx, req.UserID)
-
-		stats = &DailyLevelStats{
-			DailyLevelsCompleted: dailyLevelsCompleted,
-			LastLevelRank:        lastLevelRank,
-			GlobalRank:           globalRank,
-		}
+		stats = buildDailyLevelStats(ctx, req.UserID)
 	} else {
 		nextLevel = level + 2
-		countryCodes = getCountryCodes(req.GameMode, req.Continent, nextLevel)
+		payload = levelPayloadForNumber(nextLevel)
 	}
 
 	response := FinishLevelResponse{
-		NextLevel:        nextLevel,
-		NextCountryCodes: countryCodes,
-		Stats:            stats,
+		NextLevel:      nextLevel,
+		NextBeginWord:  payload.BeginWord,
+		NextEndWord:    payload.EndWord,
+		NextWordLadder: payload.WordLadder,
+		Stats:          stats,
 	}
 
 	c.JSON(http.StatusOK, response)
 }
 
-func getCountryCodes(gameMode string, continent string, level int) []string {
-	var countryCodes []string
-	if gameMode == "WORLD" {
-		countryCodes = utils.GetLevelCountryCodesForLevel(level)
-	} else if gameMode == "CONTINENTS" {
-		// TODO: Add continent check (e.g. Africa, Americas, Asia, Europe, Oceania)
-		continentEnum := constants.Continent(continent)
-		countryCodes = utils.GetLevelCountryCodesForContinent(level, continentEnum)
+// levelPayloadForNumber resolves the curated puzzle for a level number.
+func levelPayloadForNumber(level int) LevelPayload {
+	definition, ok := utils.GetLevelForNumber(level)
+	if !ok {
+		return emptyLevelPayload()
 	}
-	return countryCodes
+	return LevelPayload{
+		BeginWord:  definition.BeginWord,
+		EndWord:    definition.EndWord,
+		WordLadder: definition.WordLadder,
+	}
 }
 
-// Progress response for carousel: current level per mode and daily completion.
-var progressContinents = []string{"EUROPE", "ASIA", "AMERICAS", "AFRICA", "OCEANIA"}
+// levelOfTheDayPayload reads today's ladder from the database and falls back to
+// recomputing it from the date when the populate-level-of-the-day job has not
+// run. Without the fallback a missed cron leaves the daily mode unplayable.
+func levelOfTheDayPayload(ctx context.Context) LevelPayload {
+	ladder := repositories.GetLevelOfTheDayWordLadder(ctx)
+	if len(ladder) >= 2 {
+		return LevelPayload{
+			BeginWord:  ladder[0],
+			EndWord:    ladder[len(ladder)-1],
+			WordLadder: ladder,
+		}
+	}
+
+	definition, ok := utils.GetLevelForDate(time.Now().UTC())
+	if !ok {
+		return emptyLevelPayload()
+	}
+	return LevelPayload{
+		BeginWord:  definition.BeginWord,
+		EndWord:    definition.EndWord,
+		WordLadder: definition.WordLadder,
+	}
+}
+
+// emptyLevelPayload keeps wordLadder as [] rather than null on the wire, so the
+// client can always iterate over it.
+func emptyLevelPayload() LevelPayload {
+	return LevelPayload{WordLadder: []string{}}
+}
+
+func buildDailyLevelStats(ctx context.Context, userID string) *DailyLevelStats {
+	dailyLevelsCompleted := repositories.GetUserDailyLevelCount(ctx, userID)
+	lastLevelRank, _ := repositories.GetUserRankForLastDailyLevel(ctx, userID)
+	globalRank, _ := repositories.GetUserGlobalDailyRank(ctx, userID)
+
+	return &DailyLevelStats{
+		DailyLevelsCompleted: dailyLevelsCompleted,
+		LastLevelRank:        lastLevelRank,
+		GlobalRank:           globalRank,
+	}
+}
 
 type GetProgressInfo struct {
 	UserID string `form:"userId" binding:"required"`
 }
 
+// GetProgressResponse feeds the mode carousel.
+//
+// worldLevel keeps earthunt's field name because the client still reads it
+// under that name (apps/wordclimb/lib/api.ts, ProgressResponse.worldLevel);
+// in WordClimb it is the progression of the NORMAL mode, shown as "Classic".
 type GetProgressResponse struct {
-	WorldLevel      int               `json:"worldLevel"`
-	ContinentLevels map[string]int    `json:"continentLevels"`
-	DailyCompleted  bool              `json:"dailyCompleted"`
-	Stats           *DailyLevelStats  `json:"stats,omitempty"`
+	WorldLevel     int              `json:"worldLevel"`
+	RandomLevel    int              `json:"randomLevel"`
+	DailyCompleted bool             `json:"dailyCompleted"`
+	Stats          *DailyLevelStats `json:"stats,omitempty"`
 }
 
 func GetProgressHandler(c *gin.Context) {
@@ -215,39 +240,22 @@ func GetProgressHandler(c *gin.Context) {
 
 	ctx := context.Background()
 
-	worldLast := repositories.GetLastLevelFromHistory(ctx, req.UserID, "WORLD", "WORLD")
-	worldLevel := worldLast + 1
-	if worldLevel < 1 {
-		worldLevel = 1
-	}
-
-	continentLevels := make(map[string]int)
-	for _, cont := range progressContinents {
-		last := repositories.GetLastLevelFromHistory(ctx, req.UserID, "CONTINENTS", cont)
-		level := last + 1
-		if level < 1 {
-			level = 1
-		}
-		continentLevels[cont] = level
-	}
-
-	dailyCompleted := repositories.HasUserCompletedTodaysLevel(ctx, req.UserID)
-
-	var stats *DailyLevelStats
-	dailyLevelsCompleted := repositories.GetUserDailyLevelCount(ctx, req.UserID)
-	lastLevelRank, _ := repositories.GetUserRankForLastDailyLevel(ctx, req.UserID)
-	globalRank, _ := repositories.GetUserGlobalDailyRank(ctx, req.UserID)
-	stats = &DailyLevelStats{
-		DailyLevelsCompleted: dailyLevelsCompleted,
-		LastLevelRank:        lastLevelRank,
-		GlobalRank:           globalRank,
-	}
-
 	response := GetProgressResponse{
-		WorldLevel:      worldLevel,
-		ContinentLevels: continentLevels,
-		DailyCompleted:  dailyCompleted,
-		Stats:           stats,
+		WorldLevel:     nextLevelFor(ctx, req.UserID, domain.GameModeNormal),
+		RandomLevel:    nextLevelFor(ctx, req.UserID, domain.GameModeRandom),
+		DailyCompleted: repositories.HasUserCompletedTodaysLevel(ctx, req.UserID),
+		Stats:          buildDailyLevelStats(ctx, req.UserID),
 	}
+
 	c.JSON(http.StatusOK, response)
+}
+
+// nextLevelFor returns the level the user is about to play in a mode, never
+// below 1.
+func nextLevelFor(ctx context.Context, userID string, gameMode string) int {
+	level := repositories.GetLastLevelFromHistory(ctx, userID, gameMode) + 1
+	if level < 1 {
+		level = 1
+	}
+	return level
 }

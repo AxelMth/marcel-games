@@ -2,17 +2,18 @@ package domain
 
 import "testing"
 
-// Mirror of STAR_PARITY_CASES in apps/earthunt/lib/stars.test.ts. The client
-// renders the score on the success screen and the server stores what the stats
-// screen later shows, so the two implementations must agree on every row.
-// When you add a case here, add the same one there.
+// Same table as STAR_PARITY_CASES in apps/earthunt/lib/stars.test.ts: the
+// scoring rule is shared across both games, and these rows pin the rounding
+// behavior. Wordclimb's client does not compute stars today — the stats screen
+// renders what the server stored — but if it ever does, it must agree on every
+// row here.
 func TestComputeStars_MatchesClient(t *testing.T) {
 	cases := []struct {
-		name         string
-		attempts     int
-		countryCount int
-		hintsUsed    int
-		want         int
+		name      string
+		attempts  int
+		wordCount int
+		hintsUsed int
+		want      int
 	}{
 		{"no attempts", 0, 0, 0, 3},
 		{"negative attempts", -1, 5, 9, 3},
@@ -33,11 +34,11 @@ func TestComputeStars_MatchesClient(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := ComputeStars(tc.attempts, tc.countryCount, tc.hintsUsed)
+			got := ComputeStars(tc.attempts, tc.wordCount, tc.hintsUsed)
 			if got != tc.want {
 				t.Errorf(
-					"ComputeStars(attempts=%d, countryCount=%d, hintsUsed=%d) = %d, want %d",
-					tc.attempts, tc.countryCount, tc.hintsUsed, got, tc.want,
+					"ComputeStars(attempts=%d, wordCount=%d, hintsUsed=%d) = %d, want %d",
+					tc.attempts, tc.wordCount, tc.hintsUsed, got, tc.want,
 				)
 			}
 		})
