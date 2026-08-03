@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Nunito, Nunito_Sans } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { AdMobInit } from '@/components/admob-init'
+import { KeyboardInit } from '@/components/keyboard-init'
 import { LanguageProvider } from '@/components/language-provider'
 import './globals.css'
 
@@ -37,18 +38,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
+      {/* No safe-area padding on <body>: it made the document taller than the
+          viewport, so the whole page became scrollable. That is what showed the
+          body colour as an opaque band under the full-bleed map, and what let
+          the keyboard drag the map up along with the search field. Each screen
+          insets its own chrome instead — see the overlays in game-screen. */}
       <body
         className={`${_nunito.variable} ${_nunitoSans.variable} font-sans antialiased`}
-        style={{
-          paddingTop: 'env(safe-area-inset-top)',
-          paddingBottom: 'env(safe-area-inset-bottom)',
-          paddingLeft: 'env(safe-area-inset-left)',
-          paddingRight: 'env(safe-area-inset-right)',
-        }}
       >
         <LanguageProvider>
           {children}
           <AdMobInit />
+          <KeyboardInit />
           <Analytics />
         </LanguageProvider>
       </body>

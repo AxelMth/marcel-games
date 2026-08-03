@@ -24,19 +24,34 @@ func GetLevelCountryCodesForContinent(level int, continent constants.Continent) 
 }
 
 func GetLevelCountryCodesForLevel(level int) []string {
+	return GetLevelCountryCodesForLevelWithRand(level, nil)
+}
+
+// GetLevelCountryCodesForLevelWithRand draws the level from a caller-supplied
+// generator, so a reproducible level can be built without seeding the global
+// source — which is shared with every other request in flight.
+// A nil generator falls back to the package-level source.
+func GetLevelCountryCodesForLevelWithRand(level int, r *rand.Rand) []string {
 	sorted := sortCountriesByArea(constants.Countries)
 
-	countryCount := getNumberOfCountries(level)
+	countryCount := getNumberOfCountriesWithRand(level, r)
 	countrySelectWindow := getCountrySelectWindow(level, len(sorted))
 	availableCountries := sorted[:countryCount+countrySelectWindow]
 
 	result := make([]string, 0, countryCount)
-	indices := rand.Perm(len(availableCountries))[:countryCount]
+	indices := permutation(r, len(availableCountries))[:countryCount]
 	for _, idx := range indices {
 		result = append(result, availableCountries[idx].Code)
 	}
 
 	return result
+}
+
+func permutation(r *rand.Rand, n int) []int {
+	if r == nil {
+		return rand.Perm(n)
+	}
+	return r.Perm(n)
 }
 
 func getCountriesForContinent(continent constants.Continent) []constants.Country {
@@ -86,22 +101,36 @@ func getCountrySelectWindow(level int, numberOfCountries int) int {
 }
 
 func getNumberOfCountries(level int) int {
+	return getNumberOfCountriesWithRand(level, nil)
+}
+
+// The count is drawn as well as the countries, so a caller after a reproducible
+// level has to supply the generator here too — passing it only to the shuffle
+// left the size random.
+func getNumberOfCountriesWithRand(level int, r *rand.Rand) int {
 	switch {
 	case level <= 15:
 		return 1
 	case level <= 30:
-		return rand.Intn(3) + 1
+		return intn(r, 3) + 1
 	case level <= 50:
-		return rand.Intn(3) + 2
+		return intn(r, 3) + 2
 	case level <= 100:
-		return rand.Intn(4) + 2
+		return intn(r, 4) + 2
 	case level <= 250:
-		return rand.Intn(6) + 5
+		return intn(r, 6) + 5
 	case level <= 500:
-		return rand.Intn(8) + 8
+		return intn(r, 8) + 8
 	case level <= 1000:
-		return rand.Intn(4) + 12
+		return intn(r, 4) + 12
 	default:
-		return rand.Intn(6) + 15
+		return intn(r, 6) + 15
 	}
+}
+
+func intn(r *rand.Rand, n int) int {
+	if r == nil {
+		return rand.Intn(n)
+	}
+	return r.Intn(n)
 }

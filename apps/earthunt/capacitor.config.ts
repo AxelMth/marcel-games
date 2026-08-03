@@ -1,4 +1,5 @@
 import type { CapacitorConfig } from '@capacitor/cli';
+import { KeyboardResize } from '@capacitor/keyboard';
 
 const config: CapacitorConfig = {
   appId: 'com.marcelgames.earthunt',
@@ -15,6 +16,14 @@ const config: CapacitorConfig = {
       // App IDs are set in AndroidManifest.xml and Info.plist (same as earthunt app.json)
       androidAppId: 'ca-app-pub-6271901101573718~9313598215',
       iosAppId: 'ca-app-pub-6271901101573718~5878435021'
+    },
+    Keyboard: {
+      // The game screen is a full-bleed map with absolutely-positioned overlays.
+      // Letting the keyboard resize the web view (or letting WKWebView scroll to
+      // reveal the focused field) drags the map up with the search bar. Keeping
+      // the viewport at full height means only the search bar moves, driven by
+      // visualViewport in useKeyboardOffset.
+      resize: KeyboardResize.None
     }
   }
 };

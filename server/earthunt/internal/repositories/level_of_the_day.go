@@ -2,11 +2,22 @@ package repositories
 
 import (
 	"context"
+	"log"
 	"marcel-games-backend/db"
+	"marcel-games-backend/pkg/utils"
 	"time"
 )
 
-// GetLevelOfTheDayCountryCodes returns the country codes for today's level
+// GetLevelOfTheDayCountryCodes returns the country codes for today's level,
+// creating the level first if nothing has been stored for today.
+//
+// The daily cron is the normal writer. When it stops running — as it did
+// between May and August 2026 — this used to return an empty list, which the
+// client could not tell apart from "you already finished today" and turned
+// into a level with nothing to find, won the instant it opened. Rebuilding the
+// day here keeps the mode playable no matter the state of the cron, and
+// because the set is derived from the date it matches what the cron would have
+// written.
 func GetLevelOfTheDayCountryCodes(ctx context.Context) []string {
 	// Get today's date at midnight UTC
 	now := time.Now().UTC()
@@ -18,10 +29,21 @@ func GetLevelOfTheDayCountryCodes(ctx context.Context) []string {
 		db.LevelOfTheDay.Date.Lt(todayEnd),
 	).Exec(ctx)
 
-	if err != nil {
-		return []string{}
+	if err == nil && levelOfTheDay != nil && len(levelOfTheDay.CountryCodes) > 0 {
+		return levelOfTheDay.CountryCodes
 	}
-	return levelOfTheDay.CountryCodes
+
+	countryCodes := utils.DailyLevelCountryCodes(todayStart)
+
+	// Two instances racing here both write the same date and the same codes,
+	// so a duplicate row is harmless. Failing to persist is harmless too: the
+	// player still gets today's puzzle, and the next call regenerates it
+	// identically.
+	if _, createErr := CreateLevelOfTheDay(ctx, todayStart, countryCodes); createErr != nil {
+		log.Printf("level of the day: could not persist %s: %v", todayStart.Format("2006-01-02"), createErr)
+	}
+
+	return countryCodes
 }
 
 // HasUserCompletedTodaysLevel checks if the user has already completed today's level

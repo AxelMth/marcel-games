@@ -61,27 +61,7 @@ export function HomeScreen() {
   const { launch } = useLaunch()
   const { loadLevel } = useLevelApi()
   const scrollRef = useRef<HTMLDivElement>(null)
-  const firstCardRef = useRef<HTMLButtonElement>(null)
   const [selectedIndex, setSelectedIndex] = useState(0)
-  const [scrollPadding, setScrollPadding] = useState(0)
-
-  useEffect(() => {
-    if (isLoadingProgress) return
-    const el = scrollRef.current
-    const card = firstCardRef.current
-    if (!el || !card) return
-    const updatePadding = () => {
-      const containerWidth = el.clientWidth
-      const cardWidth = card.offsetWidth
-      const gap = 20
-      const padding = Math.max(0, (containerWidth - cardWidth - gap) / 2)
-      setScrollPadding(padding)
-    }
-    updatePadding()
-    const ro = new ResizeObserver(updatePadding)
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [isLoadingProgress])
 
   useEffect(() => {
     if (screen !== "home" || userId) return
@@ -131,30 +111,26 @@ export function HomeScreen() {
     }
   }, [screen, userId, progress, setProgress, setLoadingProgress])
 
-  const getScrollStep = useCallback(() => {
-    const card = firstCardRef.current
-    if (!card) return 0
-    const cardWidth = card.offsetWidth
-    const gap = 20
-    return cardWidth + gap
-  }, [])
+  // Each card is exactly as wide as the scroll port, so one page == one card.
+  // Sizing the cards in `vw` instead made them wider than the port (the two
+  // arrows eat into it), which is what pushed the mode subtitle off-screen.
+  const getScrollStep = useCallback(() => scrollRef.current?.clientWidth ?? 0, [])
 
   const scrollToIndex = useCallback((index: number) => {
     const el = scrollRef.current
-    if (!el) return
     const step = getScrollStep()
-    if (!step) return
-    el.scrollTo({ left: scrollPadding + index * step, behavior: "smooth" })
+    if (!el || !step) return
+    el.scrollTo({ left: index * step, behavior: "smooth" })
     setSelectedIndex(index)
-  }, [getScrollStep, scrollPadding])
+  }, [getScrollStep])
 
   const handleScroll = useCallback(() => {
     const el = scrollRef.current
     const step = getScrollStep()
     if (!el || !step) return
-    const index = Math.round((el.scrollLeft - scrollPadding) / step)
+    const index = Math.round(el.scrollLeft / step)
     setSelectedIndex(Math.max(0, Math.min(modes.length - 1, index)))
-  }, [getScrollStep, scrollPadding])
+  }, [getScrollStep])
 
   // Offline fallback: generate the level locally instead of blocking the
   // player behind an error. Same deterministic generator, same store action.
@@ -182,6 +158,13 @@ export function HomeScreen() {
         gameMode,
         continent: "",
       })
+      // A level with nothing to find is won the instant it opens. The daily
+      // used to arrive that way whenever the server had no puzzle stored for
+      // today, so never trust an empty set — generate one locally instead.
+      if (data.countryCodes.length === 0) {
+        startOffline(mode)
+        return
+      }
       setGameFromLevel({
         mode,
         level: data.level,
@@ -214,7 +197,12 @@ export function HomeScreen() {
   return (
     // max-w-xl keeps the phone-first layout from stretching into a mostly-empty
     // column on iPad; mx-auto centres it so the width reads as deliberate.
-    <main className="mx-auto flex min-h-svh w-full max-w-xl flex-col items-center px-0 py-6 pb-20">
+    // The inset lives inside min-h-svh (border-box), so the page still measures
+    // exactly one viewport and nothing scrolls behind the notch.
+    <main
+      className="mx-auto flex min-h-svh w-full max-w-xl flex-col items-center px-0 pb-20"
+      style={{ paddingTop: "max(1.5rem, env(safe-area-inset-top, 0px))" }}
+    >
       <ScreenHeader title="app.title" subtitle="app.subtitle" onCogClick={() => goToStats()} />
       {gameError && (
         <p className="mb-4 px-5 text-center text-sm font-medium text-red-600">
@@ -241,27 +229,24 @@ export function HomeScreen() {
             >
               <ChevronLeft className="h-6 w-6" />
             </button>
+            {/* min-w-0 lets this flex child shrink below its content width;
+                without it the scroll port overflows past the arrows. */}
             <div
               ref={scrollRef}
               onScroll={handleScroll}
-              className="flex w-[82%] max-w-md snap-x snap-mandatory gap-0 overflow-x-auto overflow-y-visible scrollbar-none"
+              className="flex min-w-0 max-w-md flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-visible scrollbar-none"
               style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
             >
-              <div
-                className="flex shrink-0 items-stretch gap-5"
-                style={{ paddingLeft: scrollPadding, paddingRight: scrollPadding }}
-              >
-              {modes.map((mode, i) => {
+              {modes.map((mode) => {
                 const worldLevel = progress?.worldLevel ?? 1
                 const dailyDone = progress?.dailyCompleted ?? false
                 const isDailyDisabled = mode.id === "daily" && dailyDone
                 return (
                   <button
                     key={mode.id}
-                    ref={i === 0 ? firstCardRef : undefined}
                     onClick={() => handleTap(mode.id)}
                     disabled={isLoadingGame || isDailyDisabled}
-                    className="mx-0 flex w-[75vw] max-w-xs shrink-0 snap-center flex-col items-center p-6 transition-transform duration-200 active:scale-[0.97] disabled:opacity-60"
+                    className="flex w-full shrink-0 snap-center flex-col items-center px-4 py-6 transition-transform duration-200 active:scale-[0.97] disabled:opacity-60"
                   >
                     <div className="mb-4 flex h-28 w-28 items-center justify-center">
                       <Image
@@ -286,7 +271,6 @@ export function HomeScreen() {
                   </button>
                 )
               })}
-              </div>
             </div>
             <button
               type="button"

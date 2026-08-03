@@ -103,7 +103,10 @@ export function StatsScreen() {
         : t("home.daily")
 
   return (
-    <main className="mx-auto flex min-h-svh w-full max-w-xl flex-col px-0 py-6 pb-20">
+    <main
+      className="mx-auto flex min-h-svh w-full max-w-xl flex-col px-0 pb-20"
+      style={{ paddingTop: "max(1.5rem, env(safe-area-inset-top, 0px))" }}
+    >
       <ScreenHeader
         title="profile.stats"
         showBackButton

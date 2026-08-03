@@ -7,7 +7,6 @@ import (
 	"marcel-games-backend/db"
 	"marcel-games-backend/internal/repositories"
 	"marcel-games-backend/pkg/utils"
-	"math/rand"
 	"os"
 	"time"
 
@@ -54,14 +53,9 @@ func main() {
 		return
 	}
 
-	// Generate random country codes for the level
-	// Use a deterministic seed based on the date for consistency
-	seed := targetDate.Unix()
-	rand.Seed(seed)
-
-	// Generate a level between 1 and 50 for variety
-	level := rand.Intn(50) + 1
-	countryCodes := utils.GetLevelCountryCodesForLevel(level)
+	// Same date-seeded generator the API uses to rebuild a missed day, so the
+	// two can never hand out different puzzles for the same date.
+	countryCodes := utils.DailyLevelCountryCodes(targetDate)
 
 	// Create the level of the day
 	createdLevel, err := repositories.CreateLevelOfTheDay(ctx, targetDate, countryCodes)

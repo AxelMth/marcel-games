@@ -2,7 +2,7 @@
 export { storage } from "./storage"
 
 // Shared hooks
-export { useDeviceUUID } from "./use-device-uuid"
+export { useDeviceUUID, type DurableIdStore } from "./use-device-uuid"
 export { getLaunchDeviceInfo, type LaunchDeviceInfo } from "./get-launch-device-info"
 export { useAnimatedText } from "./use-animated-text"
 export { useInterstitialAd, type AdIds as InterstitialAdIds } from "./use-interstitial-ad"

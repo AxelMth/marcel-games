@@ -84,8 +84,16 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    /* Rubber-banding a full-bleed map exposes whatever sits behind the page.
+       Painting html in the app colour keeps that from flashing white, and
+       overscroll-behavior stops the bounce from happening at all. */
+    background-color: var(--background);
+    overscroll-behavior: none;
+  }
   body {
     @apply bg-background text-foreground;
+    overscroll-behavior: none;
   }
 }
 
