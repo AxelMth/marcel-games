@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">wordclimb</string>
-    <string name="title_activity_main">wordclimb</string>
+    <string name="app_name">WordClimb</string>
+    <string name="title_activity_main">WordClimb</string>
     <string name="package_name">com.marcelgames.wordclimb</string>
     <string name="custom_url_scheme">com.marcelgames.wordclimb</string>
 </resources>
