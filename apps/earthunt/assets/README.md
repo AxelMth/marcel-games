@@ -4,7 +4,10 @@ Place source images here for `@capacitor/assets` to generate native icons and sp
 
 ## Required files
 
-- **icon-only.png** — App icon, minimum 1024×1024 px (use earth-logo)
+- **icon-only.png** — App icon, minimum 1024×1024 px
+- **app-logo.png** — Transparent logo used to compose the splash (moved out of
+  public/images: it is a generator input, and shipping it cost 488 KB that no
+  component ever imported)
 - **splash.png** — Splash screen, minimum 2732×2732 px (use earth-logo or a centered version)
 
 ## Setup

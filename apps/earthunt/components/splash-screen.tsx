@@ -60,7 +60,7 @@ export function SplashScreen({
     >
       <div className="mb-5 flex w-full max-w-[300px] justify-center px-5">
         <Image
-          src="/images/earth-logo.png"
+          src="/images/earth-logo.webp"
           alt="EartHunt"
           width={180}
           height={120}

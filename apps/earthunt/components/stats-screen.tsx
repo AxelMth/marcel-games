@@ -18,9 +18,9 @@ import { getProfile, type ProfileResponse, type GameHistoryEntry } from "@/lib/a
 type GameModeFilter = "WORLD" | "CONTINENTS" | "LEVEL_OF_THE_DAY"
 
 const MODE_IMAGES: Record<GameModeFilter, { src: string; alt: string }> = {
-  WORLD: { src: "/images/earth-logo.png", alt: "World" },
-  CONTINENTS: { src: "/images/continent.png", alt: "Continent" },
-  LEVEL_OF_THE_DAY: { src: "/images/daily.png", alt: "Daily" },
+  WORLD: { src: "/images/earth-logo.webp", alt: "World" },
+  CONTINENTS: { src: "/images/continent.webp", alt: "Continent" },
+  LEVEL_OF_THE_DAY: { src: "/images/daily.webp", alt: "Daily" },
 }
 
 function modeImageForEntry(entry: GameHistoryEntry): { src: string; alt: string } {
