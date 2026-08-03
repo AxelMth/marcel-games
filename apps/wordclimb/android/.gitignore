@@ -53,9 +53,13 @@ captures/
 .idea/navEditor.xml
 
 # Keystore files
-# Uncomment the following lines if you do not want to check your keystore files in.
-#*.jks
-#*.keystore
+# Upload key — NEVER commit. Losing it means never being able to update the
+# app on Play; leaking it lets anyone ship as us. These were left commented out
+# by the Capacitor template, which is the wrong default for a signed release.
+keystore.properties*
+!keystore.properties.example
+*.jks
+*.keystore
 
 # External native build folder generated in Android Studio 2.2 and later
 .externalNativeBuild
