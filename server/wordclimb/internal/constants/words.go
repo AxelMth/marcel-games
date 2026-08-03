@@ -15,9 +15,16 @@ type LevelSeed struct {
 	EndWord   string
 }
 
-// LevelSeeds mirrors the curated puzzles bundled with the client in
-// apps/wordclimb/lib/data/levels.ts. Every pair below is reachable in Words;
-// unsolvable pairs would simply be skipped by utils.GenerateLevels.
+// LevelSeeds mirrors the curated puzzles the client opens with, now generated
+// into apps/wordclimb/lib/data/catalogue.ts (levels-en.json is its source).
+// The old hand-written levels.ts is gone: 7 of its 15 ladders broke the
+// one-letter rule, so it is no longer a reference for anything.
+// Every pair below is reachable in Words; unsolvable pairs would simply be
+// skipped by utils.GenerateLevels.
+//
+// NOTE: the client catalogue now holds 140 English and 261 French levels while
+// this list still holds 15 English seeds. Wiring the client to GET /level will
+// need the two brought back in step.
 var LevelSeeds = []LevelSeed{
 	{ID: 1, BeginWord: "cold", EndWord: "warm"},
 	{ID: 2, BeginWord: "love", EndWord: "hate"},

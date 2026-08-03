@@ -19,11 +19,11 @@ const CONTINENT_OPTIONS: {
   labelKey: string
   image: string
 }[] = [
-  { id: "EUROPE", labelKey: "continentSelect.EUROPE", image: "/images/europe.png" },
-  { id: "ASIA", labelKey: "continentSelect.ASIA", image: "/images/asia.png" },
-  { id: "AMERICAS", labelKey: "continentSelect.AMERICAS", image: "/images/americas.png" },
-  { id: "AFRICA", labelKey: "continentSelect.AFRICA", image: "/images/africa.png" },
-  { id: "OCEANIA", labelKey: "continentSelect.OCEANIA", image: "/images/oceania.png" },
+  { id: "EUROPE", labelKey: "continentSelect.EUROPE", image: "/images/europe.webp" },
+  { id: "ASIA", labelKey: "continentSelect.ASIA", image: "/images/asia.webp" },
+  { id: "AMERICAS", labelKey: "continentSelect.AMERICAS", image: "/images/americas.webp" },
+  { id: "AFRICA", labelKey: "continentSelect.AFRICA", image: "/images/africa.webp" },
+  { id: "OCEANIA", labelKey: "continentSelect.OCEANIA", image: "/images/oceania.webp" },
 ]
 
 export function ContinentSelect() {

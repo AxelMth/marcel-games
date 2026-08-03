@@ -47,5 +47,14 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>We use your device identifier to provide personalized ads and support the game.</string>
+	<!-- Google's public TEST app id. Replace with WordClimb's own from the AdMob
+	     console before shipping — and never reuse EarthHunt's, which is a policy
+	     violation. The SDK reads this key at launch: if it is missing or wrong,
+	     AdMob.initialize() aborts the process. That is what got EarthHunt
+	     rejected under guideline 2.1. -->
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-3940256099942544~1458002511</string>
 </dict>
 </plist>

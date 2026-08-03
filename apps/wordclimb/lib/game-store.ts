@@ -1,6 +1,6 @@
 "use client"
 
-import { validLevels, type Level } from "@/lib/data/levels"
+import { CATALOGUE, type Level } from "@/lib/data/catalogue"
 
 export type GameMode = "classic" | "daily" | "random"
 
@@ -43,17 +43,26 @@ export function setClassicProgress(level: number): void {
   localStorage.setItem("wordclimb-classic-progress", level.toString())
 }
 
+/**
+ * Levels for the language the player is reading the app in. Each locale has its
+ * own catalogue: a French player must not be handed English ladders, which
+ * would be unguessable.
+ */
+export function levelsForLocale(locale: "en" | "fr" = getSavedLocale()): Level[] {
+  return CATALOGUE[locale]
+}
+
 // Get the daily level based on date
-export function getDailyLevelIndex(): number {
+export function getDailyLevelIndex(locale: "en" | "fr" = getSavedLocale()): number {
   const today = new Date()
-  const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
+  const dateStr = `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, "0")}-${String(today.getUTCDate()).padStart(2, "0")}`
   let hash = 0
   for (let i = 0; i < dateStr.length; i++) {
     const char = dateStr.charCodeAt(i)
     hash = (hash << 5) - hash + char
     hash |= 0
   }
-  return Math.abs(hash) % validLevels.length
+  return Math.abs(hash) % levelsForLocale(locale).length
 }
 
 // Check if daily challenge has been completed today
@@ -71,31 +80,38 @@ export function setDailyCompleted(): void {
 }
 
 // Get a random level
-export function getRandomLevel(): Level {
-  const index = Math.floor(Math.random() * validLevels.length)
-  return validLevels[index]
+export function getRandomLevel(locale: "en" | "fr" = getSavedLocale()): Level {
+  const levels = levelsForLocale(locale)
+  const index = Math.floor(Math.random() * levels.length)
+  return levels[index]
 }
 
 // Get level for a specific mode
-export function getLevelForMode(mode: GameMode): Level {
+export function getLevelForMode(
+  mode: GameMode,
+  locale: "en" | "fr" = getSavedLocale()
+): Level {
+  const levels = levelsForLocale(locale)
   switch (mode) {
     case "classic": {
       const progress = getClassicProgress()
-      const index = progress % validLevels.length
-      return validLevels[index]
+      const index = progress % levels.length
+      return levels[index]
     }
     case "daily": {
-      const index = getDailyLevelIndex()
-      return validLevels[index]
+      return levels[getDailyLevelIndex(locale)]
     }
     case "random":
-      return getRandomLevel()
+      return getRandomLevel(locale)
   }
 }
 
 // Create initial game state
-export function createGameState(mode: GameMode): GameState {
-  const level = getLevelForMode(mode)
+export function createGameState(
+  mode: GameMode,
+  locale: "en" | "fr" = getSavedLocale()
+): GameState {
+  const level = getLevelForMode(mode, locale)
   return {
     mode,
     level,

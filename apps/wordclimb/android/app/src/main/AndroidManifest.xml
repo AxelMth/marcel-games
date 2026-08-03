@@ -27,9 +27,21 @@
             android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- Google's public TEST app id. Replace with WordClimb's own from the
+             AdMob console before shipping — reusing EarthHunt's is a policy
+             violation. The SDK reads this at launch: without it the app
+             crashes when AdMob.initialize() runs. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~1458002511"
+        />
     </application>
 
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Advertising ID — required by AdMob on Android 13+ and declared in the
+         Play data-safety form. -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
 </manifest>

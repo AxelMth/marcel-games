@@ -194,7 +194,7 @@ export function SuccessScreen() {
     <main className="mx-auto flex min-h-svh w-full max-w-xl flex-col items-center justify-center px-4 py-8">
       {/* Logo */}
       <Image
-        src="/images/earthunt.png"
+        src="/images/earthunt.webp"
         alt="EartHunt"
         width={80}
         height={80}

@@ -10,6 +10,9 @@ import { fileURLToPath } from "node:url"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = join(__dirname, "..", "lib", "data")
+// The dictionary is a generator input, not app data — keeping it under lib/
+// invites the bundler to ship 7 MB nobody imports.
+const SOURCE_DIR = join(__dirname, "..", "data-sources")
 
 // ----- Word ladder (BFS) -----
 function getNeighbors(word, wordSet, len) {
@@ -92,7 +95,7 @@ function loadWords(filename) {
 /** Load word list from word_data.json (array of { word, definition }) */
 function loadWordsFromWordData(opts = {}) {
   const { minLen = 2, maxLen = 12 } = opts
-  const data = loadWords("word_data.json")
+  const data = loadWords("fr-dictionary.json")
   return data
     .map((entry) => (entry.word || "").trim().toLowerCase())
     .filter((w) => w.length >= minLen && w.length <= maxLen)
@@ -116,7 +119,7 @@ function generateLevels(wordSet) {
 function main() {
   const words = loadWordsFromWordData()
   const wordSet = toWordSet(words)
-  console.log("Loaded", wordSet.size, "words from word_data.json")
+  console.log("Loaded", wordSet.size, "words from data-sources/fr-dictionary.json")
 
   const levels = generateLevels(wordSet)
 

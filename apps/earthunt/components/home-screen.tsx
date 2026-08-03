@@ -18,19 +18,19 @@ const modes = [
     id: "world" as const,
     titleKey: "home.world",
     subtitleKey: "home.worldSubtitle",
-    image: "/images/earth-logo.png"
+    image: "/images/earth-logo.webp"
   },
   {
     id: "continent" as const,
     titleKey: "home.continent",
     subtitleKey: "home.continentSubtitle",
-    image: "/images/continent.png"
+    image: "/images/continent.webp"
   },
   {
     id: "daily" as const,
     titleKey: "home.daily",
     subtitleKey: "home.dailySubtitle",
-    image: "/images/daily.png"
+    image: "/images/daily.webp"
   },
 ]
 
