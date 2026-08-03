@@ -10,6 +10,8 @@ export default [
       "**/ios/**",
       "**/android/**",
       "**/next-env.d.ts",
+      "**/playwright-report/**",
+      "**/test-results/**",
     ],
   },
   {
@@ -27,5 +29,11 @@ export default [
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
     },
+  },
+  {
+    // Playwright fixtures take a callback named `use`, which the React rule
+    // mistakes for a hook. There is no React in the end-to-end suite.
+    files: ["e2e/**/*.ts", "playwright.config.ts"],
+    rules: { "react-hooks/rules-of-hooks": "off" },
   },
 ]

@@ -13,3 +13,5 @@ node_modules/
 .pnpm-store
 
 out/
+# Store screenshots are large binaries regenerated on demand.
+store-assets/

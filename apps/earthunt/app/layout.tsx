@@ -22,10 +22,11 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: '#55b3d1',
-  userScalable: false,
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
+  // No userScalable:false / maximumScale:1 — blocking pinch-zoom fails
+  // WCAG 1.4.4 and is occasionally flagged in App Store review. The map has
+  // its own gesture handling, so page zoom does not interfere with play.
   viewportFit: 'cover',
 }
 

@@ -102,6 +102,7 @@ app/src/main/res/xml/config.xml
 
 # Upload key — NEVER commit. Losing it means never being able to update the
 # app on Play; leaking it lets anyone ship as us.
-keystore.properties
+keystore.properties*
+!keystore.properties.example
 *.jks
 *.keystore

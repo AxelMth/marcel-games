@@ -12,6 +12,7 @@ import { useLanguage } from "@/components/language-provider"
 import { ScreenHeader } from "@/components/screen-header"
 import { LegalModal } from "@/components/legal-modal"
 import { ToggleGroup, ToggleGroupItem } from "@marcel-games/ui"
+import { bestRankForMode, hasRank } from "@/lib/ranking"
 import { getProfile, type ProfileResponse, type GameHistoryEntry } from "@/lib/api"
 
 type GameModeFilter = "WORLD" | "CONTINENTS" | "LEVEL_OF_THE_DAY"
@@ -36,6 +37,11 @@ function filterHistory(
 }
 
 function RankDisplay({ rank }: { rank: number }) {
+  // The server returns 0 when it has nothing to rank; "#0" reads as a real
+  // last place, so show an explicit dash instead.
+  if (!hasRank(rank)) {
+    return <span className="text-sm font-medium text-[#0f2b3c]/50">—</span>
+  }
   if (rank === 1) {
     return (
       <Medal className="h-5 w-5 text-amber-500" aria-label="1st place" />
@@ -83,6 +89,12 @@ export function StatsScreen() {
     ? filterHistory(data.gameHistory, gameModeFilter)
     : []
 
+  // Derived from the history, which carries a per-mode rank. stats.globalRank
+  // is computed from daily levels only, so it cannot answer this question.
+  const bestModeRank = data
+    ? bestRankForMode(data.gameHistory, gameModeFilter)
+    : null
+
   const modeLabel =
     gameModeFilter === "WORLD"
       ? t("home.world")
@@ -127,7 +139,9 @@ export function StatsScreen() {
                 {t("profile.globalRank")}
               </p>
               <p className="text-3xl font-bold tracking-tight">
-                #{data.stats.globalRank}
+                {hasRank(data.stats.globalRank)
+                  ? `#${data.stats.globalRank}`
+                  : t("profile.notRanked")}
               </p>
             </div>
 
@@ -196,7 +210,13 @@ export function StatsScreen() {
                 {t("profile.globalRankInMode")} ({modeLabel})
               </p>
               <p className="mt-0.5 flex items-center gap-1.5 text-lg font-bold text-[#0f2b3c]">
-                <RankDisplay rank={data.stats.globalRank} />
+                {bestModeRank === null ? (
+                  <span className="text-sm font-medium text-[#0f2b3c]/50">
+                    {t("profile.notRanked")}
+                  </span>
+                ) : (
+                  <RankDisplay rank={bestModeRank} />
+                )}
               </p>
             </div>
 

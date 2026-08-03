@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#FFFFFF</color>
+    <!-- Brand cyan. The stock #FFFFFF made the light-blue globe nearly vanish
+         against the launcher background. -->
+    <color name="ic_launcher_background">#69CBEB</color>
 </resources>

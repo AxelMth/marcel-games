@@ -33,9 +33,20 @@ export function getMissingCountries(
   return shuffled.slice(0, Math.min(count, pool.length))
 }
 
+/**
+ * Identifies today's challenge, in UTC.
+ *
+ * The server rotates the daily level at midnight UTC
+ * (GetLevelOfTheDayCountryCodes uses time.Now().UTC()), so the client has to
+ * agree on where the day starts. Using the device's local day instead would
+ * misalign the boundary by the UTC offset: west of UTC the new puzzle would
+ * still be filed under yesterday, and east of UTC the old puzzle would already
+ * be filed under tomorrow — in both cases the hint keys and the puzzle would
+ * belong to different days.
+ */
 export function getDailyLevelId(): string {
   const now = new Date()
-  const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
+  const dateStr = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-${String(now.getUTCDate()).padStart(2, "0")}`
   return `daily-${dateStr}`
 }
 

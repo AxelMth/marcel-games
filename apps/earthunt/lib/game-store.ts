@@ -2,6 +2,7 @@ import { create } from "zustand"
 import type { Country, Continent, CountryLocale } from "./countries"
 import { getCountriesByCodes, getCountryName } from "./countries"
 import { createGameConfig, matchCountry, type GameConfig } from "./game-logic"
+import { countPersistedHints } from "./hint-storage"
 
 export type Screen = "home" | "continent-select" | "game" | "success" | "stats"
 
@@ -37,9 +38,12 @@ interface GameState {
   isLoadingProgress: boolean
   setLoadingProgress: (loading: boolean) => void
 
-  // Ads: skip interstitial once when first world level was loaded from API
-  worldLevelWasFromApiLoad: boolean
-  clearWorldLevelWasFromApiLoad: () => void
+  // Ads: the session's single interstitial exemption (see resolveInterstitial).
+  // Spent the first time an ad is actually due, never restored — going back to
+  // the home screen must not re-arm it, which is exactly what the previous
+  // re-armable flag allowed: one skipped ad per visit to World, not per session.
+  adExemptionAvailable: boolean
+  consumeAdExemption: () => void
 
   // Navigation
   goHome: () => void
@@ -94,9 +98,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   setProgress: (progress) => set({ progress }),
   isLoadingProgress: false,
   setLoadingProgress: (loading) => set({ isLoadingProgress: loading }),
-  worldLevelWasFromApiLoad: false,
+  adExemptionAvailable: true,
 
-  clearWorldLevelWasFromApiLoad: () => set({ worldLevelWasFromApiLoad: false }),
+  consumeAdExemption: () => set({ adExemptionAvailable: false }),
 
   goHome: () =>
     set({
@@ -195,7 +199,14 @@ export const useGameStore = create<GameState>((set, get) => ({
         elapsedTime: 0,
         lastGuessResult: null,
         highlightedCountry: null,
-        hintsUsed: 0,
+        // Same reason as setGameFromLevel: a level the player already
+        // part-played must keep counting the hints they paid for.
+        hintsUsed: countPersistedHints(
+          mode,
+          pendingNextLevel,
+          continent ?? "",
+          pendingNextCountryCodes
+        ),
         pendingNextLevel: null,
         pendingNextCountryCodes: null,
       })
@@ -215,7 +226,12 @@ export const useGameStore = create<GameState>((set, get) => ({
         elapsedTime: 0,
         lastGuessResult: null,
         highlightedCountry: null,
-        hintsUsed: 0,
+        hintsUsed: countPersistedHints(
+          "world",
+          newLevel,
+          "",
+          config.missingCountries.map((c) => c.code)
+        ),
       })
     } else if (state.gameConfig.mode === "continent" && state.gameConfig.continent) {
       const continent = state.gameConfig.continent
@@ -231,7 +247,12 @@ export const useGameStore = create<GameState>((set, get) => ({
         elapsedTime: 0,
         lastGuessResult: null,
         highlightedCountry: null,
-        hintsUsed: 0,
+        hintsUsed: countPersistedHints(
+          "continent",
+          newLevel,
+          continent,
+          config.missingCountries.map((c) => c.code)
+        ),
       })
     } else {
       set({ screen: "home" })
@@ -261,9 +282,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       elapsedTime: 0,
       lastGuessResult: null,
       highlightedCountry: null,
-      hintsUsed: 0,
+      // Hints outlive the app (localStorage) but this counter does not. Rebuild
+      // it, or a resumed level is scored as if no hint had ever been taken —
+      // three stars despite the help, and a false hintsUsed sent to the server.
+      hintsUsed: countPersistedHints(mode, level, continent ?? "", countryCodes),
       gameError: null,
-      worldLevelWasFromApiLoad: mode === "world",
     })
   },
   setPendingNextLevel: (level, countryCodes) =>

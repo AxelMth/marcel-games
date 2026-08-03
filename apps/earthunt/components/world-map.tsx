@@ -20,6 +20,9 @@ const WORLD_GEOJSON_URL = "/data/world.geo.json"
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || ""
 const MAPBOX_STYLE = process.env.NEXT_PUBLIC_MAPBOX_STYLE_URL || "mapbox://styles/mapbox/light-v11"
 
+/** Set only for the store-screenshot build; never in a shipped bundle. */
+const SCREENSHOT_MODE = process.env.NEXT_PUBLIC_SCREENSHOT_MODE === "1"
+
 const COUNTRY_GREEN = "#6d9581"
 const COUNTRY_BORDER_WHITE = "#ffffff"
 /** Yellow highlight for "Show on Map" hint (matches previous version). */
@@ -227,6 +230,10 @@ export function WorldMap({
       pitchWithRotate: false,
       dragRotate: false,
       touchPitch: false,
+      // Mapbox GL clears its WebGL buffer after each frame, so the map comes
+      // out blank in any screenshot. Keeping the buffer costs memory and is
+      // only enabled for the store-screenshot build.
+      preserveDrawingBuffer: SCREENSHOT_MODE,
     })
 
     m.on("style.load", () => {

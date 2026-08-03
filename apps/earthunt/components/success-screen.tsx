@@ -7,7 +7,7 @@ import { useGameStore } from "@/lib/game-store"
 import { useLanguage } from "@/components/language-provider"
 import { useLevelApi } from "@/hooks/use-level"
 import { useInterstitialAd } from "@/hooks/use-interstitial-ad"
-import { NUMBER_OF_LEVELS_BETWEEN_ADS } from "@/lib/ad-constants"
+import { resolveInterstitial } from "@/lib/ad-cadence"
 import { getStars } from "@/lib/stars"
 import { setProgressCache } from "@/lib/progress-cache"
 import { enqueuePendingResult } from "@/lib/pending-results"
@@ -37,8 +37,8 @@ export function SuccessScreen() {
     progress,
     setProgress,
     setPendingNextLevel,
-    worldLevelWasFromApiLoad,
-    clearWorldLevelWasFromApiLoad,
+    adExemptionAvailable,
+    consumeAdExemption,
   } = useGameStore()
   const { finishLevel } = useLevelApi()
   const { preload, show } = useInterstitialAd()
@@ -151,16 +151,13 @@ export function SuccessScreen() {
 
   const handleNextLevel = async () => {
     if (!gameConfig) return
-    if (gameConfig.mode === "world" && worldLevelWasFromApiLoad) {
-      clearWorldLevelWasFromApiLoad()
-      nextLevel()
-      return
-    }
-    const shouldShowAd =
-      gameConfig &&
-      gameConfig.mode !== "daily" &&
-      gameConfig.level % NUMBER_OF_LEVELS_BETWEEN_ADS === 0
-    if (shouldShowAd) {
+    const { show: showAd, consumesExemption } = resolveInterstitial({
+      mode: gameConfig.mode,
+      level: gameConfig.level,
+      exemptionAvailable: adExemptionAvailable,
+    })
+    if (consumesExemption) consumeAdExemption()
+    if (showAd) {
       try {
         await show()
       } finally {

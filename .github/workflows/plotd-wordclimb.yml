@@ -1,4 +1,4 @@
-name: Populate Level of the Day
+name: Populate Level of the Day (wordclimb)
 
 on:
   schedule:
@@ -14,24 +14,37 @@ on:
 jobs:
   populate-level:
     runs-on: ubuntu-latest
-    
+
+    # The Go module lives in server/wordclimb/, not at the repo root. Without
+    # this every step failed at `go mod download`, so the daily level was never
+    # actually populated.
+    defaults:
+      run:
+        working-directory: server/wordclimb
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
-        go-version: '1.23'
+        go-version-file: server/wordclimb/go.mod
+        cache-dependency-path: server/wordclimb/go.sum
 
     - name: Install dependencies
       run: go mod download
 
+    # db/client.go needs the generated Prisma client to compile.
+    - name: Generate Prisma client
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      run: go run github.com/steebchen/prisma-client-go generate
+
     - name: Run database migrations
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      run: |
-        go run github.com/steebchen/prisma-client-go db push
+      run: go run github.com/steebchen/prisma-client-go db push
 
     - name: Populate level of the day
       env:
