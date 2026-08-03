@@ -16,8 +16,10 @@
 
 const IS_PROD = process.env.NODE_ENV === "production"
 
-/** Google's public test units — never earn revenue, always safe to request. */
-const TEST_APP_ID = "ca-app-pub-3940256099942544~1458002511"
+/**
+ * Google's public test units — never earn revenue, always safe to request from
+ * a simulator. Requesting live ads from a test device is a policy violation.
+ */
 const TEST_INTERSTITIAL_AD_IDS = {
   ios: "ca-app-pub-3940256099942544/4411468910",
   android: "ca-app-pub-3940256099942544/1033173712",
@@ -28,41 +30,34 @@ const TEST_REWARDED_AD_IDS = {
 } as const
 
 /**
- * Set these from the AdMob console once WordClimb iOS and Android are
- * registered. The app id (tilde) also has to be copied into
- * ios/App/App/Info.plist as GADApplicationIdentifier and into
- * android/app/src/main/AndroidManifest.xml as
- * com.google.android.gms.ads.APPLICATION_ID — a missing native key crashes the
- * app at launch, which is exactly what got EarthHunt rejected.
+ * WordClimb's own AdMob app registrations.
+ *
+ * These same values MUST also appear in ios/App/App/Info.plist as
+ * GADApplicationIdentifier and in android/app/src/main/AndroidManifest.xml as
+ * com.google.android.gms.ads.APPLICATION_ID — those native keys are what the
+ * SDK reads at launch, and a missing or mismatched one aborts the process.
+ * lib/ad-native-config.test.ts asserts the three stay in step.
  */
 export const ADMOB_APP_IDS = {
-  ios: process.env.NEXT_PUBLIC_ADMOB_IOS_APP_ID || TEST_APP_ID,
-  android: process.env.NEXT_PUBLIC_ADMOB_ANDROID_APP_ID || TEST_APP_ID,
+  ios: "ca-app-pub-6271901101573718~8478860820",
+  android: "ca-app-pub-6271901101573718~9736102177",
 } as const
 
+/** WordClimb's own units — "palier 5 niveaux" in the AdMob console. */
 export const ADMOB_INTERSTITIAL_AD_IDS = IS_PROD
   ? ({
-      ios:
-        process.env.NEXT_PUBLIC_ADMOB_IOS_INTERSTITIAL ||
-        TEST_INTERSTITIAL_AD_IDS.ios,
-      android:
-        process.env.NEXT_PUBLIC_ADMOB_ANDROID_INTERSTITIAL ||
-        TEST_INTERSTITIAL_AD_IDS.android,
+      ios: "ca-app-pub-6271901101573718/1798149826",
+      android: "ca-app-pub-6271901101573718/4424313161",
     } as const)
   : TEST_INTERSTITIAL_AD_IDS
 
+/** WordClimb's own units — the ones that pay for a hint. */
 export const ADMOB_REWARDED_AD_IDS = IS_PROD
   ? ({
-      ios:
-        process.env.NEXT_PUBLIC_ADMOB_IOS_REWARDED || TEST_REWARDED_AD_IDS.ios,
-      android:
-        process.env.NEXT_PUBLIC_ADMOB_ANDROID_REWARDED ||
-        TEST_REWARDED_AD_IDS.android,
+      ios: "ca-app-pub-6271901101573718/5313054703",
+      android: "ca-app-pub-6271901101573718/1913452475",
     } as const)
   : TEST_REWARDED_AD_IDS
-
-/** True when the build is still on Google's test identifiers. */
-export const USING_TEST_AD_IDS = ADMOB_APP_IDS.ios === TEST_APP_ID
 
 /**
  * Levels between two interstitials. Same value as EarthHunt: frequent enough to

@@ -1,12 +1,9 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
-// Keep in step with lib/ad-constants.ts. These are Google's public test
-// identifiers until WordClimb has its own AdMob app — reusing EarthHunt's would
-// be a policy violation and would pollute its metrics.
-const ADMOB_IOS_APP_ID =
-  process.env.NEXT_PUBLIC_ADMOB_IOS_APP_ID || 'ca-app-pub-3940256099942544~1458002511';
-const ADMOB_ANDROID_APP_ID =
-  process.env.NEXT_PUBLIC_ADMOB_ANDROID_APP_ID || 'ca-app-pub-3940256099942544~1458002511';
+// Keep in step with lib/ad-constants.ts and the two native files.
+// lib/ad-native-config.test.ts fails if they drift apart.
+const ADMOB_IOS_APP_ID = 'ca-app-pub-6271901101573718~8478860820';
+const ADMOB_ANDROID_APP_ID = 'ca-app-pub-6271901101573718~9736102177';
 
 const config: CapacitorConfig = {
   appId: 'com.marcelgames.wordclimb',

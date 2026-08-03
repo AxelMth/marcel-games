@@ -6,7 +6,7 @@ import { t } from "@/lib/i18n"
 
 interface HintsModalProps {
   onClose: () => void
-  onHint: (type: "firstLetter" | "fullWord") => void
+  onHint: (type: "firstLetter" | "fullWord") => void | Promise<void>
 }
 
 export function HintsModal({ onClose, onHint }: HintsModalProps) {
