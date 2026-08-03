@@ -9,6 +9,9 @@ export default [
       "**/out/**",
       "**/ios/**",
       "**/android/**",
+      // Xcode archives and exported .ipa land here; they carry a copy of the
+      // Capacitor bridge, which is not ours to lint.
+      "**/build/**",
       "**/next-env.d.ts",
       "**/playwright-report/**",
       "**/test-results/**",

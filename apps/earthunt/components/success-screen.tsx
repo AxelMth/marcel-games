@@ -191,10 +191,18 @@ export function SuccessScreen() {
   const visibleClass = "translate-y-0 opacity-100"
 
   return (
-    <main className="mx-auto flex min-h-svh w-full max-w-xl flex-col items-center justify-center px-4 py-8">
-      {/* Logo */}
+    <main
+      className="mx-auto flex min-h-svh w-full max-w-xl flex-col items-center justify-center px-4"
+      style={{
+        paddingTop: "max(2rem, env(safe-area-inset-top, 0px))",
+        paddingBottom: "max(2rem, env(safe-area-inset-bottom, 0px))",
+      }}
+    >
+      {/* Logo — earth-logo has an alpha channel, earthunt.webp does not: the
+          latter is the packaged app icon and paints its own white plate, which
+          reads as a blank square on the cyan background. */}
       <Image
-        src="/images/earthunt.webp"
+        src="/images/earth-logo.webp"
         alt="EartHunt"
         width={80}
         height={80}

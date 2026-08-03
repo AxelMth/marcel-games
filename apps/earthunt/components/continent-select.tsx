@@ -137,6 +137,12 @@ export function ContinentSelect() {
         gameMode,
         continent,
       })
+      // Same guard as the world/daily path: an empty set means an already-won
+      // level, so fall back to generating one rather than showing it.
+      if (data.countryCodes.length === 0) {
+        startOffline(continent)
+        return
+      }
       const allCountries = getCountriesByContinent(continent)
       setGameFromLevel({
         mode: "continent",
@@ -154,7 +160,13 @@ export function ContinentSelect() {
   }
 
   return (
-    <main className="mx-auto flex min-h-svh w-full max-w-xl flex-col px-0 py-6">
+    <main
+      className="mx-auto flex min-h-svh w-full max-w-xl flex-col px-0"
+      style={{
+        paddingTop: "max(1.5rem, env(safe-area-inset-top, 0px))",
+        paddingBottom: "max(1.5rem, env(safe-area-inset-bottom, 0px))",
+      }}
+    >
       <ScreenHeader
         title="app.title"
         subtitle="app.subtitle"

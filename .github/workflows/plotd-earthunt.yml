@@ -2,13 +2,21 @@ name: Populate Level of the Day (earthunt)
 
 on:
   schedule:
-    # Run at midnight UTC every day
-    - cron: '0 0 * * *'
+    # Weekly, not daily: the job fills a month ahead in a single pass, so even a
+    # wholly missed run leaves ~23 days of puzzles in front of the players.
+    # 03:17 rather than midnight — GitHub delays scheduled jobs queued on the
+    # hour, and this one used to sit behind that queue.
+    - cron: '17 3 * * 1'
   workflow_dispatch:
     inputs:
       target_date:
-        description: 'Target date for level generation (YYYY-MM-DD format, optional)'
+        description: 'Fill only this date (YYYY-MM-DD). Leave empty to fill the window.'
         required: false
+        type: string
+      days:
+        description: 'Days ahead of today to fill when no target date is given.'
+        required: false
+        default: '30'
         type: string
 
 jobs:
@@ -26,6 +34,20 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    # Each game has its own Postgres on its own Fly app. Both crons used to read
+    # a single shared DATABASE_URL, so one of them wrote its levels — and pushed
+    # its schema — into the other game's database. Failing loudly beats doing
+    # that quietly.
+    - name: Check the database secret is set
+      env:
+        DATABASE_URL: ${{ secrets.EARTHUNT_DATABASE_URL }}
+      run: |
+        if [ -z "$DATABASE_URL" ]; then
+          echo "::error::EARTHUNT_DATABASE_URL is not set. Add it under Settings → Secrets and variables → Actions."
+          echo "::error::It must point at the earthunt-api database, not wordclimb's."
+          exit 1
+        fi
+
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
@@ -38,21 +60,26 @@ jobs:
     # db/client.go needs the generated Prisma client to compile.
     - name: Generate Prisma client
       env:
-        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        DATABASE_URL: ${{ secrets.EARTHUNT_DATABASE_URL }}
       run: go run github.com/steebchen/prisma-client-go generate
 
     - name: Run database migrations
       env:
-        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        DATABASE_URL: ${{ secrets.EARTHUNT_DATABASE_URL }}
       run: go run github.com/steebchen/prisma-client-go db push
 
-    - name: Populate level of the day
+    - name: Populate levels of the day
       env:
-        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        DATABASE_URL: ${{ secrets.EARTHUNT_DATABASE_URL }}
+        # Read through the environment rather than interpolated into the script:
+        # a workflow input is attacker-controllable text and must never be
+        # pasted straight into a shell line.
+        TARGET_DATE: ${{ inputs.target_date }}
+        DAYS: ${{ inputs.days || '30' }}
       run: |
-        if [ -n "${{ github.event.inputs.target_date }}" ]; then
-          go run cmd/populate-level-of-the-day/main.go "${{ github.event.inputs.target_date }}"
+        if [ -n "$TARGET_DATE" ]; then
+          go run ./cmd/populate-level-of-the-day "$TARGET_DATE"
         else
-          # Generate for tomorrow (default behavior)
-          go run cmd/populate-level-of-the-day/main.go
+          # Fills today through today+DAYS, skipping days already stored.
+          go run ./cmd/populate-level-of-the-day -days "$DAYS"
         fi

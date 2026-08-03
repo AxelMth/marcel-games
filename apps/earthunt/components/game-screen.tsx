@@ -9,6 +9,7 @@ import { normalizeCountryName } from "@/lib/game-logic"
 
 import { HelpBubble } from "@/components/help-bubble"
 import { useLanguage } from "@/components/language-provider"
+import { useKeyboardOffset } from "@/hooks/use-keyboard-offset"
 
 import { GameIndicator } from "./game-indicator"
 import { WorldMap } from "./world-map"
@@ -35,6 +36,7 @@ export function GameScreen() {
   const [shouldShake, setShouldShake] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const { t, tReplace, lang } = useLanguage()
+  const keyboardOffset = useKeyboardOffset()
 
   useEffect(() => {
     const interval = setInterval(tick, 1000)
@@ -160,10 +162,19 @@ export function GameScreen() {
         </div>
       )}
 
-      {/* Search bar - fixed at bottom, raised above safe area */}
+      {/* Search bar - fixed at bottom, raised above the safe area and, when the
+          keyboard is open, above the keyboard. Nothing else on the screen
+          moves: the map stays exactly where the player left it.
+          The shake animation also uses `transform`, so the lift has to be a
+          `bottom` offset or the two would fight over the same property. */}
       <div
         className={`absolute left-0 right-0 z-10 p-4 pb-5 ${shouldShake ? "animate-search-bar-shake" : ""}`}
-        style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
+        style={{
+          bottom:
+            keyboardOffset > 0
+              ? `calc(0.5rem + ${keyboardOffset}px)`
+              : "calc(1.5rem + env(safe-area-inset-bottom, 0px))",
+        }}
         onAnimationEnd={() => {
           if (shouldShake) {
             setShouldShake(false)

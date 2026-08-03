@@ -14,3 +14,7 @@ node_modules
 # Playwright
 test-results/
 playwright-report/
+
+# Claude Code session worktrees. .claude/launch.json is tracked on purpose:
+# it is what `preview` uses to start the two dev servers.
+.claude/worktrees/

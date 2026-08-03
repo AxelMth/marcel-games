@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "earthunt",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@marcel-games/earthunt", "dev"],
+      "port": 3001
+    },
+    {
+      "name": "wordclimb",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@marcel-games/wordclimb", "dev"],
+      "port": 3000
+    }
+  ]
+}
