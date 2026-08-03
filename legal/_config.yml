@@ -1,0 +1,23 @@
+# Site published to GitHub Pages by .github/workflows/legal-pages.yml.
+#
+# The folder is still called legal/ because the privacy-policy URLs it already
+# serves are stable and will be pasted into App Store Connect and Play Console.
+# Renaming it would break them for no gain.
+title: Marcel Games
+description: Petits jeux mobiles, faits avec soin. / Small mobile games, made with care.
+lang: fr
+
+# No theme: the layout in _layouts/default.html is self-contained, which keeps
+# the pages fast and avoids a Jekyll theme dictating the look.
+theme: null
+plugins:
+  - jekyll-seo-tag
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
+
+exclude:
+  - README.md

@@ -1,0 +1,120 @@
+---
+title: Marcel Games
+description: EartHunt et WordClimb — deux petits jeux mobiles, sans compte et sans collecte de données personnelles.
+---
+
+<style>
+  .hero { max-width: var(--measure); }
+  .hero p.lead { font-size: 19px; color: var(--ink-soft); margin-top: 12px; }
+
+  .apps { display: grid; gap: 28px; margin: 48px 0 0; }
+  @media (min-width: 760px) { .apps { grid-template-columns: 1fr 1fr; gap: 32px; } }
+
+  .app {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 24px;
+    background: var(--bg-soft);
+    display: flex; flex-direction: column;
+    /* Grid items default to min-width:auto, so the scrolling screenshot strip
+       would push the card — and the page — wider than the phone. */
+    min-width: 0;
+  }
+  .app header { display: flex; align-items: center; gap: 14px; }
+  .app img.icon { width: 56px; height: 56px; border-radius: 13px; flex: none; }
+  .app h2 { margin: 0; font-size: 20px; }
+  .app .tag { color: var(--ink-soft); font-size: 14px; margin: 2px 0 0; }
+  .app p { margin: 16px 0 0; }
+  .app ul { margin: 14px 0 0; padding-left: 18px; color: var(--ink-soft); }
+  .app ul li { margin: 4px 0; }
+  .app .foot { margin-top: auto; padding-top: 18px; font-size: 14px; }
+
+  .shots { display: flex; gap: 12px; margin: 20px 0 0; overflow-x: auto; padding-bottom: 4px; min-width: 0; }
+  .shots img { width: 150px; border-radius: 10px; border: 1px solid var(--line); flex: none; }
+
+  .soon {
+    display: inline-block; font-size: 12px; font-weight: 600;
+    padding: 3px 9px; border-radius: 999px;
+    background: var(--line); color: var(--ink-soft);
+  }
+</style>
+
+<div class="hero">
+  <h1>Deux petits jeux, faits avec soin</h1>
+  <p class="lead">
+    Pas de compte à créer, pas de nom ni d'adresse e-mail demandés. On joue,
+    c'est tout.
+  </p>
+</div>
+
+<div class="apps wide">
+
+  <section class="app">
+    <header>
+      <img class="icon" src="{{ '/assets/earthunt-icon.webp' | relative_url }}" alt="">
+      <div>
+        <h2>EartHunt</h2>
+        <p class="tag">Jeu de géographie</p>
+      </div>
+    </header>
+
+    <p>
+      Des pays manquent sur la carte du monde. À toi de retrouver lesquels, en
+      les nommant un par un.
+    </p>
+
+    <ul>
+      <li>Mode Monde, mode Continent, et un défi différent chaque jour</li>
+      <li>Des indices quand un pays résiste</li>
+      <li>Jouable hors ligne, dans le métro comme en avion</li>
+      <li>Français et anglais</li>
+    </ul>
+
+    <div class="shots">
+      <img src="{{ '/assets/earthunt-modes.webp' | relative_url }}" alt="Choix du mode de jeu dans EartHunt" loading="lazy">
+      <img src="{{ '/assets/earthunt-gameplay.webp' | relative_url }}" alt="Carte du monde avec les pays à retrouver" loading="lazy">
+      <img src="{{ '/assets/earthunt-success.webp' | relative_url }}" alt="Écran de fin de niveau avec les étoiles obtenues" loading="lazy">
+    </div>
+
+    <p class="foot">
+      <span class="soon">Bientôt sur l'App Store</span><br>
+      <a href="{{ '/earthunt-privacy-and-terms' | relative_url }}">Confidentialité &amp; conditions</a>
+    </p>
+  </section>
+
+  <section class="app">
+    <header>
+      <img class="icon" src="{{ '/assets/wordclimb-icon.webp' | relative_url }}" alt="">
+      <div>
+        <h2>WordClimb</h2>
+        <p class="tag">Jeu de mots</p>
+      </div>
+    </header>
+
+    <p>
+      Passe d'un mot à un autre en ne changeant qu'une seule lettre à la fois.
+      <em>lord</em>, <em>lard</em>, <em>laid</em>, <em>raid</em>… jusqu'à
+      <em>main</em>.
+    </p>
+
+    <ul>
+      <li>Plus de 2 700 grilles, de deux à cinq mots à trouver</li>
+      <li>Mode Classique, tirage aléatoire, et une grille par jour</li>
+      <li>Des indices si tu bloques</li>
+      <li>Catalogues français et anglais distincts</li>
+    </ul>
+
+    <p class="foot">
+      <span class="soon">Bientôt sur l'App Store</span><br>
+      <a href="{{ '/wordclimb-privacy-and-terms' | relative_url }}">Confidentialité &amp; conditions</a>
+    </p>
+  </section>
+
+</div>
+
+<h2>Une question, un bug ?</h2>
+<p>
+  Écris-moi à <a href="mailto:ceo@axelmathi.eu">ceo@axelmathi.eu</a>, ou passe
+  par la <a href="{{ '/support' | relative_url }}">page d'assistance</a> qui
+  explique quoi joindre pour que je puisse aider vite.
+</p>

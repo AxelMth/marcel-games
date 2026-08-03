@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="{{ page.lang | default: site.lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% seo %}
+  <link rel="icon" href="{{ '/assets/earthunt-icon.webp' | relative_url }}">
+  <style>
+    :root {
+      --ink: #10222e;
+      --ink-soft: #4a6472;
+      --line: #dbe7ed;
+      --bg: #ffffff;
+      --bg-soft: #f4f9fb;
+      --accent: #1a8fb5;
+      --radius: 14px;
+      --measure: 62ch;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e8f1f5;
+        --ink-soft: #9fb6c2;
+        --line: #24404f;
+        --bg: #0d1a22;
+        --bg-soft: #132633;
+        --accent: #5ec2e0;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 0 20px; }
+    a { color: var(--accent); }
+    img { max-width: 100%; height: auto; }
+
+    header.site {
+      border-bottom: 1px solid var(--line);
+      padding: 18px 0;
+      position: sticky; top: 0;
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      backdrop-filter: blur(8px);
+      z-index: 10;
+    }
+    header.site .wrap { display: flex; align-items: center; gap: 16px; }
+    .brand {
+      font-weight: 700; letter-spacing: -0.01em;
+      color: var(--ink); text-decoration: none;
+    }
+    header.site nav { margin-left: auto; display: flex; gap: 18px; font-size: 15px; }
+
+    main { padding: 40px 0 64px; }
+    /* Long-form legal pages read better with a constrained measure; the
+       landing page opts out with .wide. */
+    main .wrap > :not(.wide) { max-width: var(--measure); }
+    h1 { font-size: clamp(28px, 5vw, 40px); line-height: 1.15; letter-spacing: -0.02em; margin: 0 0 8px; }
+    h2 { font-size: 22px; letter-spacing: -0.01em; margin: 40px 0 10px; }
+    h3 { font-size: 17px; margin: 24px 0 6px; }
+    p, li { color: var(--ink); }
+    hr { border: 0; border-top: 1px solid var(--line); margin: 40px 0; }
+
+    footer.site {
+      border-top: 1px solid var(--line);
+      padding: 28px 0 48px;
+      color: var(--ink-soft); font-size: 14px;
+    }
+    footer.site .wrap { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+    footer.site a { color: var(--ink-soft); }
+  </style>
+</head>
+<body>
+  <header class="site">
+    <div class="wrap">
+      <a class="brand" href="{{ '/' | relative_url }}">Marcel Games</a>
+      <nav>
+        <a href="{{ '/support' | relative_url }}">Support</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      {{ content }}
+    </div>
+  </main>
+
+  <footer class="site">
+    <div class="wrap">
+      <span>© {{ site.time | date: '%Y' }} Marcel Games</span>
+      <a href="mailto:ceo@axelmathi.eu">ceo@axelmathi.eu</a>
+      <a href="{{ '/earthunt-privacy-and-terms' | relative_url }}">EartHunt — Privacy</a>
+      <a href="{{ '/wordclimb-privacy-and-terms' | relative_url }}">WordClimb — Privacy</a>
+    </div>
+  </footer>
+</body>
+</html>
