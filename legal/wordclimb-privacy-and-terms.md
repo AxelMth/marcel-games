@@ -2,11 +2,6 @@
 
 _Last updated: 2026-06-30_
 
-> This mirrors the in-app legal text
-> (`apps/wordclimb/components/wordclimb/legal-modal.tsx`).
-> **Before submitting to the stores:** replace the contact email below, publish
-> this at a public URL, and paste that URL into App Store Connect and the Google
-> Play Console. Have it reviewed — this is an honest draft, not legal advice.
 
 ## Privacy Policy
 
