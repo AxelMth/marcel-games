@@ -40,24 +40,19 @@ export const ADMOB_APP_IDS = {
   android: process.env.NEXT_PUBLIC_ADMOB_ANDROID_APP_ID || TEST_APP_ID,
 } as const
 
+/** WordClimb's own units — "palier 5 niveaux" in the AdMob console. */
 export const ADMOB_INTERSTITIAL_AD_IDS = IS_PROD
   ? ({
-      ios:
-        process.env.NEXT_PUBLIC_ADMOB_IOS_INTERSTITIAL ||
-        TEST_INTERSTITIAL_AD_IDS.ios,
-      android:
-        process.env.NEXT_PUBLIC_ADMOB_ANDROID_INTERSTITIAL ||
-        TEST_INTERSTITIAL_AD_IDS.android,
+      ios: "ca-app-pub-6271901101573718/1798149826",
+      android: "ca-app-pub-6271901101573718/4424313161",
     } as const)
   : TEST_INTERSTITIAL_AD_IDS
 
+/** WordClimb's own units — the ones that pay for a hint. */
 export const ADMOB_REWARDED_AD_IDS = IS_PROD
   ? ({
-      ios:
-        process.env.NEXT_PUBLIC_ADMOB_IOS_REWARDED || TEST_REWARDED_AD_IDS.ios,
-      android:
-        process.env.NEXT_PUBLIC_ADMOB_ANDROID_REWARDED ||
-        TEST_REWARDED_AD_IDS.android,
+      ios: "ca-app-pub-6271901101573718/5313054703",
+      android: "ca-app-pub-6271901101573718/1913452475",
     } as const)
   : TEST_REWARDED_AD_IDS
 
