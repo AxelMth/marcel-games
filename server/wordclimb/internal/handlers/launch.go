@@ -3,8 +3,8 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"marcel-games-backend/internal/domain"
 	"marcel-games-backend/internal/repositories"
-	"marcel-games-backend/pkg/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -20,7 +20,6 @@ type LaunchRequest struct {
 	OsName       string `json:"osName"`
 	OsVersion    string `json:"osVersion"`
 	GameMode     string `json:"gameMode"`
-	Continent    string `json:"continent"`
 }
 
 func LaunchHandler(c *gin.Context) {
@@ -59,13 +58,16 @@ func LaunchHandler(c *gin.Context) {
 		return
 	}
 
-	// Normalize continent for world/daily so it matches stored level history
-	continent := req.Continent
-	if continent == "" && (req.GameMode == "WORLD" || req.GameMode == "LEVEL_OF_THE_DAY") {
-		continent = "WORLD"
-	}
-	currentLevel := repositories.GetLastLevelFromHistory(ctx, user.ID, req.GameMode, continent)
+	gameMode := domain.NormalizeGameMode(req.GameMode)
+	nextLevel := repositories.GetLastLevelFromHistory(ctx, user.ID, gameMode) + 1
+	payload := levelPayloadForNumber(nextLevel)
 
-	response := gin.H{"userId": user.ID, "level": currentLevel + 1, "countryCodes": utils.GetLevelCountryCodesForLevel(currentLevel + 1)}
+	response := gin.H{
+		"userId":     user.ID,
+		"level":      nextLevel,
+		"beginWord":  payload.BeginWord,
+		"endWord":    payload.EndWord,
+		"wordLadder": payload.WordLadder,
+	}
 	c.JSON(http.StatusOK, response)
 }

@@ -7,7 +7,6 @@ import (
 	"marcel-games-backend/db"
 	"marcel-games-backend/internal/repositories"
 	"marcel-games-backend/pkg/utils"
-	"math/rand"
 	"os"
 	"time"
 
@@ -54,24 +53,25 @@ func main() {
 		return
 	}
 
-	// Generate random country codes for the level
-	// Use a deterministic seed based on the date for consistency
-	seed := targetDate.Unix()
-	rand.Seed(seed)
-
-	// Generate a level between 1 and 50 for variety
-	level := rand.Intn(50) + 1
-	countryCodes := utils.GetLevelCountryCodesForLevel(level)
+	// Pick the puzzle for that date. This is a pure function of the date, so
+	// re-running the job for a day always stores the same ladder, and the API can
+	// recompute it if this job never ran.
+	definition, ok := utils.GetLevelForDate(targetDate)
+	if !ok {
+		log.Fatal("No level could be generated: the dictionary has no solvable seed pair")
+	}
 
 	// Create the level of the day
-	createdLevel, err := repositories.CreateLevelOfTheDay(ctx, targetDate, countryCodes)
+	createdLevel, err := repositories.CreateLevelOfTheDay(ctx, targetDate, definition.WordLadder)
 	if err != nil {
 		log.Fatal("Failed to create level of the day:", err)
 	}
 
-	fmt.Printf("Successfully created level of the day for %s with %d countries: %v\n",
+	fmt.Printf("Successfully created level of the day for %s: %s -> %s in %d steps: %v\n",
 		targetDate.Format("2006-01-02"),
-		len(countryCodes),
-		countryCodes)
+		definition.BeginWord,
+		definition.EndWord,
+		len(definition.WordLadder)-1,
+		definition.WordLadder)
 	fmt.Printf("Level ID: %s\n", createdLevel.ID)
 }

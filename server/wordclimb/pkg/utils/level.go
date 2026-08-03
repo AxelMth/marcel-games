@@ -2,106 +2,102 @@ package utils
 
 import (
 	"marcel-games-backend/internal/constants"
-	"math/rand"
-	"slices"
+	"sync"
+	"time"
 )
 
-func GetLevelCountryCodesForContinent(level int, continent constants.Continent) []string {
-	countriesForContinent := getCountriesForContinent(continent)
-	sorted := sortCountriesByArea(countriesForContinent)
+var (
+	levelsOnce sync.Once
+	levels     []LevelDefinition
+	dictionary map[string]struct{}
+)
 
-	countryCount := getNumberOfCountries(level)
-	countrySelectWindow := getCountrySelectWindow(level, len(sorted))
-	availableCountries := sorted[:countryCount+countrySelectWindow]
+// load builds the dictionary and the curated levels once, on first use.
+// Ladders are computed rather than stored so the dictionary stays the single
+// source of truth: a word removed from constants.Words can never survive in a
+// ladder the server hands out.
+func load() {
+	levelsOnce.Do(func() {
+		dictionary = ToWordSet(constants.Words)
 
-	result := make([]string, 0, countryCount)
-	indices := rand.Perm(len(availableCountries))[:countryCount]
-	for _, idx := range indices {
-		result = append(result, availableCountries[idx].Code)
-	}
-
-	return result
-}
-
-func GetLevelCountryCodesForLevel(level int) []string {
-	sorted := sortCountriesByArea(constants.Countries)
-
-	countryCount := getNumberOfCountries(level)
-	countrySelectWindow := getCountrySelectWindow(level, len(sorted))
-	availableCountries := sorted[:countryCount+countrySelectWindow]
-
-	result := make([]string, 0, countryCount)
-	indices := rand.Perm(len(availableCountries))[:countryCount]
-	for _, idx := range indices {
-		result = append(result, availableCountries[idx].Code)
-	}
-
-	return result
-}
-
-func getCountriesForContinent(continent constants.Continent) []constants.Country {
-	result := make([]constants.Country, 0)
-	for _, country := range constants.Countries {
-		if country.Continent == continent {
-			result = append(result, country)
+		seeds := make([]SeedPair, 0, len(constants.LevelSeeds))
+		for _, seed := range constants.LevelSeeds {
+			seeds = append(seeds, SeedPair{
+				ID:        seed.ID,
+				BeginWord: seed.BeginWord,
+				EndWord:   seed.EndWord,
+			})
 		}
-	}
-	return result
-}
 
-func sortCountriesByArea(countries []constants.Country) []constants.Country {
-	sorted := make([]constants.Country, len(countries))
-	copy(sorted, countries)
-	slices.SortFunc(sorted, func(i, j constants.Country) int {
-		if i.Area > j.Area {
-			return -1
-		}
-		if i.Area < j.Area {
-			return 1
-		}
-		return 0
+		levels = GenerateLevels(seeds, dictionary)
 	})
-	return sorted
 }
 
-func getCountrySelectWindow(level int, numberOfCountries int) int {
-	switch {
-	case level <= 15:
-		return int(float64(numberOfCountries) * 0.1)
-	case level <= 30:
-		return int(float64(numberOfCountries) * 0.2)
-	case level <= 50:
-		return int(float64(numberOfCountries) * 0.3)
-	case level <= 100:
-		return int(float64(numberOfCountries) * 0.4)
-	case level <= 250:
-		return int(float64(numberOfCountries) * 0.6)
-	case level <= 500:
-		return int(float64(numberOfCountries) * 0.75)
-	case level <= 1000:
-		return int(float64(numberOfCountries) * 0.85)
-	default:
-		return numberOfCountries
-	}
+// Dictionary returns the word set every ladder is built from.
+func Dictionary() map[string]struct{} {
+	load()
+	return dictionary
 }
 
-func getNumberOfCountries(level int) int {
-	switch {
-	case level <= 15:
-		return 1
-	case level <= 30:
-		return rand.Intn(3) + 1
-	case level <= 50:
-		return rand.Intn(3) + 2
-	case level <= 100:
-		return rand.Intn(4) + 2
-	case level <= 250:
-		return rand.Intn(6) + 5
-	case level <= 500:
-		return rand.Intn(8) + 8
-	case level <= 1000:
-		return rand.Intn(4) + 12
-	default:
-		return rand.Intn(6) + 15
+// AllLevels returns the curated levels in seed order, each with its ladder
+// filled in. Seeds with no ladder in the dictionary are dropped by
+// GenerateLevels, so this can be shorter than constants.LevelSeeds.
+func AllLevels() []LevelDefinition {
+	load()
+	return levels
+}
+
+// GetLevelForNumber returns the level to play for a 1-based level number,
+// cycling back to the first puzzle once the player is past the last one. This
+// mirrors the client, which does `progress % validLevels.length`
+// (apps/wordclimb/lib/game-store.ts, getLevelForMode).
+//
+// The bool is false only when no level could be generated at all.
+func GetLevelForNumber(level int) (LevelDefinition, bool) {
+	all := AllLevels()
+	if len(all) == 0 {
+		return LevelDefinition{}, false
 	}
+	if level < 1 {
+		level = 1
+	}
+	return all[(level-1)%len(all)], true
+}
+
+// GetLevelForDate returns the puzzle for a given day. It is deterministic: the
+// same date always yields the same level, so the level of the day can be
+// recomputed at any time instead of being read back from the database.
+//
+// The hash reproduces the client's getDailyLevelIndex
+// (apps/wordclimb/lib/game-store.ts) so both sides pick the same puzzle for a
+// given YYYY-MM-DD. Note the client hashes the *device local* date while the
+// server hashes whatever date it is handed, so callers should pass UTC and
+// accept that a device near midnight can be a day off.
+func GetLevelForDate(date time.Time) (LevelDefinition, bool) {
+	all := AllLevels()
+	if len(all) == 0 {
+		return LevelDefinition{}, false
+	}
+	return all[dailyLevelIndex(date, len(all))], true
+}
+
+// dailyLevelIndex hashes a YYYY-MM-DD date string the same way the client does:
+// h = h*31 + c over int32, then absolute value modulo the level count.
+func dailyLevelIndex(date time.Time, levelCount int) int {
+	dateStr := date.Format("2006-01-02")
+
+	var hash int32
+	for _, char := range dateStr {
+		// (hash << 5) - hash is hash * 31; int32 makes the overflow wrap the
+		// same way the client's `hash |= 0` does.
+		hash = (hash << 5) - hash + int32(char)
+	}
+
+	// Widen before negating: -math.MinInt32 does not fit in an int32.
+	abs := int64(hash)
+	if abs < 0 {
+		abs = -abs
+	}
+
+	return int(abs % int64(levelCount))
 }
