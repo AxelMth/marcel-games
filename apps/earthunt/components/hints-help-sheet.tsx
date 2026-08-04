@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react"
 import { Type, MapPin, FileText, Globe, Search, Lightbulb, Lock } from "lucide-react"
 import { useGameStore } from "@/lib/game-store"
 import { useLanguage } from "@/components/language-provider"
+import { requestTourReplay } from "@/hooks/use-guided-tour"
 import { useRewardedAd } from "@/hooks/use-rewarded-ad"
 import {
   getPersistedHints,
@@ -277,9 +278,21 @@ export function HintsHelpSheet({
                 )
               })}
             </div>
+            {/* Replays the spotlight walkthrough on the live screen. The sheet
+                has to close first, or the tour would highlight elements sitting
+                underneath it. */}
+            <button
+              onClick={() => {
+                onOpenChange(false)
+                requestTourReplay("game")
+              }}
+              className="mt-4 w-full rounded-xl border border-[#b0d8e4] py-3 text-sm font-bold text-[#1a8fb5] transition-colors active:bg-[#e0f4f8]"
+            >
+              {t("tour.replay")}
+            </button>
             <button
               onClick={() => onOpenChange(false)}
-              className="mt-4 w-full rounded-xl bg-[#1a8fb5] py-3 text-sm font-bold text-white transition-colors hover:bg-[#157a9d] active:bg-[#126a8a]"
+              className="mt-2 w-full rounded-xl bg-[#1a8fb5] py-3 text-sm font-bold text-white transition-colors hover:bg-[#157a9d] active:bg-[#126a8a]"
             >
               {t("hintsHelp.gotIt")}
             </button>

@@ -12,6 +12,11 @@ export type Locale = "fr" | "en"
 export const STRINGS = {
   fr: {
     scrollHint: "Glisse pour choisir le mode",
+    tourSkip: "Passer",
+    tourNext: "Suivant",
+    tourDone: "Compris !",
+    tourFirstStep: "Choisis ta façon de jouer",
+    tourReplay: "Revoir le tutoriel",
     world: "Monde",
     continent: "Continent",
     daily: "Défi du jour",
@@ -38,6 +43,11 @@ export const STRINGS = {
   },
   en: {
     scrollHint: "Scroll to select game mode",
+    tourSkip: "Skip",
+    tourNext: "Next",
+    tourDone: "Got it!",
+    tourFirstStep: "Pick how you want to play",
+    tourReplay: "Replay the tutorial",
     world: "World",
     continent: "Continent",
     daily: "Daily Challenge",
@@ -156,7 +166,40 @@ export async function skipSplash(page: Page) {
   })
 }
 
+/**
+ * Marks both guided tours as already seen.
+ *
+ * The tour is a modal overlay on a first visit, so leaving it armed makes every
+ * other spec fight it for clicks. Applied automatically by the `test` fixture;
+ * the tour's own spec calls `armTours` to get it back.
+ */
+export async function skipTours(page: Page) {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("earthunt-tour-home-v1", "1")
+    window.localStorage.setItem("earthunt-tour-game-v1", "1")
+  })
+}
+
+/**
+ * Undoes {@link skipTours} so a tour runs, for the spec that tests it.
+ *
+ * Only on the first load of the tab. An init script runs again on every
+ * navigation, so re-arming unconditionally would resurrect the tour after a
+ * reload — and "it does not come back" is exactly what the spec checks.
+ * sessionStorage survives the reload, which is what makes the once-only work.
+ */
+export async function armTours(page: Page) {
+  await page.addInitScript(() => {
+    if (window.sessionStorage.getItem("e2e-tours-armed")) return
+    window.sessionStorage.setItem("e2e-tours-armed", "1")
+    window.localStorage.removeItem("earthunt-tour-home-v1")
+    window.localStorage.removeItem("earthunt-tour-game-v1")
+  })
+}
+
 interface Fixtures {
+  /** Silences the guided tours; see skipTours. */
+  suppressTours: void
   /** Mapbox stubbed, API mocked with defaults, splash skipped. */
   app: Page
   /** Strings for the locale of the running project. */
@@ -164,6 +207,15 @@ interface Fixtures {
 }
 
 export const test = base.extend<Fixtures>({
+  // Auto-fixture: runs for every test, tour spec included, which then re-arms
+  // the tours explicitly.
+  suppressTours: [
+    async ({ page }, use) => {
+      await skipTours(page)
+      await use()
+    },
+    { auto: true },
+  ],
   t: async ({}, use, testInfo) => {
     const locale: Locale = testInfo.project.name.endsWith("-fr") ? "fr" : "en"
     await use(STRINGS[locale])

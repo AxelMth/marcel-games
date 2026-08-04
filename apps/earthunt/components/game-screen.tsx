@@ -7,6 +7,7 @@ import { useGameStore } from "@/lib/game-store"
 import { countries, getCountryName } from "@/lib/countries"
 import { normalizeCountryName } from "@/lib/game-logic"
 
+import { GuidedTour } from "@/components/guided-tour"
 import { HelpBubble } from "@/components/help-bubble"
 import { useLanguage } from "@/components/language-provider"
 import { useKeyboardOffset } from "@/hooks/use-keyboard-offset"
@@ -27,6 +28,7 @@ export function GameScreen() {
     submitGuess,
     clearLastGuess,
     tick,
+    startTimer,
   } = useGameStore()
 
   const [input, setInput] = useState("")
@@ -110,7 +112,10 @@ export function GameScreen() {
         foundCountries={foundCountries}
         highlightedCountry={highlightedCountry}
         continent={gameConfig.continent}
-        onSettled={() => setBoardReady(true)}
+        onSettled={() => {
+          startTimer()
+          setBoardReady(true)
+        }}
       />
 
       {/* --- OVERLAYS ON TOP OF MAP --- */}
@@ -187,6 +192,7 @@ export function GameScreen() {
           The shake animation also uses `transform`, so the lift has to be a
           `bottom` offset or the two would fight over the same property. */}
       <div
+        data-tour="search-bar"
         className={`absolute left-0 right-0 z-10 p-4 pb-5 ${shouldShake ? "animate-search-bar-shake" : ""}`}
         style={{
           bottom:
@@ -263,6 +269,14 @@ export function GameScreen() {
           )}
         </div>
       </div>
+
+      {/* Guided tour. Held back until the map has settled — highlighting a
+          spinner would teach nothing — and while the keyboard is up, since it
+          would cover the very element being pointed at. */}
+      <GuidedTour
+        tour="game"
+        enabled={boardReady && keyboardOffset === 0 && !showHintsHelpSheet}
+      />
 
       {/* Hints & Help bottom sheet */}
       <HintsHelpSheet

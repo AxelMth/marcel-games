@@ -75,6 +75,7 @@ interface GameState {
   clearHighlight: () => void
   clearLastGuess: () => void
   tick: () => void
+  startTimer: () => void
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -122,7 +123,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       gameConfig: config,
       foundCountries: [],
       attempts: 0,
-      startTime: Date.now(),
+      startTime: null,
       elapsedTime: 0,
       lastGuessResult: null,
       highlightedCountry: null,
@@ -139,7 +140,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       gameConfig: config,
       foundCountries: [],
       attempts: 0,
-      startTime: Date.now(),
+      startTime: null,
       elapsedTime: 0,
       lastGuessResult: null,
       highlightedCountry: null,
@@ -154,7 +155,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       gameConfig: config,
       foundCountries: [],
       attempts: 0,
-      startTime: Date.now(),
+      startTime: null,
       elapsedTime: 0,
       lastGuessResult: null,
       highlightedCountry: null,
@@ -195,7 +196,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             : state.continentLevels,
         foundCountries: [],
         attempts: 0,
-        startTime: Date.now(),
+        startTime: null,
         elapsedTime: 0,
         lastGuessResult: null,
         highlightedCountry: null,
@@ -222,7 +223,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         gameConfig: config,
         foundCountries: [],
         attempts: 0,
-        startTime: Date.now(),
+        startTime: null,
         elapsedTime: 0,
         lastGuessResult: null,
         highlightedCountry: null,
@@ -243,7 +244,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         gameConfig: config,
         foundCountries: [],
         attempts: 0,
-        startTime: Date.now(),
+        startTime: null,
         elapsedTime: 0,
         lastGuessResult: null,
         highlightedCountry: null,
@@ -278,7 +279,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           : get().continentLevels,
       foundCountries: [],
       attempts: 0,
-      startTime: Date.now(),
+      startTime: null,
       elapsedTime: 0,
       lastGuessResult: null,
       highlightedCountry: null,
@@ -396,6 +397,14 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   clearHighlight: () => set({ highlightedCountry: null }),
   clearLastGuess: () => set({ lastGuessResult: null }),
+  // Called by the game screen once the map has settled. The clock is the
+  // player's score, so it must not include however long the map took to load —
+  // and gating only the display would make the timer jump the moment it
+  // started, since tick recomputes from startTime rather than incrementing.
+  startTimer: () => {
+    if (get().startTime === null) set({ startTime: Date.now() })
+  },
+
   tick: () => {
     const state = get()
     if (state.startTime && state.screen === "game") {

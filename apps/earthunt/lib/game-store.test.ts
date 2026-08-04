@@ -13,6 +13,68 @@ function startWorldLevel(level = 1) {
 }
 
 describe("game store", () => {
+  describe("the clock", () => {
+    // The map can take seconds to appear, and the player's time is their score:
+    // charging them for the load was the bug behind "the counter runs while
+    // everything is still loading".
+    it("stays at zero until the board is ready", () => {
+      startWorldLevel()
+      expect(store().startTime).toBeNull()
+
+      store().tick()
+      store().tick()
+
+      expect(store().elapsedTime).toBe(0)
+    })
+
+    it("counts from the moment the board is ready, not from the level opening", () => {
+      vi.useFakeTimers()
+      try {
+        vi.setSystemTime(new Date("2026-08-04T09:00:00Z"))
+        startWorldLevel()
+
+        // Five seconds of map loading, which must cost the player nothing.
+        vi.advanceTimersByTime(5000)
+        store().startTimer()
+
+        vi.advanceTimersByTime(3000)
+        store().tick()
+
+        expect(store().elapsedTime).toBe(3)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it("ignores a second start, so a re-settled map cannot rewind the clock", () => {
+      vi.useFakeTimers()
+      try {
+        vi.setSystemTime(new Date("2026-08-04T09:00:00Z"))
+        startWorldLevel()
+        store().startTimer()
+        const armedAt = store().startTime
+
+        vi.advanceTimersByTime(4000)
+        store().startTimer()
+
+        expect(store().startTime).toBe(armedAt)
+        store().tick()
+        expect(store().elapsedTime).toBe(4)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it("re-arms for the next level", () => {
+      startWorldLevel(1)
+      store().startTimer()
+      expect(store().startTime).not.toBeNull()
+
+      startWorldLevel(2)
+      expect(store().startTime).toBeNull()
+    })
+  })
+
   describe("setGameFromLevel", () => {
     it("enters the game screen with a fresh slate", () => {
       startWorldLevel(3)

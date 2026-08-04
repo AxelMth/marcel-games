@@ -50,6 +50,7 @@ export function ScreenHeader({
       {showCog && onCogClick ? (
         <button
           onClick={onCogClick}
+          data-tour="stats-cog"
           className="ml-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/30 backdrop-blur-sm transition-colors active:bg-white/50"
           aria-label={t("profile.settings")}
         >

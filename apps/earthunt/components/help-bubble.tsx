@@ -26,6 +26,7 @@ export function HelpBubble({
     return (
       <button
         type="button"
+        data-tour="help-bubble"
         onClick={onFirstClick}
         className="absolute z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/90 shadow-xl backdrop-blur-sm transition-all duration-200 active:scale-90 border-2 border-[#1a8fb5]/30"
         style={{
