@@ -35,6 +35,10 @@ export function GameScreen() {
   const [helpBubbleExpanded, setHelpBubbleExpanded] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [shouldShake, setShouldShake] = useState(false)
+  // The clock is the player's score, so it must not run while they are still
+  // staring at a loading map. The map settles either way — loaded or declared
+  // unavailable — so this can never leave the timer stopped for good.
+  const [boardReady, setBoardReady] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const { t, tReplace, lang } = useLanguage()
   const keyboardOffset = useKeyboardOffset()
@@ -43,9 +47,10 @@ export function GameScreen() {
   useNativeScrollLock()
 
   useEffect(() => {
+    if (!boardReady) return
     const interval = setInterval(tick, 1000)
     return () => clearInterval(interval)
-  }, [tick])
+  }, [tick, boardReady])
 
   const suggestions = useMemo(() => {
     if (!input || input.length < 2) return []
@@ -105,6 +110,7 @@ export function GameScreen() {
         foundCountries={foundCountries}
         highlightedCountry={highlightedCountry}
         continent={gameConfig.continent}
+        onSettled={() => setBoardReady(true)}
       />
 
       {/* --- OVERLAYS ON TOP OF MAP --- */}

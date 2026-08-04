@@ -5,6 +5,7 @@ import mapboxgl from "mapbox-gl"
 import "mapbox-gl/dist/mapbox-gl.css"
 import type { Country, Continent } from "@/lib/countries"
 import { Spinner } from "@marcel-games/ui"
+import { useLanguage } from "@/components/language-provider"
 
 interface GeoJsonFeature {
   type: "Feature"
@@ -92,23 +93,40 @@ function filterGeoJsonFeatures(
   return { type: "FeatureCollection", features }
 }
 
+// Past this, the map is treated as unavailable and the player is let through.
+// A level that never finishes loading is indistinguishable from a broken app —
+// it is the exact shape of the guideline 2.1 rejection this app already had.
+const MAP_LOAD_TIMEOUT_MS = 8000
+
 interface WorldMapProps {
   missingCountries: Country[]
   foundCountries: Country[]
   highlightedCountry: string | null
   continent?: Continent
+  /**
+   * Fired once the map has finished loading, or given up trying. Callers use it
+   * to hold the clock until the player can actually see the board.
+   */
+  onSettled?: () => void
 }
 
 export function WorldMap({
   missingCountries,
   foundCountries,
   highlightedCountry,
-  continent
+  continent,
+  onSettled
 }: WorldMapProps) {
+  const { t } = useLanguage()
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<mapboxgl.Map | null>(null)
   const initialized = useRef(false)
   const [mapReady, setMapReady] = useState(false)
+  const [mapUnavailable, setMapUnavailable] = useState(false)
+  // Kept in a ref so the init effect never has to re-run when the parent
+  // re-renders with a new callback identity.
+  const onSettledRef = useRef(onSettled)
+  onSettledRef.current = onSettled
   const [fullGeoJson, setFullGeoJson] = useState<GeoJsonFeatureCollection | null>(null)
 
   // GeoJSON uses ADM0_A3 (3-letter codes); Country.code is 3-letter
@@ -209,9 +227,12 @@ export function WorldMap({
     if (!mapContainer.current || initialized.current) return
     if (!MAPBOX_TOKEN) {
       setMapReady(true)
+      setMapUnavailable(true)
+      onSettledRef.current?.()
       return
     }
     setMapReady(false)
+    setMapUnavailable(false)
     initialized.current = true
 
     mapboxgl.accessToken = MAPBOX_TOKEN
@@ -234,6 +255,36 @@ export function WorldMap({
       // out blank in any screenshot. Keeping the buffer costs memory and is
       // only enabled for the store-screenshot build.
       preserveDrawingBuffer: SCREENSHOT_MODE,
+    })
+
+    // Every path out of "loading" goes through here exactly once, so the player
+    // is never left watching a spinner: the map either becomes usable, or it is
+    // declared unavailable and the game carries on without it. Guessing is done
+    // by typing, so a missing map costs the visual aid, not the level.
+    let settled = false
+    const settle = () => {
+      if (settled) return
+      settled = true
+      clearTimeout(giveUpTimer)
+      setMapReady(true)
+      onSettledRef.current?.()
+    }
+
+    const giveUpTimer = setTimeout(() => {
+      setMapUnavailable(true)
+      settle()
+    }, MAP_LOAD_TIMEOUT_MS)
+
+    m.on("error", (event) => {
+      const status = (event?.error as { status?: number } | undefined)?.status
+      // 401/403 mean the token is missing, wrong or unauthorised — retrying
+      // cannot help, so stop waiting immediately instead of burning the
+      // timeout. Tile-level errors carry no such status and are ignored: the
+      // map is still perfectly usable with a few tiles missing.
+      if (status === 401 || status === 403) {
+        setMapUnavailable(true)
+        settle()
+      }
     })
 
     m.on("style.load", () => {
@@ -302,12 +353,13 @@ export function WorldMap({
       })
 
       updateMapLayers()
-      m.once("idle", () => setMapReady(true))
+      m.once("idle", settle)
     })
 
     map.current = m
 
     return () => {
+      clearTimeout(giveUpTimer)
       m.remove()
       map.current = null
       initialized.current = false
@@ -366,6 +418,13 @@ export function WorldMap({
           aria-hidden
         >
           <Spinner className="size-10 text-primary" />
+        </div>
+      )}
+      {mapReady && mapUnavailable && (
+        <div className="pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 justify-center px-8">
+          <p className="rounded-2xl bg-white/85 px-5 py-4 text-center text-sm font-medium text-[#0f2b3c] shadow-md backdrop-blur-sm">
+            {t("game.mapUnavailable")}
+          </p>
         </div>
       )}
     </div>

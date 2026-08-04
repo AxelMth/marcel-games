@@ -34,6 +34,8 @@ export const translations = {
       worldLevel: "World - Level {{level}}",
       continentLevel: "{{continent}} - Lvl {{level}}",
       enterCountryName: "Enter a country name...",
+      mapUnavailable:
+        "The map could not load. You can still play: type the names of the missing countries.",
       missing: "missing", // Used as "X missing" (plural)
       missingOne: "missing", // Used as "1 missing"
       allCountriesFound: "All countries have been found",
@@ -145,6 +147,8 @@ export const translations = {
       worldLevel: "Monde - Niveau {{level}}",
       continentLevel: "{{continent}} - Niv. {{level}}",
       enterCountryName: "Tape le nom d'un pays...",
+      mapUnavailable:
+        "La carte n'a pas pu se charger. Tu peux quand même jouer : tape le nom des pays manquants.",
       missing: "manquants", // Used as "X manquants" (plural)
       missingOne: "manquant", // Used as "1 manquant"
       allCountriesFound: "Tous les pays ont été trouvés",
