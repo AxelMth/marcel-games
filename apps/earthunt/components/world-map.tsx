@@ -6,6 +6,7 @@ import "mapbox-gl/dist/mapbox-gl.css"
 import type { Country, Continent } from "@/lib/countries"
 import { Spinner } from "@marcel-games/ui"
 import { useLanguage } from "@/components/language-provider"
+import { buildCountryFillExpression, COUNTRY_GREEN } from "@/lib/map-paint"
 
 interface GeoJsonFeature {
   type: "Feature"
@@ -24,10 +25,8 @@ const MAPBOX_STYLE = process.env.NEXT_PUBLIC_MAPBOX_STYLE_URL || "mapbox://style
 /** Set only for the store-screenshot build; never in a shipped bundle. */
 const SCREENSHOT_MODE = process.env.NEXT_PUBLIC_SCREENSHOT_MODE === "1"
 
-const COUNTRY_GREEN = "#6d9581"
 const COUNTRY_BORDER_WHITE = "#ffffff"
 /** Yellow highlight for "Show on Map" hint (matches previous version). */
-const COUNTRY_HIGHLIGHT_COLOR = "#FFD700"
 
 /** Centers and zoom levels aligned with earthunt Map.tsx. */
 const continentCenters: Record<Continent, { center: [number, number]; zoom: number }> = {
@@ -151,30 +150,14 @@ export function WorldMap({
     if (!m || !m.isStyleLoaded()) return
     if (!m.getLayer("country-fills")) return
 
-    // Paint by ADM0_A3 (3-letter): highlight > found > default
-    const fillExpression: mapboxgl.ExpressionSpecification = [
-      "case",
-      ["in", ["get", "ADM0_A3"], ["literal", foundCodes]],
-      COUNTRY_GREEN,
-      COUNTRY_GREEN,
-    ]
+    const fillExpression = buildCountryFillExpression(
+      highlightedCode,
+      foundCodes
+    ) as mapboxgl.ExpressionSpecification
 
     if (m.getLayer("country-fills")) {
       m.setPaintProperty("country-fills", "fill-color", fillExpression)
       m.setPaintProperty("country-fills", "fill-opacity", 1)
-    }
-
-    const highlightedFillExpression: mapboxgl.ExpressionSpecification = [
-      "case",
-      highlightedCode
-        ? ["==", ["get", "ADM0_A3"], highlightedCode]
-        : ["literal", false],
-      COUNTRY_HIGHLIGHT_COLOR,
-      COUNTRY_GREEN,
-    ]
-    if (m.getLayer("country-fills-highlighted")) {
-      m.setPaintProperty("country-fills-highlighted", "fill-color", highlightedFillExpression)
-      m.setPaintProperty("country-fills-highlighted", "fill-opacity", 1)
     }
 
     const borderWidthExpression: mapboxgl.ExpressionSpecification = [
@@ -320,26 +303,6 @@ export function WorldMap({
         },
         m.getStyle().layers?.find((l) => l.type === "symbol")?.id
       )
-
-      m.addLayer({
-        id: "country-fills-highlighted",
-        type: "fill",
-        source: "country-boundaries",
-        paint: {
-          "fill-color": COUNTRY_HIGHLIGHT_COLOR,
-          "fill-opacity": 1,
-        },
-      })
-
-      m.addLayer({
-        id: "country-fills-found",
-        type: "fill",
-        source: "country-boundaries",
-        paint: {
-          "fill-color": COUNTRY_GREEN,
-          "fill-opacity": 1,
-        },
-      })
 
       m.addLayer({
         id: "country-borders",

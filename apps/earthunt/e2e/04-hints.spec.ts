@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test"
-import { expect, mockApi, skipSplash, stubMapbox, test } from "./fixtures"
+import { expect, mockApi, skipSplash, stubMapbox, test, boardFor, firstMissingName } from "./fixtures"
 
 /** Opens the hints sheet from inside a level. */
 async function openHints(page: Page) {
@@ -40,15 +40,17 @@ test.describe("hints", () => {
     await expect(hintButton(page, t.fullName)).toBeVisible()
   })
 
-  test("reveals the first letter, which costs no ad", async ({ page, t }) => {
+  test("reveals the first letter, which costs no ad", async ({ page, t, locale }) => {
     await page.goto("/")
     await page.getByRole("heading", { name: t.world, exact: true }).click()
     await openHints(page)
 
     await hintButton(page, t.firstLetter).click()
 
-    // FRA is the first missing country, so the revealed letter is F.
-    await expect(page.getByText(/F/).first()).toBeVisible()
+    // The first missing country of level 1 comes from the generator, so the
+    // revealed letter is its initial.
+    const initial = firstMissingName(locale, "world", 1)[0]
+    await expect(page.getByText(new RegExp(initial, "i")).first()).toBeVisible()
     expect(await hintKeys(page)).toHaveLength(1)
   })
 
@@ -89,9 +91,14 @@ test.describe("hints", () => {
     await hintButton(page, t.firstLetter).click()
     await expect(hintButton(page, t.showOnMap)).toBeEnabled()
 
+    // Keyed on the country the hint describes — the first one still missing —
+    // and on nothing else on the board.
+    const board = boardFor("world", 1)
     const keys = await hintKeys(page)
-    expect(keys.some((k) => k.endsWith("FRA"))).toBe(true)
-    expect(keys.some((k) => k.endsWith("ITA"))).toBe(false)
+    expect(keys.some((k) => k.endsWith(board[0]))).toBe(true)
+    for (const other of board.slice(1)) {
+      expect(keys.some((k) => k.endsWith(other))).toBe(false)
+    }
   })
 
   test("works in continent mode and stores under a continent key", async ({ page, t }) => {

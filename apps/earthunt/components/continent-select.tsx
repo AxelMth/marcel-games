@@ -137,20 +137,11 @@ export function ContinentSelect() {
         gameMode,
         continent,
       })
-      // Same guard as the world/daily path: an empty set means an already-won
-      // level, so fall back to generating one rather than showing it.
-      if (data.countryCodes.length === 0) {
-        startOffline(continent)
-        return
-      }
-      const allCountries = getCountriesByContinent(continent)
-      setGameFromLevel({
-        mode: "continent",
-        level: data.level,
-        continent,
-        countryCodes: data.countryCodes,
-        allCountries,
-      })
+      // The server tells us which level the player is on; the countries come
+      // from the seeded generator, so the same level always holds the same
+      // board. The server used to draw them anew on every request, which is
+      // what made a level change under the player and orphaned their hints.
+      setGameFromLevel(buildOfflineLevelParams("continent", data.level, continent))
     } catch (e) {
       console.error("Level load failed, starting offline:", e)
       startOffline(continent)

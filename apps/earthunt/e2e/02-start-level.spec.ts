@@ -1,4 +1,4 @@
-import { expect, makeApiUnreachable, mockApi, skipSplash, stubMapbox, test } from "./fixtures"
+import { boardFor, expect, makeApiUnreachable, mockApi, skipSplash, stubMapbox, test } from "./fixtures"
 
 test.describe("starting a level", () => {
   test("starts a world level from the carousel", async ({ app: page, t }) => {
@@ -13,12 +13,15 @@ test.describe("starting a level", () => {
   test("shows how many countries are missing", async ({ page, t }) => {
     await stubMapbox(page)
     await skipSplash(page)
-    await mockApi(page, { levelCountryCodes: ["FRA", "ITA", "ESP"] })
+    await mockApi(page, { worldLevel: 1 })
 
     await page.goto("/")
     await page.getByRole("heading", { name: t.world, exact: true }).click()
 
-    await expect(page.getByText(/3/).first()).toBeVisible()
+    // The count comes from the generator, not from the mock: the API only says
+    // which level the player is on.
+    const expected = boardFor("world", 1).length
+    await expect(page.getByText(new RegExp(`\\b${expected}\\b`)).first()).toBeVisible()
   })
 
   test("starts a continent level", async ({ app: page, t }) => {

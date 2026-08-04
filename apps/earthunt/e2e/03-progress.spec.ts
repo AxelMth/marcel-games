@@ -1,16 +1,5 @@
-import { expect, mockApi, skipSplash, stubMapbox, test, type Locale } from "./fixtures"
+import { boardNames, expect, mockApi, skipSplash, stubMapbox, test } from "./fixtures"
 import type { Page } from "@playwright/test"
-
-/** Country names as the app expects them, per locale. */
-const NAMES = {
-  fr: { FRA: "France", ITA: "Italie", ESP: "Espagne" },
-  en: { FRA: "France", ITA: "Italy", ESP: "Spain" },
-} as const
-
-function namesFor(projectName: string) {
-  const locale: Locale = projectName.endsWith("-fr") ? "fr" : "en"
-  return NAMES[locale]
-}
 
 async function guess(page: Page, name: string, placeholder: string) {
   const input = page.getByPlaceholder(placeholder)
@@ -18,20 +7,35 @@ async function guess(page: Page, name: string, placeholder: string) {
   await input.press("Enter")
 }
 
+/**
+ * Plays a level to completion.
+ *
+ * The countries come from the same seeded generator the app uses — the API no
+ * longer picks them, so a hardcoded list would just be guessing at a board that
+ * is not on screen.
+ */
+async function completeWorldLevel(
+  page: Page,
+  locale: "fr" | "en",
+  level: number,
+  placeholder: string
+) {
+  for (const name of boardNames(locale, "world", level)) {
+    await guess(page, name, placeholder)
+  }
+}
+
 test.describe("progress is saved and shown", () => {
-  test("completing a level advances the mode card", async ({ page, t }, testInfo) => {
-    const names = namesFor(testInfo.project.name)
+  test("completing a level advances the mode card", async ({ page, t, locale }) => {
     await stubMapbox(page)
     await skipSplash(page)
-    await mockApi(page, { worldLevel: 1, levelCountryCodes: ["FRA", "ITA", "ESP"] })
+    await mockApi(page, { worldLevel: 1 })
 
     await page.goto("/")
     await page.getByRole("heading", { name: t.world, exact: true }).click()
     await expect(page.getByText(t.worldLevel(1))).toBeVisible()
 
-    for (const code of ["FRA", "ITA", "ESP"] as const) {
-      await guess(page, names[code], t.enterCountryName)
-    }
+    await completeWorldLevel(page, locale, 1, t.enterCountryName)
 
     // The success screen appears after a short delay that lets the last answer land.
     await expect(page.getByRole("button", { name: t.nextLevel })).toBeVisible({
@@ -39,17 +43,14 @@ test.describe("progress is saved and shown", () => {
     })
   })
 
-  test("the new level survives going home", async ({ page, t }, testInfo) => {
-    const names = namesFor(testInfo.project.name)
+  test("the new level survives going home", async ({ page, t, locale }) => {
     await stubMapbox(page)
     await skipSplash(page)
-    await mockApi(page, { worldLevel: 1, levelCountryCodes: ["FRA", "ITA", "ESP"] })
+    await mockApi(page, { worldLevel: 1 })
 
     await page.goto("/")
     await page.getByRole("heading", { name: t.world, exact: true }).click()
-    for (const code of ["FRA", "ITA", "ESP"] as const) {
-      await guess(page, names[code], t.enterCountryName)
-    }
+    await completeWorldLevel(page, locale, 1, t.enterCountryName)
     await expect(page.getByRole("button", { name: t.nextLevel })).toBeVisible({
       timeout: 15_000,
     })

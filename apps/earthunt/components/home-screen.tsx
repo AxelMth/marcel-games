@@ -133,8 +133,10 @@ export function HomeScreen() {
     setSelectedIndex(Math.max(0, Math.min(modes.length - 1, index)))
   }, [getScrollStep])
 
-  // Offline fallback: generate the level locally instead of blocking the
-  // player behind an error. Same deterministic generator, same store action.
+  // Not just an offline fallback any more: this is how World levels are always
+  // built. The generator is seeded from the level id, so the same level always
+  // holds the same countries — which the server could not promise, since it
+  // drew them afresh on every request.
   const startOffline = (mode: "world" | "daily") => {
     const level = mode === "world" ? (progress?.worldLevel ?? 1) : 1
     setGameFromLevel(buildOfflineLevelParams(mode, level))
@@ -159,9 +161,17 @@ export function HomeScreen() {
         gameMode,
         continent: "",
       })
-      // A level with nothing to find is won the instant it opens. The daily
-      // used to arrive that way whenever the server had no puzzle stored for
-      // today, so never trust an empty set — generate one locally instead.
+
+      // The server is authoritative for which level the player is on, and for
+      // the daily puzzle — everyone must get the same one. It no longer picks
+      // the countries of a World level: those come from the seeded generator so
+      // that leaving and coming back shows the same board.
+      if (mode === "world") {
+        setGameFromLevel(buildOfflineLevelParams("world", data.level))
+        return
+      }
+
+      // A level with nothing to find is won the instant it opens.
       if (data.countryCodes.length === 0) {
         startOffline(mode)
         return

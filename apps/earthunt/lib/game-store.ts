@@ -2,7 +2,7 @@ import { create } from "zustand"
 import type { Country, Continent, CountryLocale } from "./countries"
 import { getCountriesByCodes, getCountryName } from "./countries"
 import { createGameConfig, matchCountry, type GameConfig } from "./game-logic"
-import { countPersistedHints } from "./hint-storage"
+import { countPersistedHints, getPersistedHints } from "./hint-storage"
 
 export type Screen = "home" | "continent-select" | "game" | "success" | "stats"
 
@@ -76,6 +76,26 @@ interface GameState {
   clearLastGuess: () => void
   tick: () => void
   startTimer: () => void
+}
+
+/**
+ * The country a paid "show on map" hint should be lighting up, or null.
+ *
+ * Hints survive in localStorage but `highlightedCountry` is in-memory state, so
+ * leaving a level and coming back showed the hint as spent while the map went
+ * dark again — the player had paid for nothing. Recomputed whenever the first
+ * missing country changes, which is on level start and after every find.
+ */
+function restoreHighlight(
+  mode: string,
+  level: number,
+  continent: string,
+  missing: { code: string }[],
+  found: { code: string }[]
+): string | null {
+  const next = missing.find((c) => !found.some((f) => f.code === c.code))
+  if (!next) return null
+  return getPersistedHints(mode, level, continent, next.code)?.map ? next.code : null
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -282,7 +302,13 @@ export const useGameStore = create<GameState>((set, get) => ({
       startTime: null,
       elapsedTime: 0,
       lastGuessResult: null,
-      highlightedCountry: null,
+      highlightedCountry: restoreHighlight(
+        mode,
+        level,
+        continent ?? "",
+        missingCountries,
+        []
+      ),
       // Hints outlive the app (localStorage) but this counter does not. Rebuild
       // it, or a resumed level is scored as if no hint had ever been taken —
       // three stars despite the help, and a false hintsUsed sent to the server.
@@ -344,8 +370,25 @@ export const useGameStore = create<GameState>((set, get) => ({
     set({
       foundCountries: newFound,
       lastGuessResult: result,
+      // Flash the country just found, then hand the highlight over to whichever
+      // country the next paid hint belongs to — the hints always describe the
+      // first one still missing, so the map has to follow.
       highlightedCountry: matched.code,
     })
+
+    setTimeout(() => {
+      const current = get()
+      if (current.gameConfig !== state.gameConfig) return
+      set({
+        highlightedCountry: restoreHighlight(
+          state.gameConfig!.mode,
+          state.gameConfig!.level,
+          state.gameConfig!.continent ?? "",
+          state.gameConfig!.missingCountries,
+          newFound
+        ),
+      })
+    }, 1200)
 
     if (allFound) {
       setTimeout(() => {

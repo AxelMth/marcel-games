@@ -3,9 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"marcel-games-backend/internal/constants"
 	"marcel-games-backend/internal/repositories"
-	"marcel-games-backend/pkg/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -179,16 +177,24 @@ func FinishLevelHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func getCountryCodes(gameMode string, continent string, level int) []string {
-	var countryCodes []string
-	if gameMode == "WORLD" {
-		countryCodes = utils.GetLevelCountryCodesForLevel(level)
-	} else if gameMode == "CONTINENTS" {
-		// TODO: Add continent check (e.g. Africa, Americas, Asia, Europe, Oceania)
-		continentEnum := constants.Continent(continent)
-		countryCodes = utils.GetLevelCountryCodesForContinent(level, continentEnum)
-	}
-	return countryCodes
+// getCountryCodes no longer picks the countries for the solo modes.
+//
+// It used to draw them from the package-level random source on every request,
+// so three identical calls for the same user and level answered USA, then BRA,
+// then CHN. The board changed under the player each time the level was
+// re-fetched, and it took their paid hints with it: hints are filed under the
+// code of the country they describe, so a new draw orphaned them.
+//
+// World and Continent are single-player progressions with no reason for the
+// server to choose their content. The client already derives them from the
+// level id with a seeded shuffle, the same way it does offline, so leaving it
+// as the only generator makes a level reproducible by construction rather than
+// by keeping two implementations in step.
+//
+// The level of the day is different and stays server-side: every player must
+// get the same puzzle, so it is stored, not derived.
+func getCountryCodes(_ string, _ string, _ int) []string {
+	return []string{}
 }
 
 // Progress response for carousel: current level per mode and daily completion.

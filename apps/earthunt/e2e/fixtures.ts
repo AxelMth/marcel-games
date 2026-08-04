@@ -1,5 +1,8 @@
 import { test as base, type Page } from "@playwright/test"
 
+import { countries, type Continent } from "../lib/countries"
+import { buildOfflineLevelParams } from "../lib/game-logic"
+
 export const USER_ID = "e2e-user"
 
 export type Locale = "fr" | "en"
@@ -78,7 +81,10 @@ export interface ApiState {
   worldLevel: number
   continentLevels: Record<string, number>
   dailyCompleted: boolean
-  /** Codes the next GET /level hands out. */
+  /**
+   * Codes GET /level hands out. Only the daily challenge reads them now: World
+   * and Continent boards come from the client generator, keyed on the level.
+   */
   levelCountryCodes: string[]
   /** Codes POST /level returns for the level after this one. */
   nextCountryCodes: string[]
@@ -93,9 +99,50 @@ export const DEFAULT_STATE: ApiState = {
 }
 
 /**
- * Stubs the whole backend so a run is hermetic. The real level generator draws
- * countries at random by design, which would make any assertion on a specific
- * country flaky.
+ * The board a World or Continent level actually shows.
+ *
+ * The API used to choose the countries, and drew them anew on every request, so
+ * the mock had to pin them for a test to assert anything. The client is now the
+ * only generator — seeded from the level id, hence stable — and the API only
+ * says which level the player is on. Deriving the expectation from the same
+ * generator the app uses keeps these assertions honest rather than restating a
+ * mock back to itself.
+ */
+export function boardFor(
+  mode: "world" | "continent" | "daily",
+  level: number,
+  continent?: Continent
+): string[] {
+  return buildOfflineLevelParams(mode, level, continent).countryCodes
+}
+
+/** Every country of a level, named in the running locale, in board order. */
+export function boardNames(
+  locale: Locale,
+  mode: "world" | "continent" | "daily",
+  level: number,
+  continent?: Continent
+): string[] {
+  return boardFor(mode, level, continent).map((code) => {
+    const country = countries.find((c) => c.code === code)!
+    return locale === "fr" ? country.nameFr : country.nameEn
+  })
+}
+
+/** Name of the country the hints describe: the first one still missing. */
+export function firstMissingName(
+  locale: Locale,
+  mode: "world" | "continent" | "daily",
+  level: number,
+  continent?: Continent
+): string {
+  const [code] = boardFor(mode, level, continent)
+  const country = countries.find((c) => c.code === code)!
+  return locale === "fr" ? country.nameFr : country.nameEn
+}
+
+/**
+ * Stubs the whole backend so a run is hermetic.
  */
 export async function mockApi(page: Page, overrides: Partial<ApiState> = {}) {
   const state: ApiState = { ...DEFAULT_STATE, ...overrides }
@@ -204,6 +251,8 @@ interface Fixtures {
   app: Page
   /** Strings for the locale of the running project. */
   t: (typeof STRINGS)[Locale]
+  /** The locale itself, for helpers that need to pick a country name. */
+  locale: Locale
 }
 
 export const test = base.extend<Fixtures>({
@@ -216,8 +265,10 @@ export const test = base.extend<Fixtures>({
     },
     { auto: true },
   ],
-  t: async ({}, use, testInfo) => {
-    const locale: Locale = testInfo.project.name.endsWith("-fr") ? "fr" : "en"
+  locale: async ({}, use, testInfo) => {
+    await use(testInfo.project.name.endsWith("-fr") ? "fr" : "en")
+  },
+  t: async ({ locale }, use) => {
     await use(STRINGS[locale])
   },
   app: async ({ page }, use) => {

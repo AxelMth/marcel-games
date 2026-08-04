@@ -13,6 +13,52 @@ function startWorldLevel(level = 1) {
 }
 
 describe("game store", () => {
+  describe("a paid hint outliving the level", () => {
+    // Exactly the reported scenario: pay for "show on map", leave the level,
+    // come back. The hint was remembered as spent but the map went dark, so the
+    // player had paid for nothing.
+    it("relights the country whose map hint was already paid for", () => {
+      const config = startWorldLevel(4)
+      const target = config.missingCountries[0].code
+      setPersistedHint("world", 4, "", target, "map", true)
+
+      startWorldLevel(4)
+
+      expect(store().highlightedCountry).toBe(target)
+    })
+
+    it("leaves the map dark when no map hint was paid for", () => {
+      const config = startWorldLevel(4)
+      // A first-letter hint is free and must not light the map.
+      setPersistedHint("world", 4, "", config.missingCountries[0].code, "letter", "A")
+
+      startWorldLevel(4)
+
+      expect(store().highlightedCountry).toBeNull()
+    })
+
+    it("does not leak a hint from one level into another", () => {
+      const config = startWorldLevel(4)
+      setPersistedHint("world", 4, "", config.missingCountries[0].code, "map", true)
+
+      startWorldLevel(5)
+
+      expect(store().highlightedCountry).toBeNull()
+    })
+
+    it("keys the hint per continent, so two continents do not share it", () => {
+      const europe = getCountriesByContinent("EUROPE")
+      store().setGameFromLevel(buildOfflineLevelParams("continent", 2, "EUROPE"))
+      const target = store().gameConfig!.missingCountries[0].code
+      setPersistedHint("continent", 2, "EUROPE", target, "map", true)
+
+      store().setGameFromLevel(buildOfflineLevelParams("continent", 2, "ASIA"))
+
+      expect(store().highlightedCountry).toBeNull()
+      expect(europe.length).toBeGreaterThan(0)
+    })
+  })
+
   describe("the clock", () => {
     // The map can take seconds to appear, and the player's time is their score:
     // charging them for the load was the bug behind "the counter runs while
