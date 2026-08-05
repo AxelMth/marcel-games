@@ -1,0 +1,2 @@
+# Postgres data directory created by docker-compose.yml when running locally.
+.docker/

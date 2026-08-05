@@ -68,6 +68,14 @@ jobs:
         DATABASE_URL: ${{ secrets.WORDCLIMB_DATABASE_URL }}
       run: go run github.com/steebchen/prisma-client-go db push
 
+    # The daily challenge is drawn from the level catalogue, so the catalogue has
+    # to be in the database first. Idempotent: it upserts, and rerunning it is
+    # also how a regenerated catalogue reaches production.
+    - name: Populate the level catalogue
+      env:
+        DATABASE_URL: ${{ secrets.WORDCLIMB_DATABASE_URL }}
+      run: go run ./cmd/populate-levels
+
     - name: Populate levels of the day
       env:
         DATABASE_URL: ${{ secrets.WORDCLIMB_DATABASE_URL }}

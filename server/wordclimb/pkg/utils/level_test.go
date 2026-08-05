@@ -1,98 +1,9 @@
 package utils
 
 import (
-	"marcel-games-backend/internal/constants"
 	"testing"
 	"time"
 )
-
-// differsByOneLetter reports whether two words are one substitution apart,
-// which is the only legal move in a ladder.
-func differsByOneLetter(a, b string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	diff := 0
-	for i := range a {
-		if a[i] != b[i] {
-			diff++
-		}
-	}
-	return diff == 1
-}
-
-func Test_EverySeedPairProducesALevel(t *testing.T) {
-	levels := AllLevels()
-
-	if len(levels) != len(constants.LevelSeeds) {
-		t.Fatalf("Expected %d levels, but got %d: some seed pair is unreachable in the dictionary",
-			len(constants.LevelSeeds), len(levels))
-	}
-}
-
-func Test_LaddersAreValid(t *testing.T) {
-	dictionary := Dictionary()
-
-	for _, level := range AllLevels() {
-		if len(level.WordLadder) < 2 {
-			t.Errorf("Level %d: expected a ladder of at least 2 words, but got %v", level.ID, level.WordLadder)
-			continue
-		}
-
-		if level.WordLadder[0] != level.BeginWord {
-			t.Errorf("Level %d: ladder starts with %q, but the begin word is %q",
-				level.ID, level.WordLadder[0], level.BeginWord)
-		}
-
-		last := level.WordLadder[len(level.WordLadder)-1]
-		if last != level.EndWord {
-			t.Errorf("Level %d: ladder ends with %q, but the end word is %q", level.ID, last, level.EndWord)
-		}
-
-		for i, word := range level.WordLadder {
-			if _, ok := dictionary[word]; !ok {
-				t.Errorf("Level %d: word %q is not in the dictionary", level.ID, word)
-			}
-			if i > 0 && !differsByOneLetter(level.WordLadder[i-1], word) {
-				t.Errorf("Level %d: %q -> %q is not a one-letter change",
-					level.ID, level.WordLadder[i-1], word)
-			}
-		}
-	}
-}
-
-func Test_GetLevelForNumberCyclesThroughLevels(t *testing.T) {
-	total := len(AllLevels())
-
-	first, ok := GetLevelForNumber(1)
-	if !ok {
-		t.Fatal("Expected a level for level number 1")
-	}
-
-	// One full cycle later, the same puzzle comes back.
-	wrapped, ok := GetLevelForNumber(total + 1)
-	if !ok {
-		t.Fatalf("Expected a level for level number %d", total+1)
-	}
-
-	if wrapped.ID != first.ID {
-		t.Errorf("Expected level %d to wrap back to level ID %d, but got %d", total+1, first.ID, wrapped.ID)
-	}
-}
-
-func Test_GetLevelForNumberClampsNonPositiveLevels(t *testing.T) {
-	first, _ := GetLevelForNumber(1)
-
-	for _, level := range []int{0, -1, -42} {
-		result, ok := GetLevelForNumber(level)
-		if !ok {
-			t.Fatalf("Expected a level for level number %d", level)
-		}
-		if result.ID != first.ID {
-			t.Errorf("Expected level number %d to clamp to level ID %d, but got %d", level, first.ID, result.ID)
-		}
-	}
-}
 
 // The server must pick the same daily puzzle as the client, which hashes the
 // YYYY-MM-DD string in apps/wordclimb/lib/game-store.ts (getDailyLevelIndex).
@@ -114,28 +25,76 @@ func Test_DailyLevelIndexMatchesTheClientHash(t *testing.T) {
 			t.Fatalf("Invalid test date %q: %v", tc.date, err)
 		}
 
-		result := dailyLevelIndex(date, 15)
+		result := DailyLevelIndex(date, 15)
 		if result != tc.expected {
 			t.Errorf("Expected index %d for %s, but got %d", tc.expected, tc.date, result)
 		}
 	}
 }
 
-func Test_GetLevelForDateIsStable(t *testing.T) {
+func Test_DailyLevelIndexIsStableAcrossTheDay(t *testing.T) {
 	date := time.Date(2026, time.August, 2, 0, 0, 0, 0, time.UTC)
 
-	first, ok := GetLevelForDate(date)
-	if !ok {
-		t.Fatal("Expected a level for the day")
-	}
+	first := DailyLevelIndex(date, 1440)
+	later := DailyLevelIndex(date.Add(23*time.Hour), 1440)
 
-	// The time of day must not change the puzzle.
-	later, ok := GetLevelForDate(date.Add(23 * time.Hour))
-	if !ok {
-		t.Fatal("Expected a level for the day")
+	if first != later {
+		t.Errorf("Expected the same level all day, but got indices %d and %d", first, later)
 	}
+}
 
-	if first.ID != later.ID {
-		t.Errorf("Expected the same level all day, but got IDs %d and %d", first.ID, later.ID)
+// A device an hour ahead of UTC must not get tomorrow's puzzle: both sides
+// format the date in UTC, so the zone the time carries is irrelevant.
+func Test_DailyLevelIndexIgnoresTheZone(t *testing.T) {
+	utcMorning := time.Date(2026, time.August, 2, 8, 0, 0, 0, time.UTC)
+	sameInstantInParis := utcMorning.In(time.FixedZone("CEST", 2*60*60))
+
+	if got, want := DailyLevelIndex(sameInstantInParis, 1440), DailyLevelIndex(utcMorning, 1440); got != want {
+		t.Errorf("Expected the zone not to change the puzzle, but got %d and %d", got, want)
+	}
+}
+
+// Late-evening UTC still belongs to today. This is the case that used to be
+// wrong, when the client hashed its own local date.
+func Test_DailyLevelIndexUsesTheUTCDay(t *testing.T) {
+	lateUTC := time.Date(2026, time.August, 2, 23, 30, 0, 0, time.UTC)
+	earlyUTC := time.Date(2026, time.August, 2, 0, 30, 0, 0, time.UTC)
+
+	if got, want := DailyLevelIndex(lateUTC, 1440), DailyLevelIndex(earlyUTC, 1440); got != want {
+		t.Errorf("Expected one puzzle for the whole UTC day, but got %d and %d", got, want)
+	}
+}
+
+func Test_LevelNumberToIndexCyclesThroughTheCatalogue(t *testing.T) {
+	const count = 1440
+
+	if got := LevelNumberToIndex(1, count); got != 0 {
+		t.Errorf("Expected level 1 to be index 0, but got %d", got)
+	}
+	if got := LevelNumberToIndex(count, count); got != count-1 {
+		t.Errorf("Expected level %d to be the last index, but got %d", count, got)
+	}
+	// One full cycle later, the same puzzle comes back.
+	if got := LevelNumberToIndex(count+1, count); got != 0 {
+		t.Errorf("Expected level %d to wrap back to index 0, but got %d", count+1, got)
+	}
+}
+
+func Test_LevelNumberToIndexClampsNonPositiveLevels(t *testing.T) {
+	for _, level := range []int{0, -1, -42} {
+		if got := LevelNumberToIndex(level, 1440); got != 0 {
+			t.Errorf("Expected level %d to clamp to index 0, but got %d", level, got)
+		}
+	}
+}
+
+// An empty catalogue must not panic with a division by zero; callers check the
+// count themselves and surface an empty payload.
+func Test_IndexHelpersSurviveAnEmptyCatalogue(t *testing.T) {
+	if got := LevelNumberToIndex(3, 0); got != 0 {
+		t.Errorf("Expected index 0 for an empty catalogue, but got %d", got)
+	}
+	if got := DailyLevelIndex(time.Now(), 0); got != 0 {
+		t.Errorf("Expected index 0 for an empty catalogue, but got %d", got)
 	}
 }

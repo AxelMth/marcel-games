@@ -8,7 +8,7 @@ import (
 )
 
 // CreateOneLevelHistory records a finished level. wordLadder is the ladder the
-// player solved, full path included, and is part of the row's unique key
+// player solved, intermediate words only, and is part of the row's unique key
 // (@@unique([userId, level, gameMode, wordLadder]) in schema.prisma) so the same
 // puzzle cannot be recorded twice for a user.
 func CreateOneLevelHistory(
@@ -19,6 +19,8 @@ func CreateOneLevelHistory(
 	timeSpent int,
 	hintsUsed int,
 	gameMode string,
+	beginWord string,
+	endWord string,
 	wordLadder []string,
 ) (*db.LevelHistoryModel, error) {
 	if wordLadder == nil {
@@ -32,6 +34,8 @@ func CreateOneLevelHistory(
 		db.LevelHistory.GameMode.Set(db.GameMode(gameMode)),
 		db.LevelHistory.WordLadder.Set(wordLadder),
 		db.LevelHistory.HintsUsed.Set(hintsUsed),
+		db.LevelHistory.BeginWord.Set(beginWord),
+		db.LevelHistory.EndWord.Set(endWord),
 	).Exec(ctx)
 	return levelHistory, err
 }
@@ -259,8 +263,12 @@ func GetUserGlobalDailyRank(ctx context.Context, userID string) (int, error) {
 
 // GameHistoryEntry holds a single level history record for the profile API
 type GameHistoryEntry struct {
-	Level      int      `json:"level"`
-	GameMode   string   `json:"gameMode"`
+	Level     int    `json:"level"`
+	GameMode  string `json:"gameMode"`
+	BeginWord string `json:"beginWord"`
+	EndWord   string `json:"endWord"`
+	// Intermediate words only; the client re-inserts the two ends to display
+	// the whole ladder.
 	WordLadder []string `json:"wordLadder"`
 	Stars      int      `json:"stars"`
 	Rank       int      `json:"rank"`
@@ -354,6 +362,8 @@ func GetUserLevelHistory(ctx context.Context, userID string, limit int) ([]GameH
 		entries = append(entries, GameHistoryEntry{
 			Level:      h.Level,
 			GameMode:   string(h.GameMode),
+			BeginWord:  h.BeginWord,
+			EndWord:    h.EndWord,
 			WordLadder: h.WordLadder,
 			Stars:      stars,
 			Rank:       rank,
