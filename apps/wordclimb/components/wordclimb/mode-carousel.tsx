@@ -14,7 +14,7 @@ const modes: { key: GameMode; icon: typeof BookOpen; color: string }[] = [
 ]
 
 export function ModeCarousel() {
-  const { locale, startGame, progress } = useApp()
+  const { locale, startGame, progress, isStartingGame } = useApp()
   const scrollRef = useRef<HTMLDivElement>(null)
   const firstCardRef = useRef<HTMLButtonElement>(null)
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -80,7 +80,10 @@ export function ModeCarousel() {
     if (diff > 10) return
     const dailyDone = progress?.dailyCompleted ?? false
     if (mode === "daily" && dailyDone) return
-    startGame(mode)
+    // Fetching the level is a round trip now; a second tap while it is in
+    // flight would start two games.
+    if (isStartingGame) return
+    void startGame(mode)
   }
 
   const classicLevel = progress?.worldLevel ?? 1
@@ -111,7 +114,7 @@ export function ModeCarousel() {
               ref={i === 0 ? firstCardRef : undefined}
               onPointerDown={handlePointerDown as (e: MouseEvent) => void}
               onClick={(e) => handleCardClick(key, e)}
-              disabled={isDailyDisabled}
+              disabled={isDailyDisabled || isStartingGame}
               className="mx-2 flex w-[75vw] max-w-xs shrink-0 snap-center flex-col items-center justify-center gap-3 rounded-[20px] bg-[rgba(255,255,255,0.92)] p-6 shadow-lg backdrop-blur-sm transition-transform active:scale-[0.97] disabled:opacity-60"
               style={{ minHeight: "180px" }}
             >

@@ -1,6 +1,11 @@
+# Local Postgres for the wordclimb server.
+#
+# The database and container are named after the game: this file was copied from
+# earthunt and kept its names, and the two games sharing a name is precisely how
+# one game's cron ended up writing into the other's database.
 services:
   postgresql:
-    container_name: postgresql
+    container_name: wordclimb-postgresql
     restart: unless-stopped
     image: postgres:17
     ports:
@@ -8,11 +13,11 @@ services:
     environment:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: root
-      POSTGRES_DB: earthunt
+      POSTGRES_DB: wordclimb
     volumes:
       - ./.docker/postgresql/data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U root -d earthunt"]
+      test: ["CMD-SHELL", "pg_isready -U root -d wordclimb"]
       interval: 5s
       timeout: 5s
       retries: 5

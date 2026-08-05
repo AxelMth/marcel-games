@@ -5,8 +5,19 @@ import { ArrowLeft, Lightbulb, HelpCircle } from "lucide-react"
 import { useApp } from "@/lib/app-context"
 import { t } from "@/lib/i18n"
 import { getDefinition } from "@/lib/data/definitions"
-import { setClassicProgress, getClassicProgress, setDailyCompleted, createGameState } from "@/lib/game-store"
+import {
+  setClassicProgress,
+  getClassicProgress,
+  setDailyCompleted,
+  createGameState,
+  createLocalGameState,
+  levelFromApi,
+  toBackendGameMode,
+  toBackendLocale,
+} from "@/lib/game-store"
 import type { GameState } from "@/lib/game-store"
+import { postFinishLevel } from "@/lib/api"
+import { enqueuePendingResult } from "@/lib/pending-results"
 import { WordRow } from "./word-row"
 import { HintsModal } from "./hints-modal"
 import { HelpModal } from "./help-modal"
@@ -16,7 +27,7 @@ import { useInterstitialAd } from "@/hooks/use-interstitial-ad"
 import { useRewardedAd } from "@/hooks/use-rewarded-ad"
 
 export function GameScreen() {
-  const { locale, gameState, setGameState, goHome } = useApp()
+  const { locale, gameState, setGameState, goHome, userId, setProgress } = useApp()
   const [input, setInput] = useState("")
   const [showHints, setShowHints] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
@@ -46,6 +57,59 @@ export function GameScreen() {
   const currentTargetWord = wordLadder[state.currentWordIndex]
   const wordsLeft = wordLadder.length - state.currentWordIndex
 
+  // The next puzzle, as the server hands it back when a level is banked. Held
+  // here so the "next level" tap does not have to make a second round trip.
+  const nextLevelRef = useRef<GameState["level"] | null>(null)
+
+  /**
+   * Records a finished level: locally first, so progression survives with no
+   * network, then against the API. A result that cannot be sent is queued and
+   * replayed at the next launch — the player never waits on it.
+   */
+  const bankCompletion = useCallback(
+    (finished: GameState) => {
+      if (finished.mode === "classic") {
+        setClassicProgress(getClassicProgress() + 1)
+      }
+      if (finished.mode === "daily") {
+        setDailyCompleted()
+      }
+
+      const result = {
+        attempts: finished.attempts,
+        timeSpent: Math.max(0, Math.floor((Date.now() - finished.startTime) / 1000)),
+        hintsUsed: finished.hintsUsed,
+        gameMode: toBackendGameMode(finished.mode),
+        locale: toBackendLocale(locale),
+        beginWord: finished.level.beginWord,
+        endWord: finished.level.endWord,
+        wordLadder: finished.level.wordLadder,
+      }
+
+      if (!userId) {
+        enqueuePendingResult(result)
+        return
+      }
+
+      postFinishLevel({ userId, ...result })
+        .then((response) => {
+          nextLevelRef.current = levelFromApi({
+            level: response.nextLevel,
+            beginWord: response.nextBeginWord,
+            endWord: response.nextEndWord,
+            wordLadder: response.nextWordLadder,
+          })
+          if (response.stats) {
+            setProgress((p) => (p ? { ...p, stats: response.stats } : p))
+          }
+        })
+        .catch(() => {
+          enqueuePendingResult(result)
+        })
+    },
+    [locale, userId, setProgress]
+  )
+
   const handleSubmit = useCallback(() => {
     if (!input.trim()) return
 
@@ -72,14 +136,7 @@ export function GameScreen() {
       setInput("")
 
       if (isComplete) {
-        // Handle completion
-        if (state.mode === "classic") {
-          const currentProgress = getClassicProgress()
-          setClassicProgress(currentProgress + 1)
-        }
-        if (state.mode === "daily") {
-          setDailyCompleted()
-        }
+        bankCompletion(newState)
         setTimeout(() => setShowSuccess(true), 600)
       }
     } else {
@@ -99,7 +156,7 @@ export function GameScreen() {
     setTimeout(() => {
       setGameState((prev) => (prev ? { ...prev, feedback: null } : prev))
     }, 1500)
-  }, [input, currentTargetWord, state, wordLadder, setGameState])
+  }, [input, currentTargetWord, state, wordLadder, setGameState, bankCompletion])
 
   const handleHint = useCallback(
     async (type: "firstLetter" | "fullWord") => {
@@ -124,28 +181,25 @@ export function GameScreen() {
         const nextIndex = state.currentWordIndex + 1
         const isComplete = nextIndex >= wordLadder.length
 
-        setGameState({
+        const newState: GameState = {
           ...state,
           foundWords: newFoundWords,
           currentWordIndex: nextIndex,
           hintsUsed: state.hintsUsed + 1,
           isComplete,
-        })
+        }
+
+        setGameState(newState)
         setInput("")
 
         if (isComplete) {
-          if (state.mode === "classic") {
-            setClassicProgress(getClassicProgress() + 1)
-          }
-          if (state.mode === "daily") {
-            setDailyCompleted()
-          }
+          bankCompletion(newState)
           setTimeout(() => setShowSuccess(true), 600)
         }
       }
       setShowHints(false)
     },
-    [state, currentTargetWord, wordLadder, setGameState, showRewardedAd]
+    [state, currentTargetWord, wordLadder, setGameState, showRewardedAd, bankCompletion]
   )
 
   // Scroll ladder to show current word
@@ -354,7 +408,15 @@ export function GameScreen() {
                 // ignored on purpose
               }
             }
-            setGameState(createGameState("classic"))
+            // POST /level already returned the next puzzle; only a failed or
+            // still-pending call falls back to the bundled catalogue.
+            const next = nextLevelRef.current
+            nextLevelRef.current = null
+            setGameState(
+              next
+                ? createGameState("classic", next)
+                : createLocalGameState("classic", locale)
+            )
           }}
           onBackToMenu={() => {
             setShowSuccess(false)

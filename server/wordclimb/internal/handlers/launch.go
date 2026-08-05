@@ -20,6 +20,8 @@ type LaunchRequest struct {
 	OsName       string `json:"osName"`
 	OsVersion    string `json:"osVersion"`
 	GameMode     string `json:"gameMode"`
+	// Optional: an absent locale means English, the app's own default.
+	Locale string `json:"locale"`
 }
 
 func LaunchHandler(c *gin.Context) {
@@ -59,8 +61,9 @@ func LaunchHandler(c *gin.Context) {
 	}
 
 	gameMode := domain.NormalizeGameMode(req.GameMode)
+	locale := domain.NormalizeLocale(req.Locale)
 	nextLevel := repositories.GetLastLevelFromHistory(ctx, user.ID, gameMode) + 1
-	payload := levelPayloadForNumber(nextLevel)
+	payload := levelPayloadForNumber(ctx, locale, nextLevel)
 
 	response := gin.H{
 		"userId":     user.ID,
