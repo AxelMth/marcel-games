@@ -12,6 +12,21 @@ function startWorldLevel(level = 1) {
   return store().gameConfig!
 }
 
+/**
+ * Starts the first level that actually holds several countries.
+ *
+ * Early levels ask for a single country by design — that is the difficulty
+ * curve — so a test about moving from one country to the next has to look
+ * further up rather than hardcode a level number that the curve could move.
+ */
+function startMultiCountryLevel() {
+  for (let level = 1; level <= 300; level++) {
+    const config = startWorldLevel(level)
+    if (config.missingCountries.length >= 2) return config
+  }
+  throw new Error("no level with two countries to find")
+}
+
 describe("game store", () => {
   describe("a paid hint outliving the level", () => {
     // Exactly the reported scenario: pay for "show on map", leave the level,
@@ -284,7 +299,7 @@ describe("game store", () => {
     })
 
     it("advances to the next country once the current one is found", () => {
-      const [first, second] = store().gameConfig!.missingCountries
+      const [first, second] = startMultiCountryLevel().missingCountries
       store().submitGuess(first.nameEn, "en")
       expect(store().consumeHintFullName("en")).toBe(second.nameEn)
     })
