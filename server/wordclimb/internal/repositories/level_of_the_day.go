@@ -62,6 +62,12 @@ func HasUserCompletedTodaysLevel(ctx context.Context, userID string) bool {
 // CreateLevelOfTheDay stores the puzzle for a locale on a day. The whole puzzle
 // is copied in rather than referenced, so regenerating the catalogue can never
 // change a day that has already been played.
+//
+// It upserts rather than inserts, to repair a row that exists but holds no
+// usable puzzle. Days written before this table carried a locale have no begin
+// word and a ladder in the old whole-path convention: GetLevelOfTheDay rightly
+// refuses to serve them, and a plain insert would then collide with them on
+// (date, locale) on every single run.
 func CreateLevelOfTheDay(
 	ctx context.Context,
 	locale string,
@@ -73,9 +79,20 @@ func CreateLevelOfTheDay(
 	if wordLadder == nil {
 		wordLadder = []string{}
 	}
-	return db.Client().LevelOfTheDay.CreateOne(
-		db.LevelOfTheDay.Date.Set(StartOfDayUTC(date)),
+	day := StartOfDayUTC(date)
+
+	return db.Client().LevelOfTheDay.UpsertOne(
+		db.LevelOfTheDay.DateLocale(
+			db.LevelOfTheDay.Date.Equals(day),
+			db.LevelOfTheDay.Locale.Equals(db.Locale(locale)),
+		),
+	).Create(
+		db.LevelOfTheDay.Date.Set(day),
 		db.LevelOfTheDay.Locale.Set(db.Locale(locale)),
+		db.LevelOfTheDay.BeginWord.Set(beginWord),
+		db.LevelOfTheDay.EndWord.Set(endWord),
+		db.LevelOfTheDay.WordLadder.Set(wordLadder),
+	).Update(
 		db.LevelOfTheDay.BeginWord.Set(beginWord),
 		db.LevelOfTheDay.EndWord.Set(endWord),
 		db.LevelOfTheDay.WordLadder.Set(wordLadder),

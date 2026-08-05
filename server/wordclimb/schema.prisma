@@ -87,10 +87,15 @@ model LevelHistory {
 // day has been played its ladder must never change, and regenerating the
 // catalogue renumbers levels.
 model LevelOfTheDay {
-  id         String   @id @default(uuid())
-  date       DateTime
-  locale     Locale
-  beginWord  String   @default("")
+  id   String   @id @default(uuid())
+  date DateTime
+  // Defaulted for the sake of the rows that predate it: before this column
+  // existed there was a single, English catalogue, so every stored daily was
+  // an English one. Without a default, `prisma db push` refuses to add a
+  // required column to a table that already has rows, and the only escape it
+  // offers is --force-reset, which drops User and LevelHistory too.
+  locale    Locale @default(EN)
+  beginWord String @default("")
   endWord    String   @default("")
   // Intermediate words only, same convention as Level.wordLadder.
   wordLadder String[] @default([])

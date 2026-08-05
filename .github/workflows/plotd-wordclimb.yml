@@ -63,10 +63,19 @@ jobs:
         DATABASE_URL: ${{ secrets.WORDCLIMB_DATABASE_URL }}
       run: go run github.com/steebchen/prisma-client-go generate
 
+    # --accept-data-loss is needed for the run that adds the (date, locale)
+    # unique constraint to LevelOfTheDay: Prisma cannot prove ahead of time that
+    # no two rows would collide, so it refuses without the flag. Here they
+    # cannot — date was unique before, and every legacy row becomes EN.
+    #
+    # It is a blunt flag: it will also wave through a genuinely destructive
+    # change later. Acceptable while nothing is published and there are no
+    # players to lose; revisit once the games ship, ideally by moving off
+    # `db push` onto real Prisma migrations.
     - name: Run database migrations
       env:
         DATABASE_URL: ${{ secrets.WORDCLIMB_DATABASE_URL }}
-      run: go run github.com/steebchen/prisma-client-go db push
+      run: go run github.com/steebchen/prisma-client-go db push --accept-data-loss
 
     # The daily challenge is drawn from the level catalogue, so the catalogue has
     # to be in the database first. Idempotent: it upserts, and rerunning it is
