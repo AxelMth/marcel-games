@@ -147,8 +147,11 @@ export function WorldMap({
 
   const updateMapLayers = useCallback(() => {
     const m = map.current
-    if (!m || !m.isStyleLoaded()) return
-    if (!m.getLayer("country-fills")) return
+    // Only the layer's existence is required: setPaintProperty is safe from the
+    // moment it exists. Gating on isStyleLoaded() as well made this a silent
+    // no-op whenever it happened to be false — and since nothing retried, the
+    // colours simply never updated again.
+    if (!m || !m.getLayer("country-fills")) return
 
     const fillExpression = buildCountryFillExpression(
       highlightedCode,
@@ -164,7 +167,7 @@ export function WorldMap({
       "case",
       highlightedCode
         ? ["==", ["get", "ADM0_A3"], highlightedCode]
-        : ["literal", false],
+        : false,
       2.5,
       ["in", ["get", "ADM0_A3"], ["literal", foundCodes]],
       1,
@@ -175,7 +178,7 @@ export function WorldMap({
       "case",
       highlightedCode
         ? ["==", ["get", "ADM0_A3"], highlightedCode]
-        : ["literal", false],
+        : false,
       1,
       ["in", ["get", "ADM0_A3"], ["literal", foundCodes]],
       1,
@@ -340,9 +343,20 @@ export function WorldMap({
     updateMapLayers()
   }, [filteredGeoJson, updateMapLayers, mapReady])
 
-  // Update layers when game state changes
+  // Update layers when game state changes.
+  //
+  // Also once more on the next idle: Mapbox can drop a paint set while the
+  // style is still settling, and this effect only re-runs when the game state
+  // itself changes — so a dropped update would never be retried and the hint
+  // would stay invisible for the rest of the level.
   useEffect(() => {
     updateMapLayers()
+    const m = map.current
+    if (!m) return
+    m.once("idle", updateMapLayers)
+    return () => {
+      m.off("idle", updateMapLayers)
+    }
   }, [updateMapLayers])
 
   // Fly to highlighted country when "Show on map" hint is used

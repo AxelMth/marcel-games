@@ -51,6 +51,20 @@ describe("country fill", () => {
     }
   })
 
+  /**
+   * `["literal", false]` is not a valid Mapbox expression — `literal` takes an
+   * array or an object — and an invalid branch invalidates the whole thing.
+   * setPaintProperty then keeps the previous value without throwing, so every
+   * country stayed on the layer's constant green and the hint never showed.
+   * Nothing in the app surfaced it; only running it on a device did.
+   */
+  it("uses a bare boolean for the no-highlight branch", () => {
+    const expression = buildCountryFillExpression(null, [])
+
+    expect(expression[1]).toBe(false)
+    expect(JSON.stringify(expression)).not.toContain('["literal",false]')
+  })
+
   // Guards the shape Mapbox needs: a flat "case" with condition/value pairs and
   // a single trailing fallback.
   it("produces a well-formed case expression", () => {

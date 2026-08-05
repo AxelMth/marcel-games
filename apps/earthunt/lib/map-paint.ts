@@ -22,7 +22,12 @@ export function buildCountryFillExpression(
 ): unknown[] {
   return [
     "case",
-    highlightedCode ? ["==", ["get", "ADM0_A3"], highlightedCode] : ["literal", false],
+    // A bare `false`, not `["literal", false]`: Mapbox's `literal` takes an
+    // array or an object, so the boolean form is an invalid expression. It is
+    // rejected as a whole, silently — setPaintProperty fires an error event and
+    // keeps the previous value — which left every country on the layer's
+    // constant green and no country ever turned gold.
+    highlightedCode ? ["==", ["get", "ADM0_A3"], highlightedCode] : false,
     COUNTRY_HIGHLIGHT_COLOR,
     ["in", ["get", "ADM0_A3"], ["literal", foundCodes]],
     COUNTRY_GREEN,
@@ -43,15 +48,19 @@ export function resolveCountryFill(
   const [, highlightCondition, highlightColour, foundCondition, foundColour, fallback] =
     expression as [
       string,
-      unknown[],
+      unknown[] | false,
       string,
       unknown[],
       string,
       string,
     ]
 
-  const [highlightOp, , highlightValue] = highlightCondition as [string, unknown, string]
-  if (highlightOp === "==" && highlightValue === countryCode) return highlightColour
+  // The condition is a bare `false` when no hint is active, and a comparison
+  // otherwise — see buildCountryFillExpression on why it is not ["literal", false].
+  if (Array.isArray(highlightCondition)) {
+    const [highlightOp, , highlightValue] = highlightCondition as [string, unknown, string]
+    if (highlightOp === "==" && highlightValue === countryCode) return highlightColour
+  }
 
   const foundList = (foundCondition as [string, unknown, ["literal", string[]]])[2]?.[1] ?? []
   if (foundList.includes(countryCode)) return foundColour
