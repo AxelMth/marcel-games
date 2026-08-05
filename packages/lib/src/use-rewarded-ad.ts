@@ -1,8 +1,9 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import type { PluginListenerHandle } from "@capacitor/core"
 import { Capacitor } from "@capacitor/core"
-import { AdMob } from "@capacitor-community/admob"
+import { AdMob, RewardAdPluginEvents } from "@capacitor-community/admob"
 
 export interface AdIds {
   ios: string
@@ -17,11 +18,14 @@ function getAdId(ids: AdIds): string {
 }
 
 /**
- * How long a player waits for an ad before the reward is granted anyway.
+ * How long the player waits for an ad to *load* before the reward is granted
+ * anyway.
  *
- * A hint is a deliberate action with a promised outcome, and a slow network
- * must not be able to swallow it. Losing the impression costs one ad; refusing
- * the hint costs the player's trust.
+ * This covers the load only, and is cancelled the moment the ad appears. An
+ * earlier version timed the whole flow, so it fired six seconds into a
+ * fifteen-second video: the reward landed and the sheet closed while the ad was
+ * still playing, which looked exactly like "the ad shows but does nothing" —
+ * and handed out a reward for an ad nobody had watched.
  */
 const AD_LOAD_TIMEOUT_MS = 6000
 
@@ -39,8 +43,7 @@ export interface UseRewardedAdOptions {
  * Each app passes its own ad unit IDs from its ad-constants file.
  *
  * `isLoading` is part of the contract rather than a nicety: without it the UI
- * has no way to say anything while an ad loads, so the tap looks ignored until
- * the reward lands seconds later.
+ * has no way to say anything while an ad loads, so the tap looks ignored.
  */
 export function useRewardedAd(
   adIds: AdIds,
@@ -80,41 +83,64 @@ export function useRewardedAd(
         return
       }
 
-      let settled = false
-      const grant = () => {
-        if (settled) return
-        settled = true
-        clearTimeout(timer)
+      let done = false
+      let loadTimer: ReturnType<typeof setTimeout> | undefined
+      const listeners: PluginListenerHandle[] = []
+
+      const finish = (granted: boolean) => {
+        if (done) return
+        done = true
+        clearTimeout(loadTimer)
+        for (const listener of listeners) void listener.remove()
         setIsLoading(false)
-        successCallback()
+        if (granted) successCallback()
       }
 
-      // The reward is never held hostage by a slow load.
-      const timer = setTimeout(grant, AD_LOAD_TIMEOUT_MS)
-
       setIsLoading(true)
-      prepare()
-        .then((ready) => {
-          if (settled) return undefined
-          if (!ready) {
-            grant()
-            return undefined
-          }
-          return AdMob.showRewardVideoAd()
-        })
-        .then((result) => {
-          preparedRef.current = false
-          // Fetch the next one straight away. Without this the first hint of a
-          // session used the ad loaded at mount and every later one waited on a
-          // cold load — which is what made hints feel broken.
-          void prepare()
-          if (result !== undefined) grant()
-        })
-        .catch(() => {
-          preparedRef.current = false
-          void prepare()
-          grant()
-        })
+      loadTimer = setTimeout(() => finish(true), AD_LOAD_TIMEOUT_MS)
+
+      const run = async () => {
+        // showRewardVideoAd()'s promise only settles when the reward is earned
+        // — dismissing the ad early leaves it pending for ever — so the events
+        // are what actually drive this, and the promise is the backstop.
+        listeners.push(
+          await AdMob.addListener(RewardAdPluginEvents.Showed, () => {
+            // The ad is on screen: the player is watching, not waiting.
+            clearTimeout(loadTimer)
+            setIsLoading(false)
+          })
+        )
+        listeners.push(
+          await AdMob.addListener(RewardAdPluginEvents.Rewarded, () => finish(true))
+        )
+        listeners.push(
+          // Closed before the reward: no hint, but the UI has to come back.
+          await AdMob.addListener(RewardAdPluginEvents.Dismissed, () => finish(false))
+        )
+        listeners.push(
+          await AdMob.addListener(RewardAdPluginEvents.FailedToShow, () => finish(true))
+        )
+
+        const ready = await prepare()
+        if (done) return
+        if (!ready) {
+          finish(true)
+          return
+        }
+
+        const reward = await AdMob.showRewardVideoAd()
+        preparedRef.current = false
+        // Fetch the next one straight away, or every later hint in the session
+        // waits on a cold load.
+        void prepare()
+        if (reward !== undefined) finish(true)
+      }
+
+      run().catch(() => {
+        preparedRef.current = false
+        void prepare()
+        finish(true)
+      })
     },
     [isNative, isRandom, prepare]
   )

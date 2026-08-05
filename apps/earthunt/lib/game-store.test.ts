@@ -256,16 +256,24 @@ describe("game store", () => {
       expect(store().consumeHintFullName("fr")).toBe(target.nameFr)
     })
 
-    it("highlights the country on the map, then clears it", () => {
+    // The highlight used to wipe itself after five seconds, while the rewarded
+    // video that pays for it runs fifteen to thirty: the country lit up and
+    // went dark again behind the ad, so the player came back to a blank map
+    // having paid for nothing.
+    it("keeps the country lit well past the length of a rewarded ad", () => {
       vi.useFakeTimers()
-      startWorldLevel(1)
-      const target = store().gameConfig!.missingCountries[0]
+      try {
+        startWorldLevel(1)
+        const target = store().gameConfig!.missingCountries[0]
 
-      expect(store().consumeHintShowOnMap()).toBe(target.code)
-      expect(store().highlightedCountry).toBe(target.code)
+        expect(store().consumeHintShowOnMap()).toBe(target.code)
+        expect(store().highlightedCountry).toBe(target.code)
 
-      vi.advanceTimersByTime(5000)
-      expect(store().highlightedCountry).toBeNull()
+        vi.advanceTimersByTime(60_000)
+        expect(store().highlightedCountry).toBe(target.code)
+      } finally {
+        vi.useRealTimers()
+      }
     })
 
     it("counts each hint, which is what costs the player stars", () => {

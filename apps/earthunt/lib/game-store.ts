@@ -417,13 +417,16 @@ export const useGameStore = create<GameState>((set, get) => ({
       (c) => !state.foundCountries.some((f) => f.code === c.code)
     )
     if (remaining.length === 0) return null
+    // No auto-clear. This used to wipe the highlight five seconds later, while
+    // the rewarded video that paid for it runs fifteen to thirty — so the
+    // country lit up and went dark again behind the ad, and the player came
+    // back to a map showing nothing. It also contradicted the persisted hint,
+    // which relights the country on every return to the level.
+    // The highlight now lasts until that country is found.
     set({
       hintsUsed: state.hintsUsed + 1,
       highlightedCountry: remaining[0].code,
     })
-    setTimeout(() => {
-      set({ highlightedCountry: null })
-    }, 5000)
     return remaining[0].code
   },
 
