@@ -20,7 +20,8 @@
     "ios:export": "xcodebuild -exportArchive -archivePath build/EartHunt.xcarchive -exportOptionsPlist ios/ExportOptions.plist -exportPath build/ipa -allowProvisioningUpdates",
     "assets": "capacitor-assets generate",
     "add:ios": "npx cap add ios",
-    "add:android": "npx cap add android"
+    "add:android": "npx cap add android",
+    "ios:bump": "node scripts/bump-build-number.mjs"
   },
   "dependencies": {
     "@aparajita/capacitor-secure-storage": "^8.0.0",
