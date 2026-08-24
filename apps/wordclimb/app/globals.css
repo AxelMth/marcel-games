@@ -9,7 +9,10 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #F8F8F8;
+  /* Palier bas du dégradé de l'accueil, pas un gris neutre. C'est ce que
+     html et body peignent, donc la première image du web view : un gris ici
+     faisait clignoter l'écran entre le lancement natif et le dégradé. */
+  --background: #ccebda;
   --foreground: #0A3D62;
   --card: #FFFFFF;
   --card-foreground: #0A3D62;
