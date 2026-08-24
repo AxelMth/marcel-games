@@ -14,20 +14,37 @@ import {
 } from "lucide-react"
 import { useApp } from "@/lib/app-context"
 import { t } from "@/lib/i18n"
-import { getProfile, type ProfileResponse } from "@/lib/api"
+import { getProfile, type GameHistoryEntry, type ProfileResponse } from "@/lib/api"
 import { LegalModal } from "@/components/wordclimb/legal-modal"
 import { ScreenHeader } from "./screen-header"
 
-type GameModeFilter = "all" | "WORLD" | "CONTINENTS" | "LEVEL_OF_THE_DAY"
+type GameModeFilter = "all" | "NORMAL" | "RANDOM" | "LEVEL_OF_THE_DAY"
 
-function formatGameMode(locale: "en" | "fr", mode: string, continent: string): string {
-  if (mode === "LEVEL_OF_THE_DAY") return locale === "fr" ? "Niveau du jour" : "Daily"
-  if (mode === "WORLD") return locale === "fr" ? "Monde" : "World"
-  if (mode === "CONTINENTS") {
-    if (continent === "WORLD") return locale === "fr" ? "Monde" : "World"
-    return continent
-  }
-  return mode
+/** The filters, in carousel order, with the icon and label each mode already uses. */
+const MODE_FILTERS: {
+  value: GameModeFilter
+  icon: typeof BookOpen | null
+  labelKey: "filterAll" | "classic" | "random" | "dailyChallenge"
+}[] = [
+  { value: "all", icon: null, labelKey: "filterAll" },
+  { value: "NORMAL", icon: BookOpen, labelKey: "classic" },
+  { value: "RANDOM", icon: Shuffle, labelKey: "random" },
+  { value: "LEVEL_OF_THE_DAY", icon: Calendar, labelKey: "dailyChallenge" },
+]
+
+function formatGameMode(locale: "en" | "fr", mode: string): string {
+  const filter = MODE_FILTERS.find((f) => f.value === mode)
+  if (!filter || filter.value === "all") return mode
+  return t(locale, filter.labelKey)
+}
+
+/**
+ * The ladder as the player solved it, begin and end words included — the
+ * intermediate words on their own do not say which puzzle it was.
+ */
+function formatLadder(entry: GameHistoryEntry): string {
+  const chain = [entry.beginWord, ...(entry.wordLadder ?? []), entry.endWord]
+  return chain.filter(Boolean).join(" → ")
 }
 
 function filterHistory(
@@ -144,40 +161,21 @@ export function StatsScreen() {
                 {t(locale, "profileGameHistory")}
               </h3>
               <div className="flex flex-wrap gap-2">
-                {(["all", "WORLD", "CONTINENTS", "LEVEL_OF_THE_DAY"] as const).map(
-                  (value) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setGameModeFilter(value)}
-                      className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
-                        gameModeFilter === value
-                          ? "bg-[#0A3D62] text-white"
-                          : "bg-white/80 text-[#0A3D62]"
-                      }`}
-                    >
-                      {value === "all" && t(locale, "filterAll")}
-                      {value === "WORLD" && (
-                        <>
-                          <BookOpen className="h-4 w-4 shrink-0" />
-                          {locale === "fr" ? "Monde" : "World"}
-                        </>
-                      )}
-                      {value === "LEVEL_OF_THE_DAY" && (
-                        <>
-                          <Calendar className="h-4 w-4 shrink-0" />
-                          {locale === "fr" ? "Niveau du jour" : "Daily"}
-                        </>
-                      )}
-                      {value === "CONTINENTS" && (
-                        <>
-                          <Shuffle className="h-4 w-4 shrink-0" />
-                          {locale === "fr" ? "Continents" : "Continents"}
-                        </>
-                      )}
-                    </button>
-                  )
-                )}
+                {MODE_FILTERS.map(({ value, icon: Icon, labelKey }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setGameModeFilter(value)}
+                    className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                      gameModeFilter === value
+                        ? "bg-[#0A3D62] text-white"
+                        : "bg-white/80 text-[#0A3D62]"
+                    }`}
+                  >
+                    {Icon && <Icon className="h-4 w-4 shrink-0" />}
+                    {t(locale, labelKey)}
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -192,10 +190,15 @@ export function StatsScreen() {
                     key={i}
                     className="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-4 py-3 shadow-sm"
                   >
-                    <span className="font-medium text-[#0A3D62]">
-                      {formatGameMode(locale, entry.gameMode, entry.continent)} —{" "}
-                      {t(locale, "level")} {entry.level}
-                    </span>
+                    <div className="flex min-w-0 flex-col gap-0.5">
+                      <span className="font-medium text-[#0A3D62]">
+                        {formatGameMode(locale, entry.gameMode)} —{" "}
+                        {t(locale, "level")} {entry.level}
+                      </span>
+                      <span className="truncate text-xs text-[#0A3D62]/70">
+                        {formatLadder(entry)}
+                      </span>
+                    </div>
                     {entry.stars != null && (
                       <div className="flex gap-0.5">
                         {[1, 2, 3].map((star) => (

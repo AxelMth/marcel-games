@@ -17,6 +17,19 @@ import { fileURLToPath } from "node:url"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = join(__dirname, "..", "lib", "data")
+// The Go server seeds its Level table from the very same catalogue this script
+// emits for the client. One generator, one order, one set of level numbers:
+// a level the server calls 12 is the level the client falls back to offline.
+const SERVER_DATA_DIR = join(
+  __dirname,
+  "..",
+  "..",
+  "..",
+  "server",
+  "wordclimb",
+  "internal",
+  "constants"
+)
 
 function hammingDistance(a, b) {
   if (a.length !== b.length) return null
@@ -117,3 +130,14 @@ export const CATALOGUE: Record<"en" | "fr", Level[]> = {
 
 writeFileSync(join(DATA_DIR, "catalogue.ts"), body)
 console.log(`\nWrote lib/data/catalogue.ts — en: ${en.length}, fr: ${fr.length}`)
+
+// Same levels, same order, for cmd/populate-levels to load into Postgres.
+// JSON rather than generated Go: the server only ever reads it, and a 600 KB
+// literal would be dead weight in the compiler.
+writeFileSync(
+  join(SERVER_DATA_DIR, "catalogue.json"),
+  `${JSON.stringify({ en, fr }, null, 2)}\n`
+)
+console.log(
+  `Wrote server/wordclimb/internal/constants/catalogue.json — en: ${en.length}, fr: ${fr.length}`
+)

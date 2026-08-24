@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"marcel-games-backend/internal/domain"
 	"marcel-games-backend/internal/repositories"
-	"marcel-games-backend/pkg/utils"
 	"net/http"
 	"time"
 
@@ -15,11 +14,17 @@ import (
 type GetLevelInfo struct {
 	UserID   string `form:"userId" binding:"required"`
 	GameMode string `form:"gameMode" binding:"required"`
+	// Optional: an absent locale means English, the app's own default.
+	Locale string `form:"locale"`
 }
 
-// LevelPayload is a playable level. WordLadder is the full solution path, begin
-// and end words included, which is what utils.FindLadder returns. BeginWord and
-// EndWord are sent separately so the client does not have to slice the ladder.
+// LevelPayload is a playable level.
+//
+// WordLadder holds the intermediate words only — the ones the player has to
+// find — with the begin and end words in their own fields. Same convention as
+// the client's Level type (apps/wordclimb/lib/data/catalogue.ts), so the puzzle
+// the API serves and the puzzle the client falls back to offline have the same
+// shape.
 type LevelPayload struct {
 	BeginWord  string   `json:"beginWord"`
 	EndWord    string   `json:"endWord"`
@@ -47,12 +52,16 @@ func GetLevelHandler(c *gin.Context) {
 	}
 
 	gameMode := domain.NormalizeGameMode(req.GameMode)
+	locale := domain.NormalizeLocale(req.Locale)
 
 	ctx := context.Background()
 
 	var currentLevel int
-	var payload LevelPayload
 	var stats *DailyLevelStats
+	// Not the zero value: a bare LevelPayload has a nil WordLadder, which
+	// marshals to null and breaks the promise that the client can always
+	// iterate over it.
+	payload := emptyLevelPayload()
 
 	if gameMode == domain.GameModeLevelOfTheDay {
 		// Level of the day is always level 1: there is a single puzzle per day.
@@ -61,7 +70,7 @@ func GetLevelHandler(c *gin.Context) {
 		// An already-finished daily returns an empty payload so the client shows
 		// the "come back tomorrow" state instead of the puzzle again.
 		if !repositories.HasUserCompletedTodaysLevel(ctx, req.UserID) {
-			payload = levelOfTheDayPayload(ctx)
+			payload = levelOfTheDayPayload(ctx, locale)
 		}
 
 		stats = buildDailyLevelStats(ctx, req.UserID)
@@ -69,7 +78,7 @@ func GetLevelHandler(c *gin.Context) {
 		// For other game modes, get the last level and increment
 		level := repositories.GetLastLevelFromHistory(ctx, req.UserID, gameMode)
 		currentLevel = level + 1
-		payload = levelPayloadForNumber(currentLevel)
+		payload = levelPayloadForNumber(ctx, locale, currentLevel)
 	}
 
 	response := GetLevelInfoResponse{
@@ -86,8 +95,13 @@ type FinishLevelInfo struct {
 	Attempts   int      `json:"attempts"`
 	TimeSpent  int      `json:"timeSpent"`
 	HintsUsed  int      `json:"hintsUsed"`
-	GameMode   string   `json:"gameMode"`
+	GameMode string `json:"gameMode"`
+	// The puzzle that was solved. WordLadder is the intermediate words only.
+	BeginWord  string   `json:"beginWord"`
+	EndWord    string   `json:"endWord"`
 	WordLadder []string `json:"wordLadder"`
+	// Optional: an absent locale means English, the app's own default.
+	Locale string `json:"locale"`
 }
 
 type FinishLevelResponse struct {
@@ -112,8 +126,22 @@ func FinishLevelHandler(c *gin.Context) {
 	}
 
 	gameMode := domain.NormalizeGameMode(req.GameMode)
+	locale := domain.NormalizeLocale(req.Locale)
 
 	ctx := context.Background()
+
+	// One daily per day, however many times it is submitted. The offline queue
+	// replays results whose response was lost, and every replay used to add a
+	// row — inflating the player's daily count and their rank with it.
+	if gameMode == domain.GameModeLevelOfTheDay &&
+		repositories.HasUserCompletedTodaysLevel(ctx, req.UserID) {
+		c.JSON(http.StatusOK, FinishLevelResponse{
+			NextLevel:      1,
+			NextWordLadder: []string{},
+			Stats:          buildDailyLevelStats(ctx, req.UserID),
+		})
+		return
+	}
 
 	level := repositories.GetLastLevelFromHistory(ctx, req.UserID, gameMode)
 
@@ -125,6 +153,8 @@ func FinishLevelHandler(c *gin.Context) {
 		req.TimeSpent,
 		req.HintsUsed,
 		gameMode,
+		req.BeginWord,
+		req.EndWord,
 		req.WordLadder,
 	)
 
@@ -135,8 +165,9 @@ func FinishLevelHandler(c *gin.Context) {
 	}
 
 	var nextLevel int
-	var payload LevelPayload
 	var stats *DailyLevelStats
+	// See GetLevelHandler: an empty payload still has to carry an empty array.
+	payload := emptyLevelPayload()
 
 	if gameMode == domain.GameModeLevelOfTheDay {
 		// The daily puzzle is over until tomorrow, so there is no next level to
@@ -145,7 +176,7 @@ func FinishLevelHandler(c *gin.Context) {
 		stats = buildDailyLevelStats(ctx, req.UserID)
 	} else {
 		nextLevel = level + 2
-		payload = levelPayloadForNumber(nextLevel)
+		payload = levelPayloadForNumber(ctx, locale, nextLevel)
 	}
 
 	response := FinishLevelResponse{
@@ -159,40 +190,36 @@ func FinishLevelHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// levelPayloadForNumber resolves the curated puzzle for a level number.
-func levelPayloadForNumber(level int) LevelPayload {
-	definition, ok := utils.GetLevelForNumber(level)
-	if !ok {
-		return emptyLevelPayload()
-	}
-	return LevelPayload{
-		BeginWord:  definition.BeginWord,
-		EndWord:    definition.EndWord,
-		WordLadder: definition.WordLadder,
-	}
+// levelPayloadForNumber resolves the catalogue puzzle for a level number in a
+// locale. An empty payload means the catalogue has not been populated for that
+// language — see cmd/populate-levels.
+func levelPayloadForNumber(ctx context.Context, locale string, level int) LevelPayload {
+	return toLevelPayload(repositories.GetLevelForPlay(ctx, locale, level))
 }
 
-// levelOfTheDayPayload reads today's ladder from the database and falls back to
+// levelOfTheDayPayload reads today's puzzle from the database and falls back to
 // recomputing it from the date when the populate-level-of-the-day job has not
 // run. Without the fallback a missed cron leaves the daily mode unplayable.
-func levelOfTheDayPayload(ctx context.Context) LevelPayload {
-	ladder := repositories.GetLevelOfTheDayWordLadder(ctx)
-	if len(ladder) >= 2 {
-		return LevelPayload{
-			BeginWord:  ladder[0],
-			EndWord:    ladder[len(ladder)-1],
-			WordLadder: ladder,
-		}
+func levelOfTheDayPayload(ctx context.Context, locale string) LevelPayload {
+	today := time.Now().UTC()
+
+	if level := repositories.GetLevelOfTheDay(ctx, locale, today); level != nil {
+		return toLevelPayload(level)
 	}
 
-	definition, ok := utils.GetLevelForDate(time.Now().UTC())
-	if !ok {
+	return toLevelPayload(repositories.GetDailyLevelFromCatalogue(ctx, locale, today))
+}
+
+// toLevelPayload converts a catalogue row to the wire shape, collapsing a
+// missing level into the empty payload the client reads as "nothing to play".
+func toLevelPayload(level *repositories.Level) LevelPayload {
+	if level == nil {
 		return emptyLevelPayload()
 	}
 	return LevelPayload{
-		BeginWord:  definition.BeginWord,
-		EndWord:    definition.EndWord,
-		WordLadder: definition.WordLadder,
+		BeginWord:  level.BeginWord,
+		EndWord:    level.EndWord,
+		WordLadder: level.WordLadder,
 	}
 }
 

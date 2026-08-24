@@ -1,22 +1,32 @@
 "use client"
 
 import { CATALOGUE, type Level } from "@/lib/data/catalogue"
+import type { BackendGameMode, BackendLocale } from "@/lib/api"
 
 export type GameMode = "classic" | "daily" | "random"
 
-// Backend game modes used by the shared API schema.
-// Wordclimb modes map onto these when talking to the server.
-export type BackendGameMode = "WORLD" | "LEVEL_OF_THE_DAY"
-
+/**
+ * Maps the UI's modes onto the GameMode enum the server stores.
+ *
+ * "random" used to be folded into the classic mode, which made every shuffled
+ * puzzle count towards the classic progression. They are separate modes on the
+ * server and are kept separate here.
+ */
 export function toBackendGameMode(mode: GameMode): BackendGameMode {
   switch (mode) {
     case "daily":
       return "LEVEL_OF_THE_DAY"
-    case "classic":
     case "random":
+      return "RANDOM"
+    case "classic":
     default:
-      return "WORLD"
+      return "NORMAL"
   }
+}
+
+/** Maps the app's locale onto the Locale enum the server stores. */
+export function toBackendLocale(locale: "en" | "fr"): BackendLocale {
+  return locale === "fr" ? "FR" : "EN"
 }
 
 export interface GameState {
@@ -52,31 +62,53 @@ export function levelsForLocale(locale: "en" | "fr" = getSavedLocale()): Level[]
   return CATALOGUE[locale]
 }
 
-// Get the daily level based on date
-export function getDailyLevelIndex(locale: "en" | "fr" = getSavedLocale()): number {
-  const today = new Date()
-  const dateStr = `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, "0")}-${String(today.getUTCDate()).padStart(2, "0")}`
+/**
+ * The UTC day, as YYYY-MM-DD.
+ *
+ * The daily challenge turns over at midnight UTC on the server, so every notion
+ * of "today" in the app is a UTC day. Using the device's local date instead
+ * would hand players near a date boundary a different puzzle from the one the
+ * server ranks them against.
+ */
+export function utcDateString(date: Date = new Date()): string {
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0")
+  const day = String(date.getUTCDate()).padStart(2, "0")
+  return `${date.getUTCFullYear()}-${month}-${day}`
+}
+
+/**
+ * Picks the daily puzzle out of a catalogue of `levelCount` levels.
+ *
+ * The server reproduces this exact hash in pkg/utils/level.go (DailyLevelIndex)
+ * so both sides land on the same puzzle for a given day — which is what makes
+ * the offline fallback play the same daily the server would have served.
+ */
+export function dailyLevelIndexFor(dateStr: string, levelCount: number): number {
+  if (levelCount <= 0) return 0
   let hash = 0
   for (let i = 0; i < dateStr.length; i++) {
     const char = dateStr.charCodeAt(i)
     hash = (hash << 5) - hash + char
     hash |= 0
   }
-  return Math.abs(hash) % levelsForLocale(locale).length
+  return Math.abs(hash) % levelCount
 }
 
-// Check if daily challenge has been completed today
+// Get the daily level based on date
+export function getDailyLevelIndex(locale: "en" | "fr" = getSavedLocale()): number {
+  return dailyLevelIndexFor(utcDateString(), levelsForLocale(locale).length)
+}
+
+// Check if daily challenge has been completed today, "today" being the UTC day
+// the server rolls the challenge over on.
 export function isDailyCompleted(): boolean {
   if (typeof window === "undefined") return false
-  const today = new Date().toISOString().split("T")[0]
-  const stored = localStorage.getItem("wordclimb-daily-completed")
-  return stored === today
+  return localStorage.getItem("wordclimb-daily-completed") === utcDateString()
 }
 
 export function setDailyCompleted(): void {
   if (typeof window === "undefined") return
-  const today = new Date().toISOString().split("T")[0]
-  localStorage.setItem("wordclimb-daily-completed", today)
+  localStorage.setItem("wordclimb-daily-completed", utcDateString())
 }
 
 // Get a random level
@@ -86,7 +118,15 @@ export function getRandomLevel(locale: "en" | "fr" = getSavedLocale()): Level {
   return levels[index]
 }
 
-// Get level for a specific mode
+/**
+ * Picks a level out of the bundled catalogue — the offline fallback for when
+ * the API is unreachable.
+ *
+ * It agrees with the server by construction: both catalogues come from a single
+ * run of scripts/build-catalogue.mjs, so a locale has the same levels in the
+ * same order on both sides, and the same index arithmetic lands on the same
+ * puzzle.
+ */
 export function getLevelForMode(
   mode: GameMode,
   locale: "en" | "fr" = getSavedLocale()
@@ -106,12 +146,32 @@ export function getLevelForMode(
   }
 }
 
-// Create initial game state
-export function createGameState(
-  mode: GameMode,
-  locale: "en" | "fr" = getSavedLocale()
-): GameState {
-  const level = getLevelForMode(mode, locale)
+/**
+ * Converts an API level payload into a playable level, or null when the server
+ * has nothing to hand out — a daily already finished today, or a catalogue that
+ * has not been populated for this language.
+ *
+ * Both sides use the same convention: wordLadder holds the intermediate words
+ * only, with the begin and end words in their own fields.
+ */
+export function levelFromApi(payload: {
+  level?: number
+  beginWord: string
+  endWord: string
+  wordLadder: string[]
+}): Level | null {
+  if (!payload.beginWord || !payload.endWord) return null
+  if (!payload.wordLadder || payload.wordLadder.length === 0) return null
+  return {
+    id: payload.level ?? 0,
+    beginWord: payload.beginWord,
+    endWord: payload.endWord,
+    wordLadder: payload.wordLadder,
+  }
+}
+
+/** Wraps a level — from the API or from the bundled catalogue — in a fresh game. */
+export function createGameState(mode: GameMode, level: Level): GameState {
   return {
     mode,
     level,
@@ -123,6 +183,14 @@ export function createGameState(
     isComplete: false,
     feedback: null,
   }
+}
+
+/** The offline path: a game built from the bundled catalogue. */
+export function createLocalGameState(
+  mode: GameMode,
+  locale: "en" | "fr" = getSavedLocale()
+): GameState {
+  return createGameState(mode, getLevelForMode(mode, locale))
 }
 
 // Get saved locale
