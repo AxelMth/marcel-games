@@ -1,10 +1,12 @@
 "use client"
 
 import { useState, useCallback, useRef, useEffect } from "react"
-import { ArrowLeft, Lightbulb, HelpCircle } from "lucide-react"
+import { Lightbulb, HelpCircle } from "lucide-react"
 import { useApp } from "@/lib/app-context"
 import { t } from "@/lib/i18n"
 import { getDefinition } from "@/lib/data/definitions"
+import { ScreenHeader } from "@marcel-games/ui"
+import { useKeyboardOffset } from "@marcel-games/lib"
 import { setClassicProgress, getClassicProgress, setDailyCompleted, createGameState } from "@/lib/game-store"
 import type { GameState } from "@/lib/game-store"
 import { WordRow } from "./word-row"
@@ -20,6 +22,7 @@ export function GameScreen() {
   const [showSuccess, setShowSuccess] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const ladderRef = useRef<HTMLDivElement>(null)
+  const keyboardOffset = useKeyboardOffset()
 
   const state = gameState!
   const level = state.level
@@ -148,39 +151,48 @@ export function GameScreen() {
         : t(locale, "random")
 
   return (
-    <div
-      className="flex flex-col h-[100dvh] bg-[#F8F8F8] relative"
-      style={{
-        paddingTop: "env(safe-area-inset-top)",
-        paddingBottom: "env(safe-area-inset-bottom)",
-      }}
-    >
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-3 bg-[#F8F8F8] border-b border-[#E0E0E0] z-10">
-        <button
-          onClick={goHome}
-          className="flex items-center gap-1 text-[#1D70A2] font-semibold text-sm"
-          aria-label="Back to menu"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <span className="text-sm font-bold text-[#0A3D62]">{modeLabel}</span>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowHints(true)}
-            className="flex items-center gap-1 rounded-full bg-[#1D70A2] bg-opacity-10 px-2.5 py-1 text-xs font-semibold text-[#1D70A2]"
-          >
-            <Lightbulb size={14} />
-            {t(locale, "hints")}
-          </button>
-          <button
-            onClick={() => setShowHelp(true)}
-            className="text-[#50555C]"
-            aria-label="Help"
-          >
-            <HelpCircle size={20} />
-          </button>
-        </div>
+    // h-svh with no padding of its own: the box measures exactly one
+    // viewport, so the input bar below can never be pushed off screen. The top
+    // bar and the input bar carry the safe-area insets themselves — same
+    // division of labour as earthunt's game screen.
+    <div className="relative flex h-svh flex-col overflow-hidden bg-[#F8F8F8]">
+      {/* Top bar. The shared header keeps the mode label centred against the
+          screen: laid out as justify-between it drifted left, because the two
+          buttons on the right are far wider than the lone back arrow. */}
+      <div
+        className="z-10 border-b border-[#E0E0E0] bg-[#F8F8F8] py-3"
+        style={{
+          paddingTop: "max(0.75rem, env(safe-area-inset-top, 0px))",
+          paddingLeft: "max(0rem, env(safe-area-inset-left, 0px))",
+          paddingRight: "max(0rem, env(safe-area-inset-right, 0px))",
+        }}
+      >
+        <ScreenHeader
+          className="px-4 text-[#0A3D62]"
+          title={modeLabel}
+          titleClassName="text-sm"
+          onBack={goHome}
+          backLabel={t(locale, "backToMenu")}
+          backClassName="text-[#1D70A2] active:bg-[#1D70A2]/10"
+          actions={
+            <>
+              <button
+                onClick={() => setShowHints(true)}
+                className="flex items-center gap-1 rounded-full bg-[#1D70A2]/10 px-2.5 py-1 text-xs font-semibold text-[#1D70A2]"
+              >
+                <Lightbulb size={14} />
+                {t(locale, "hints")}
+              </button>
+              <button
+                onClick={() => setShowHelp(true)}
+                className="text-[#50555C]"
+                aria-label="Help"
+              >
+                <HelpCircle size={20} />
+              </button>
+            </>
+          }
+        />
       </div>
 
       {/* Words left banner */}
@@ -267,7 +279,23 @@ export function GameScreen() {
 
       {/* Input bar fixed at bottom */}
       {!state.isComplete && (
-        <div className="border-t border-[#E0E0E0] bg-[#F8F8F8] px-4 py-3 z-10">
+        <div
+          className="border-t border-[#E0E0E0] bg-[#F8F8F8] px-4 py-3 z-10"
+          style={{
+            marginBottom: keyboardOffset > 0 ? `${keyboardOffset}px` : undefined,
+            // The home-indicator inset is pointless once the keyboard covers
+            // that strip, so it only applies when the keyboard is down.
+            paddingBottom:
+              keyboardOffset > 0
+                ? "0.75rem"
+                : "max(0.75rem, env(safe-area-inset-bottom, 0px))",
+            paddingLeft: "max(1rem, env(safe-area-inset-left, 0px))",
+            paddingRight: "max(1rem, env(safe-area-inset-right, 0px))",
+            // keyboardWillShow fires as the keyboard starts animating in;
+            // matching its duration keeps the bar riding on top of it.
+            transition: "margin-bottom 220ms ease-out",
+          }}
+        >
           <form
             onSubmit={(e) => {
               e.preventDefault()

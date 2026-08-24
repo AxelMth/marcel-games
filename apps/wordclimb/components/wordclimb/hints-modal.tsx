@@ -43,7 +43,7 @@ export function HintsModal({ onClose, onHint }: HintsModalProps) {
               onClick={() => onHint("firstLetter")}
               className="flex items-center gap-3 rounded-2xl bg-[rgba(29,112,162,0.08)] p-4 text-left transition-colors hover:bg-[rgba(29,112,162,0.15)] active:bg-[rgba(29,112,162,0.2)]"
             >
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#1D70A2] bg-opacity-15">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#1D70A2]/15">
                 <Type size={20} className="text-[#1D70A2]" />
               </div>
               <div>
@@ -62,7 +62,7 @@ export function HintsModal({ onClose, onHint }: HintsModalProps) {
               onClick={() => onHint("fullWord")}
               className="flex items-center gap-3 rounded-2xl bg-[rgba(212,120,47,0.08)] p-4 text-left transition-colors hover:bg-[rgba(212,120,47,0.15)] active:bg-[rgba(212,120,47,0.2)]"
             >
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#D4782F] bg-opacity-15">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#D4782F]/15">
                 <Eye size={20} className="text-[#D4782F]" />
               </div>
               <div>

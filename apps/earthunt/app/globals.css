@@ -1,4 +1,9 @@
 @import 'tailwindcss';
+/* Tailwind v4 discovers sources from the project root but skips node_modules,
+   and the workspace packages resolve through a node_modules symlink. Without
+   this, a utility class used *only* inside a shared component silently produces
+   no CSS — the component renders unstyled and nothing warns. */
+@source '../../../packages/ui/src';
 @import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));

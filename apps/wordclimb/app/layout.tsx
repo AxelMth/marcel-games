@@ -32,8 +32,9 @@ export const viewport: Viewport = {
   themeColor: '#55b3d1',
   width: 'device-width',
   initialScale: 1,
+  // No userScalable:false — blocking pinch-zoom fails WCAG 1.4.4 and is
+  // occasionally flagged in App Store review. Same call as earthunt.
   viewportFit: 'cover',
-  userScalable: false,
 }
 
 export default function RootLayout({

@@ -10,7 +10,7 @@ import { normalizeCountryName } from "@/lib/game-logic"
 import { GuidedTour } from "@/components/guided-tour"
 import { HelpBubble } from "@/components/help-bubble"
 import { useLanguage } from "@/components/language-provider"
-import { useKeyboardOffset } from "@/hooks/use-keyboard-offset"
+import { useKeyboardOffset } from "@marcel-games/lib"
 import { useNativeScrollLock } from "@/hooks/use-native-scroll-lock"
 
 import { GameIndicator } from "./game-indicator"

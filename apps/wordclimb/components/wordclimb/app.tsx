@@ -20,7 +20,7 @@ export function WordClimbApp() {
   }, [])
 
   return (
-    <main className="min-h-[100dvh]">
+    <main>
       {screen === "home" && <HomeScreen />}
       {screen === "game" && <GameScreen />}
       {screen === "stats" && <StatsScreen />}
