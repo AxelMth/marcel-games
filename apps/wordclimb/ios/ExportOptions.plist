@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Export settings for a TestFlight / App Store upload.
+	     Used by: xcodebuild -exportArchive -exportOptionsPlist ios/ExportOptions.plist
+	     See the "Building for TestFlight" section of the repository README. -->
+	<key>method</key>
+	<string>app-store-connect</string>
+
+	<key>teamID</key>
+	<string>7H6S64378V</string>
+
+	<!-- Let Xcode fetch or create the distribution certificate and profile.
+	     Requires the Apple account to be signed in (Xcode → Settings → Accounts)
+	     or an App Store Connect API key passed to xcodebuild. -->
+	<key>signingStyle</key>
+	<string>automatic</string>
+
+	<!-- Bitcode has been removed from the toolchain since Xcode 14; leaving it
+	     on makes the export fail. -->
+	<key>uploadBitcode</key>
+	<false/>
+
+	<!-- Symbols let App Store Connect symbolicate crash reports. The last
+	     rejection came with unsymbolicated .ips files, which is exactly the
+	     situation this avoids. -->
+	<key>uploadSymbols</key>
+	<true/>
+
+	<key>destination</key>
+	<string>export</string>
+</dict>
+</plist>

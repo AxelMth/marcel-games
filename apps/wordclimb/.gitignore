@@ -12,3 +12,5 @@ out/
 
 .env
 .pnpm-store
+# Local iOS archive and .ipa output
+build/
