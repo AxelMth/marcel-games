@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { useApp } from "@/lib/app-context"
-import { askForTrackingPermission } from "@/lib/app-tracking-transparency"
 import { isFirstVisit, setVisited } from "@/lib/game-store"
 import { HomeScreen } from "./home-screen"
 import { GameScreen } from "./game-screen"
@@ -18,10 +17,6 @@ export function WordClimbApp() {
       setShowWelcome(true)
       setVisited()
     }
-    // ATT first, then the UMP consent form. Without recorded consent AdMob
-    // serves non-personalized ads in Europe, at a fraction of the revenue.
-    // Both no-op off-device, so this is safe in the browser.
-    askForTrackingPermission()
   }, [])
 
   return (

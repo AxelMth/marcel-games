@@ -11,9 +11,6 @@ import { WordRow } from "./word-row"
 import { HintsModal } from "./hints-modal"
 import { HelpModal } from "./help-modal"
 import { SuccessModal } from "./success-modal"
-import { resolveInterstitial } from "@/lib/ad-cadence"
-import { useInterstitialAd } from "@/hooks/use-interstitial-ad"
-import { useRewardedAd } from "@/hooks/use-rewarded-ad"
 
 export function GameScreen() {
   const { locale, gameState, setGameState, goHome } = useApp()
@@ -23,11 +20,6 @@ export function GameScreen() {
   const [showSuccess, setShowSuccess] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const ladderRef = useRef<HTMLDivElement>(null)
-  // The session's single interstitial exemption. A ref, not state: spending it
-  // must not re-render, and it must survive every level of the session.
-  const adExemptionRef = useRef(true)
-  const { preload: preloadAd, show: showAd } = useInterstitialAd()
-  const { showRewardedAd } = useRewardedAd()
 
   const state = gameState!
   const level = state.level
@@ -36,12 +28,6 @@ export function GameScreen() {
   // Full ladder: endWord, ...reversed(wordLadder), beginWord
   // Display: endWord at top, beginWord at bottom
   // User finds intermediate words from beginWord side going up
-
-  useEffect(() => {
-    // Warm the interstitial while the success modal is up, so the tap on
-    // "next level" does not wait on a network fetch.
-    if (showSuccess && state.mode === "classic") preloadAd()
-  }, [showSuccess, state.mode, preloadAd])
 
   const currentTargetWord = wordLadder[state.currentWordIndex]
   const wordsLeft = wordLadder.length - state.currentWordIndex
@@ -102,17 +88,8 @@ export function GameScreen() {
   }, [input, currentTargetWord, state, wordLadder, setGameState])
 
   const handleHint = useCallback(
-    async (type: "firstLetter" | "fullWord") => {
+    (type: "firstLetter" | "fullWord") => {
       if (state.isComplete) return
-
-      // Revealing the whole word skips the puzzle, so it is the one worth an
-      // ad. The first letter stays free — same split as EarthHunt. The reward
-      // callback is fail-open: if AdMob is unavailable the player still gets
-      // the hint rather than being stuck.
-      if (type === "fullWord") {
-        await new Promise<void>((resolve) => showRewardedAd(() => resolve()))
-        if (state.isComplete) return
-      }
 
       if (type === "firstLetter") {
         setInput(currentTargetWord[0])
@@ -145,7 +122,7 @@ export function GameScreen() {
       }
       setShowHints(false)
     },
-    [state, currentTargetWord, wordLadder, setGameState, showRewardedAd]
+    [state, currentTargetWord, wordLadder, setGameState]
   )
 
   // Scroll ladder to show current word
@@ -331,28 +308,11 @@ export function GameScreen() {
           hintsUsed={state.hintsUsed}
           wordsFound={wordLadder.length}
           startTime={state.startTime}
-          onNextLevel={async () => {
+          onNextLevel={() => {
             setShowSuccess(false)
             if (state.mode !== "classic") {
               goHome()
               return
-            }
-            // getClassicProgress is the level just banked, which is what the
-            // cadence counts.
-            const { show, consumesExemption } = resolveInterstitial({
-              mode: "classic",
-              level: getClassicProgress(),
-              exemptionAvailable: adExemptionRef.current,
-            })
-            if (consumesExemption) adExemptionRef.current = false
-            if (show) {
-              // Never block progression on an ad: showInterstitial resolves
-              // even when AdMob fails or the platform is web.
-              try {
-                await showAd()
-              } catch {
-                // ignored on purpose
-              }
             }
             setGameState(createGameState("classic"))
           }}

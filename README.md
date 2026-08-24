@@ -8,11 +8,11 @@ Next.js 16, shared UI/lib packages, and a Go + Gin API server per app.
 ```
 marcel-games/
 ├── apps/
-│   ├── earthunt/           # Next.js 16 + Capacitor app (dev port 3001) — uses Mapbox + AdMob
-│   └── wordclimb/          # Next.js 16 + Capacitor app (dev port 3000) — ad-free word game
+│   ├── earthunt/           # Next.js 16 + Capacitor app (dev port 3001) — uses Mapbox
+│   └── wordclimb/          # Next.js 16 + Capacitor app (dev port 3000) — word ladder game
 ├── packages/
 │   ├── ui/                 # Shared React component library
-│   └── lib/                # Shared hooks, storage, haptics, AdMob, device utilities
+│   └── lib/                # Shared hooks, storage, haptics, device utilities
 ├── server/
 │   ├── earthunt/           # Go 1.23 + Gin API → Fly.io app `earthunt-api`
 │   │   ├── cmd/api/main.go

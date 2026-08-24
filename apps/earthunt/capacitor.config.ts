@@ -12,11 +12,6 @@ const config: CapacitorConfig = {
     // repo ever calls LiveUpdates.sync(). It was pure launch-time risk for a
     // feature that was never used. To re-enable OTA later, reinstall the plugin
     // and call LiveUpdates.sync() explicitly from JS after the app has loaded.
-    AdMob: {
-      // App IDs are set in AndroidManifest.xml and Info.plist (same as earthunt app.json)
-      androidAppId: 'ca-app-pub-6271901101573718~9313598215',
-      iosAppId: 'ca-app-pub-6271901101573718~5878435021'
-    },
     Keyboard: {
       // The game screen is a full-bleed map with absolutely-positioned overlays.
       // Letting the keyboard resize the web view (or letting WKWebView scroll to

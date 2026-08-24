@@ -5,7 +5,6 @@ import { Type, MapPin, FileText, Globe, Search, Lightbulb, Lock } from "lucide-r
 import { useGameStore } from "@/lib/game-store"
 import { useLanguage } from "@/components/language-provider"
 import { requestTourReplay } from "@/hooks/use-guided-tour"
-import { useRewardedAd } from "@/hooks/use-rewarded-ad"
 import {
   getPersistedHints,
   setPersistedHint,
@@ -41,7 +40,6 @@ export function HintsHelpSheet({
     consumeHintShowOnMap,
     consumeHintFullName,
   } = useGameStore()
-  const { showRewardedAd, isLoading: isAdLoading } = useRewardedAd()
   const [localResult, setLocalResult] = useState<{
     letter?: string
     map?: boolean
@@ -95,38 +93,34 @@ export function HintsHelpSheet({
   }
 
   const handleShowOnMap = () => {
-    showRewardedAd(() => {
-      const code = consumeHintShowOnMap()
-      if (code && gameConfig && firstMissingCode) {
-        setPersistedHint(
-          gameConfig.mode,
-          gameConfig.level,
-          gameConfig.continent ?? "",
-          firstMissingCode,
-          "map",
-          true
-        )
-        setLocalResult((prev) => ({ ...prev, map: true }))
-        onOpenChange(false)
-      }
-    })
+    const code = consumeHintShowOnMap()
+    if (code && gameConfig && firstMissingCode) {
+      setPersistedHint(
+        gameConfig.mode,
+        gameConfig.level,
+        gameConfig.continent ?? "",
+        firstMissingCode,
+        "map",
+        true
+      )
+      setLocalResult((prev) => ({ ...prev, map: true }))
+      onOpenChange(false)
+    }
   }
 
   const handleFullName = () => {
-    showRewardedAd(() => {
-      const name = consumeHintFullName(lang)
-      if (name && gameConfig && firstMissingCode) {
-        setPersistedHint(
-          gameConfig.mode,
-          gameConfig.level,
-          gameConfig.continent ?? "",
-          firstMissingCode,
-          "name",
-          name
-        )
-        setLocalResult((prev) => ({ ...prev, name }))
-      }
-    })
+    const name = consumeHintFullName(lang)
+    if (name && gameConfig && firstMissingCode) {
+      setPersistedHint(
+        gameConfig.mode,
+        gameConfig.level,
+        gameConfig.continent ?? "",
+        firstMissingCode,
+        "name",
+        name
+      )
+      setLocalResult((prev) => ({ ...prev, name }))
+    }
   }
 
   const handleOpenChange = (next: boolean) => {
@@ -184,7 +178,7 @@ export function HintsHelpSheet({
 
               <button
                 onClick={handleShowOnMap}
-                disabled={!hints.letter || !!hints.map || !firstMissingCode || isAdLoading}
+                disabled={!hints.letter || !!hints.map || !firstMissingCode}
                 className="flex flex-col gap-3 rounded-xl bg-[#f0a830]/10 p-4 text-left transition-all hover:bg-[#f0a830]/20 active:scale-[0.98] disabled:cursor-default disabled:opacity-100"
               >
                 <div className="flex gap-4">
@@ -206,11 +200,9 @@ export function HintsHelpSheet({
                           {t("hintsHelp.showOnMap")}
                         </p>
                         <p className="text-xs text-[#3a6b7e]">
-                          {isAdLoading
-                            ? t("hintsHelp.loadingAd")
-                            : !hints.letter
-                              ? t("hintsHelp.unlockFirstLetter")
-                              : t("hintsHelp.showOnMapDesc")}
+                          {!hints.letter
+                            ? t("hintsHelp.unlockFirstLetter")
+                            : t("hintsHelp.showOnMapDesc")}
                         </p>
                       </>
                     )}
@@ -220,7 +212,7 @@ export function HintsHelpSheet({
 
               <button
                 onClick={handleFullName}
-                disabled={!hints.letter || !hints.map || !!hints.name || !firstMissingCode || isAdLoading}
+                disabled={!hints.letter || !hints.map || !!hints.name || !firstMissingCode}
                 className="flex flex-col gap-3 rounded-xl bg-[#6d9581]/10 p-4 text-left transition-all hover:bg-[#6d9581]/20 active:scale-[0.98] disabled:cursor-default disabled:opacity-100"
               >
                 <div className="flex gap-4">
@@ -242,11 +234,9 @@ export function HintsHelpSheet({
                           {t("hintsHelp.fullName")}
                         </p>
                         <p className="text-xs text-[#3a6b7e]">
-                          {isAdLoading
-                            ? t("hintsHelp.loadingAd")
-                            : !hints.letter || !hints.map
-                              ? t("hintsHelp.unlockMapFirst")
-                              : t("hintsHelp.fullNameDesc")}
+                          {!hints.letter || !hints.map
+                            ? t("hintsHelp.unlockMapFirst")
+                            : t("hintsHelp.fullNameDesc")}
                         </p>
                       </>
                     )}

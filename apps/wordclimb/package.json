@@ -19,7 +19,6 @@
     "add:android": "npx cap add android"
   },
   "dependencies": {
-    "@capacitor-community/admob": "^8.0.0",
     "@capacitor/core": "^8.1.0",
     "@hookform/resolvers": "^3.9.1",
     "@marcel-games/lib": "workspace:^",
@@ -53,7 +52,6 @@
     "@radix-ui/react-tooltip": "1.2.8",
     "@vercel/analytics": "1.6.1",
     "autoprefixer": "^10.4.20",
-    "capacitor-plugin-app-tracking-transparency": "^3.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.1.1",

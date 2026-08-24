@@ -6,8 +6,6 @@ import { Clock, Target, Lightbulb, Home, ArrowRight, Star } from "lucide-react"
 import { useGameStore } from "@/lib/game-store"
 import { useLanguage } from "@/components/language-provider"
 import { useLevelApi } from "@/hooks/use-level"
-import { useInterstitialAd } from "@/hooks/use-interstitial-ad"
-import { resolveInterstitial } from "@/lib/ad-cadence"
 import { getStars } from "@/lib/stars"
 import { setProgressCache } from "@/lib/progress-cache"
 import { enqueuePendingResult } from "@/lib/pending-results"
@@ -37,11 +35,8 @@ export function SuccessScreen() {
     progress,
     setProgress,
     setPendingNextLevel,
-    adExemptionAvailable,
-    consumeAdExemption,
   } = useGameStore()
   const { finishLevel } = useLevelApi()
-  const { preload, show } = useInterstitialAd()
   const hasPostedFinish = useRef(false)
   const screen = useGameStore((s) => s.screen)
 
@@ -122,11 +117,6 @@ export function SuccessScreen() {
       })
   }, [gameConfig, userId, progress, foundCountries, attempts, elapsedTime, hintsUsed, finishLevel, setPendingNextLevel, setProgress])
 
-  // Preload interstitial when success screen mounts (for "Next Level" tap)
-  useEffect(() => {
-    if (gameConfig?.mode !== "daily") preload()
-  }, [gameConfig?.mode, preload])
-
   const [visibleCards, setVisibleCards] = useState([false, false, false, false])
   const [modeLabelVisible, setModeLabelVisible] = useState(false)
   const [actionsVisible, setActionsVisible] = useState(false)
@@ -149,23 +139,9 @@ export function SuccessScreen() {
     return () => timers.forEach((t) => clearTimeout(t))
   }, [])
 
-  const handleNextLevel = async () => {
+  const handleNextLevel = () => {
     if (!gameConfig) return
-    const { show: showAd, consumesExemption } = resolveInterstitial({
-      mode: gameConfig.mode,
-      level: gameConfig.level,
-      exemptionAvailable: adExemptionAvailable,
-    })
-    if (consumesExemption) consumeAdExemption()
-    if (showAd) {
-      try {
-        await show()
-      } finally {
-        nextLevel()
-      }
-    } else {
-      nextLevel()
-    }
+    nextLevel()
   }
 
   if (!gameConfig) return null

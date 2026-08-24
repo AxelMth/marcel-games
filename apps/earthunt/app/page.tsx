@@ -8,7 +8,6 @@ import { GameScreen } from "@/components/game-screen"
 import { SuccessScreen } from "@/components/success-screen"
 import { SplashScreen } from "@/components/splash-screen"
 import { StatsScreen } from "@/components/stats-screen"
-import { askForTrackingPermission } from "@/lib/app-tracking-transparency"
 import { useLaunch } from "@/hooks/use-launch"
 import { getProgress } from "@/lib/api"
 import { getProgressCache, setProgressCache } from "@/lib/progress-cache"
@@ -100,7 +99,6 @@ export default function Page() {
   const handleSplashComplete = () => {
     if (typeof window !== "undefined") sessionStorage.setItem(SPLASH_STORAGE_KEY, "1")
     setShowSplash(false)
-    askForTrackingPermission()
   }
 
   if (showSplash === null) {

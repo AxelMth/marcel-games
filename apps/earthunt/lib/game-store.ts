@@ -38,13 +38,6 @@ interface GameState {
   isLoadingProgress: boolean
   setLoadingProgress: (loading: boolean) => void
 
-  // Ads: the session's single interstitial exemption (see resolveInterstitial).
-  // Spent the first time an ad is actually due, never restored — going back to
-  // the home screen must not re-arm it, which is exactly what the previous
-  // re-armable flag allowed: one skipped ad per visit to World, not per session.
-  adExemptionAvailable: boolean
-  consumeAdExemption: () => void
-
   // Navigation
   goHome: () => void
   goToStats: () => void
@@ -119,10 +112,6 @@ export const useGameStore = create<GameState>((set, get) => ({
   setProgress: (progress) => set({ progress }),
   isLoadingProgress: false,
   setLoadingProgress: (loading) => set({ isLoadingProgress: loading }),
-  adExemptionAvailable: true,
-
-  consumeAdExemption: () => set({ adExemptionAvailable: false }),
-
   goHome: () =>
     set({
       screen: "home",

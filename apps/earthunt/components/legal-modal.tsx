@@ -50,8 +50,7 @@ const COPY: Record<"en" | "fr", LegalCopy> = {
       {
         heading: "Advertising",
         body: [
-          "We show ads through Google AdMob. On iOS we ask for your permission (App Tracking Transparency) before using your device's advertising identifier for personalized ads. If you decline, you still see ads, but they are not personalized.",
-          "Google may process data as described in Google's Privacy Policy.",
+          "EartHunt shows no ads and uses no advertising identifier. We do not track you across apps or websites.",
         ],
       },
       {
@@ -63,7 +62,7 @@ const COPY: Record<"en" | "fr", LegalCopy> = {
       {
         heading: "Your choices",
         body: [
-          "You can reset the advertising identifier or revoke tracking permission in your device settings at any time. Uninstalling the app removes locally stored data.",
+          "Uninstalling the app removes locally stored data.",
         ],
       },
       {
@@ -123,8 +122,7 @@ const COPY: Record<"en" | "fr", LegalCopy> = {
       {
         heading: "Publicité",
         body: [
-          "Nous affichons des publicités via Google AdMob. Sur iOS, nous demandons votre autorisation (App Tracking Transparency) avant d'utiliser l'identifiant publicitaire de votre appareil pour des publicités personnalisées. Si vous refusez, vous voyez toujours des publicités, mais non personnalisées.",
-          "Google peut traiter des données comme décrit dans la politique de confidentialité de Google.",
+          "EartHunt n'affiche aucune publicité et n'utilise aucun identifiant publicitaire. Nous ne vous suivons pas d'une application ou d'un site à l'autre.",
         ],
       },
       {
@@ -136,7 +134,7 @@ const COPY: Record<"en" | "fr", LegalCopy> = {
       {
         heading: "Vos choix",
         body: [
-          "Vous pouvez réinitialiser l'identifiant publicitaire ou révoquer l'autorisation de suivi dans les réglages de votre appareil à tout moment. Désinstaller l'application supprime les données stockées localement.",
+          "Désinstaller l'application supprime les données stockées localement.",
         ],
       },
       {

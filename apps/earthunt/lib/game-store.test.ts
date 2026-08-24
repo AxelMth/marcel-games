@@ -157,29 +157,6 @@ describe("game store", () => {
       expect(store().continentLevels.EUROPE).toBe(4)
     })
 
-    it("keeps the ad exemption available until something spends it", () => {
-      expect(store().adExemptionAvailable).toBe(true)
-
-      // Starting, leaving and restarting levels must not burn it: only an ad
-      // that is actually due does.
-      startWorldLevel(1)
-      store().goHome()
-      startWorldLevel(1)
-      store().nextLevel()
-      expect(store().adExemptionAvailable).toBe(true)
-
-      store().consumeAdExemption()
-      expect(store().adExemptionAvailable).toBe(false)
-    })
-
-    it("never restores the exemption once spent", () => {
-      store().consumeAdExemption()
-      startWorldLevel(1)
-      store().goHome()
-      startWorldLevel(1)
-      expect(store().adExemptionAvailable).toBe(false)
-    })
-
     it("restricts allCountries to the continent in continent mode", () => {
       store().setGameFromLevel(buildOfflineLevelParams("continent", 1, "OCEANIA"))
       expect(store().gameConfig?.allCountries).toHaveLength(

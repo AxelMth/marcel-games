@@ -11,16 +11,12 @@
     "lint": "tsc --noEmit"
   },
   "peerDependencies": {
-    "@capacitor-community/admob": "^8.0.0",
     "@capacitor/core": "^8.1.0",
     "@capacitor/device": "^8.0.0",
     "@capacitor/preferences": "^8.0.0",
     "react": "^19.0.0"
   },
   "peerDependenciesMeta": {
-    "@capacitor-community/admob": {
-      "optional": true
-    },
     "@capacitor/core": {
       "optional": true
     },
