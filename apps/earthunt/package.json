@@ -21,7 +21,8 @@
     "assets": "capacitor-assets generate",
     "add:ios": "npx cap add ios",
     "add:android": "npx cap add android",
-    "ios:bump": "node scripts/bump-build-number.mjs"
+    "ios:bump": "node scripts/bump-build-number.mjs",
+    "ios:archive:organizer": "node scripts/archive-to-organizer.mjs"
   },
   "dependencies": {
     "@aparajita/capacitor-secure-storage": "^8.0.0",
