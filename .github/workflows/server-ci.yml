@@ -63,12 +63,34 @@ jobs:
         include:
           - app: earthunt
             token_secret: FLY_EARTHUNT_API_TOKEN
+            db_secret: EARTHUNT_DATABASE_URL
           - app: wordclimb
             token_secret: FLY_WORDCLIMB_API_TOKEN
+            db_secret: WORDCLIMB_DATABASE_URL
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: server/${{ matrix.app }}/go.mod
+          cache-dependency-path: server/${{ matrix.app }}/go.sum
+
+      # The schema has to reach the database before the code that reads it.
+      # It used to be applied only by the weekly level-of-the-day cron, so a
+      # column added alongside a handler went live up to seven days before its
+      # migration — and never, once that cron started failing. WordClimb spent
+      # weeks answering 500 on /profile for exactly that reason.
+      #
+      # Running it here also makes a failed migration block the deploy instead
+      # of going unnoticed in a cron nobody reads.
+      - name: Apply ${{ matrix.app }} database schema
+        working-directory: server/${{ matrix.app }}
+        env:
+          DATABASE_URL: ${{ secrets[matrix.db_secret] }}
+        run: ../../.github/workflows/db-push.sh
 
       - name: Set up Flyctl
         uses: superfly/flyctl-actions/setup-flyctl@master
