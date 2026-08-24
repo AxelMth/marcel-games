@@ -71,7 +71,7 @@ export function StatsScreen() {
       className="flex min-h-svh flex-col"
       style={{
         background:
-          "linear-gradient(180deg, #55b3d1 0%, #69cbeb 40%, #c0e8f0 100%)",
+          "linear-gradient(180deg, #69bf8e 0%, #7ed7a5 40%, #ccebda 100%)",
         paddingTop: "max(1rem, env(safe-area-inset-top, 0px))",
         paddingBottom: "max(1rem, env(safe-area-inset-bottom, 0px))",
       }}

@@ -21,7 +21,7 @@ export function HomeScreen() {
       className="relative flex min-h-svh flex-col overflow-hidden"
       style={{
         background:
-          "linear-gradient(180deg, #55b3d1 0%, #69cbeb 40%, #c0e8f0 100%)",
+          "linear-gradient(180deg, #69bf8e 0%, #7ed7a5 40%, #ccebda 100%)",
         paddingTop: "max(1rem, env(safe-area-inset-top, 0px))",
       }}
     >
