@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Nunito, Nunito_Sans } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
-import { AdMobInit } from '@/components/admob-init'
-import { KeyboardInit } from '@/components/keyboard-init'
 import { LanguageProvider } from '@/components/language-provider'
 import './globals.css'
 
@@ -48,8 +46,6 @@ export default function RootLayout({
       >
         <LanguageProvider>
           {children}
-          <AdMobInit />
-          <KeyboardInit />
           <Analytics />
         </LanguageProvider>
       </body>

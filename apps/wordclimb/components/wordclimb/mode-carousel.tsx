@@ -103,7 +103,7 @@ export function ModeCarousel() {
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex w-[82%] max-w-md snap-x snap-mandatory gap-4 overflow-x-auto overflow-y-visible scrollbar-none"
+        className="flex min-w-0 max-w-md flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-visible scrollbar-none"
         style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
       >
         {modes.map(({ key, icon: Icon, color }, i) => {
@@ -115,32 +115,35 @@ export function ModeCarousel() {
               onPointerDown={handlePointerDown as (e: MouseEvent) => void}
               onClick={(e) => handleCardClick(key, e)}
               disabled={isDailyDisabled || isStartingGame}
-              className="mx-2 flex w-[75vw] max-w-xs shrink-0 snap-center flex-col items-center justify-center gap-3 rounded-[20px] bg-[rgba(255,255,255,0.92)] p-6 shadow-lg backdrop-blur-sm transition-transform active:scale-[0.97] disabled:opacity-60"
-              style={{ minHeight: "180px" }}
+              className="flex w-full shrink-0 snap-center px-2 py-1 transition-transform active:scale-[0.97] disabled:opacity-60"
             >
+              {/* No white panel: the card sits straight on the gradient, the
+                  way earthunt's mode card does. Text colours move off the grey
+                  greys, which only read against white. */}
               <div
-                className="flex items-center justify-center rounded-full"
-                style={{
-                  width: 56,
-                  height: 56,
-                  backgroundColor: `${color}20`,
-                }}
+                className="flex w-full flex-col items-center justify-center gap-3 p-6"
+                style={{ minHeight: "180px" }}
               >
-                <Icon size={28} color={color} strokeWidth={2.2} />
-              </div>
-              <span className="text-center text-lg font-bold" style={{ color }}>
-                {t(locale, titleKey(key))}
-              </span>
-              <span className="min-h-[2.5rem] w-full text-center text-sm leading-relaxed text-[#50555C]">
-                {key === "daily" && dailyDone
-                  ? t(locale, "doneForToday")
-                  : t(locale, descKey(key))}
-              </span>
-              {key === "classic" && (
-                <span className="w-full text-center text-xs font-medium text-[#50555C]/80">
-                  {t(locale, "level")} {classicLevel}
+                <div
+                  className="flex items-center justify-center rounded-full bg-white/40 backdrop-blur-sm"
+                  style={{ width: 56, height: 56 }}
+                >
+                  <Icon size={28} color={color} strokeWidth={2.2} />
+                </div>
+                <span className="text-center text-lg font-bold text-[#0A3D62]">
+                  {t(locale, titleKey(key))}
                 </span>
-              )}
+                <span className="min-h-[2.5rem] w-full text-center text-sm leading-relaxed text-[#0A3D62]/80">
+                  {key === "daily" && dailyDone
+                    ? t(locale, "doneForToday")
+                    : t(locale, descKey(key))}
+                </span>
+                {key === "classic" && (
+                  <span className="w-full text-center text-xs font-medium text-[#0A3D62]/60">
+                    {t(locale, "level")} {classicLevel}
+                  </span>
+                )}
+              </div>
             </button>
           )
         })}

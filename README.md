@@ -8,11 +8,11 @@ Next.js 16, shared UI/lib packages, and a Go + Gin API server per app.
 ```
 marcel-games/
 ├── apps/
-│   ├── earthunt/           # Next.js 16 + Capacitor app (dev port 3001) — uses Mapbox + AdMob
-│   └── wordclimb/          # Next.js 16 + Capacitor app (dev port 3000) — ad-free word game
+│   ├── earthunt/           # Next.js 16 + Capacitor app (dev port 3001) — uses Mapbox
+│   └── wordclimb/          # Next.js 16 + Capacitor app (dev port 3000) — word ladder game
 ├── packages/
 │   ├── ui/                 # Shared React component library
-│   └── lib/                # Shared hooks, storage, haptics, AdMob, device utilities
+│   └── lib/                # Shared hooks, storage, haptics, device utilities
 ├── server/
 │   ├── earthunt/           # Go 1.23 + Gin API → Fly.io app `earthunt-api`
 │   │   ├── cmd/api/main.go
@@ -87,11 +87,13 @@ account, and select the team (`7H6S64378V`). Without this,
 every archive fails with *"No profiles for 'com.marcelgames.earthunt' were
 found"*.
 
-Also bump the build number in `ios/App/App.xcodeproj` before each upload:
-App Store Connect rejects a `CURRENT_PROJECT_VERSION` it has already seen for
-the same `MARKETING_VERSION`.
+Bump the build number before each upload — App Store Connect rejects a
+`CURRENT_PROJECT_VERSION` it has already seen for the same `MARKETING_VERSION`,
+and it does so *after* the upload, so forgetting costs a whole archive and
+export cycle:
 
 ```bash
+pnpm --filter @marcel-games/earthunt ios:bump      # 15 -> 16
 pnpm --filter @marcel-games/earthunt ios:prepare
 pnpm --filter @marcel-games/earthunt ios:archive
 pnpm --filter @marcel-games/earthunt ios:export

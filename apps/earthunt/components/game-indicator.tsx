@@ -82,7 +82,10 @@ export function GameIndicator({
         top: "calc(max(0.75rem, env(safe-area-inset-top, 0px)) + 3.5rem)",
       }}
     >
-      <div className="relative flex max-w-[min(90vw,320px)] items-center justify-center overflow-hidden rounded-full bg-white/85 px-5 py-2 shadow-lg backdrop-blur-sm">
+      <div
+        data-tour="game-indicator"
+        className="relative flex max-w-[min(90vw,320px)] items-center justify-center overflow-hidden rounded-full bg-white/85 px-5 py-2 shadow-lg backdrop-blur-sm"
+      >
         {allFound && (
           <div
             className="absolute inset-0 origin-left bg-[#2ec4a0] animate-game-indicator-complete-fill"

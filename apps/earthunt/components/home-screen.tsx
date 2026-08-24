@@ -12,6 +12,7 @@ import { getProgressCache, setProgressCache } from "@/lib/progress-cache"
 import { countries } from "@/lib/countries"
 import { buildOfflineLevelParams } from "@/lib/game-logic"
 import { ScreenHeader } from "@/components/screen-header"
+import { GuidedTour } from "@/components/guided-tour"
 
 const modes = [
   {
@@ -132,8 +133,10 @@ export function HomeScreen() {
     setSelectedIndex(Math.max(0, Math.min(modes.length - 1, index)))
   }, [getScrollStep])
 
-  // Offline fallback: generate the level locally instead of blocking the
-  // player behind an error. Same deterministic generator, same store action.
+  // Not just an offline fallback any more: this is how World levels are always
+  // built. The generator is seeded from the level id, so the same level always
+  // holds the same countries — which the server could not promise, since it
+  // drew them afresh on every request.
   const startOffline = (mode: "world" | "daily") => {
     const level = mode === "world" ? (progress?.worldLevel ?? 1) : 1
     setGameFromLevel(buildOfflineLevelParams(mode, level))
@@ -158,9 +161,17 @@ export function HomeScreen() {
         gameMode,
         continent: "",
       })
-      // A level with nothing to find is won the instant it opens. The daily
-      // used to arrive that way whenever the server had no puzzle stored for
-      // today, so never trust an empty set — generate one locally instead.
+
+      // The server is authoritative for which level the player is on, and for
+      // the daily puzzle — everyone must get the same one. It no longer picks
+      // the countries of a World level: those come from the seeded generator so
+      // that leaving and coming back shows the same board.
+      if (mode === "world") {
+        setGameFromLevel(buildOfflineLevelParams("world", data.level))
+        return
+      }
+
+      // A level with nothing to find is won the instant it opens.
       if (data.countryCodes.length === 0) {
         startOffline(mode)
         return
@@ -237,13 +248,14 @@ export function HomeScreen() {
               className="flex min-w-0 max-w-md flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-visible scrollbar-none"
               style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
             >
-              {modes.map((mode) => {
+              {modes.map((mode, i) => {
                 const worldLevel = progress?.worldLevel ?? 1
                 const dailyDone = progress?.dailyCompleted ?? false
                 const isDailyDisabled = mode.id === "daily" && dailyDone
                 return (
                   <button
                     key={mode.id}
+                    data-tour={i === selectedIndex ? "mode-card" : undefined}
                     onClick={() => handleTap(mode.id)}
                     disabled={isLoadingGame || isDailyDisabled}
                     className="flex w-full shrink-0 snap-center flex-col items-center px-4 py-6 transition-transform duration-200 active:scale-[0.97] disabled:opacity-60"
@@ -275,6 +287,7 @@ export function HomeScreen() {
             <button
               type="button"
               onClick={() => scrollToIndex(selectedIndex + 1)}
+              data-tour="mode-next"
               disabled={selectedIndex === modes.length - 1}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/80 text-[#0f2b3c] shadow-md transition-opacity disabled:opacity-30"
               aria-label="Next mode"
@@ -290,6 +303,10 @@ export function HomeScreen() {
       >
         {t("home.scrollToSelect")}
       </p>
+
+      {/* Only once the carousel is on screen: the tour measures its target, and
+          a card that has not been laid out yet has no rectangle to point at. */}
+      <GuidedTour tour="home" enabled={screen === "home" && !isLoadingProgress} />
     </main>
   )
 }

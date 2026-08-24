@@ -16,6 +16,7 @@ import { useApp } from "@/lib/app-context"
 import { t } from "@/lib/i18n"
 import { getProfile, type GameHistoryEntry, type ProfileResponse } from "@/lib/api"
 import { LegalModal } from "@/components/wordclimb/legal-modal"
+import { ScreenHeader } from "./screen-header"
 
 type GameModeFilter = "all" | "NORMAL" | "RANDOM" | "LEVEL_OF_THE_DAY"
 
@@ -84,27 +85,15 @@ export function StatsScreen() {
 
   return (
     <div
-      className="flex min-h-[100dvh] flex-col"
+      className="flex min-h-svh flex-col"
       style={{
         background:
-          "linear-gradient(180deg, #55b3d1 0%, #69cbeb 40%, #c0e8f0 100%)",
-        paddingTop: "env(safe-area-inset-top)",
-        paddingBottom: "env(safe-area-inset-bottom)",
+          "linear-gradient(180deg, #69bf8e 0%, #7ed7a5 40%, #ccebda 100%)",
+        paddingTop: "max(1rem, env(safe-area-inset-top, 0px))",
+        paddingBottom: "max(1rem, env(safe-area-inset-bottom, 0px))",
       }}
     >
-      <header className="flex w-full flex-row items-center justify-between px-4 pt-4">
-        <button
-          onClick={goHome}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/30 text-[#0A3D62] backdrop-blur-sm transition-colors active:bg-white/50"
-          aria-label={t(locale, "profileBack")}
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <h1 className="text-xl font-extrabold tracking-tight text-[#0A3D62] md:text-2xl">
-          {t(locale, "statsTitle")}
-        </h1>
-        <div className="h-10 w-10 shrink-0" aria-hidden />
-      </header>
+      <ScreenHeader title="statsTitle" onBack={goHome} />
 
       <div className="flex flex-1 flex-col gap-6 px-4 py-6">
         {loading && (

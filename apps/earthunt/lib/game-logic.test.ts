@@ -1,3 +1,4 @@
+import { COUNTRY_DIFFICULTY_ORDER } from "./country-difficulty"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { countries, getCountriesByContinent } from "./countries"
 import {
@@ -63,40 +64,98 @@ describe("matchCountry", () => {
 
 describe("getMissingCountries", () => {
   it("is deterministic: the same level id always yields the same set", () => {
-    const a = getMissingCountries("world-level-4", countries, 3, 10)
-    const b = getMissingCountries("world-level-4", countries, 3, 10)
+    const a = getMissingCountries("world-level-4", countries, 4)
+    const b = getMissingCountries("world-level-4", countries, 4)
     expect(a.map((c) => c.code)).toEqual(b.map((c) => c.code))
   })
 
   it("yields different sets for different level ids", () => {
-    const a = getMissingCountries("world-level-4", countries, 3, 10)
-    const b = getMissingCountries("world-level-5", countries, 3, 10)
+    const a = getMissingCountries("world-level-4", countries, 4)
+    const b = getMissingCountries("world-level-40", countries, 40)
     expect(a.map((c) => c.code)).not.toEqual(b.map((c) => c.code))
   })
 
-  it("stays within the requested bounds", () => {
-    for (let level = 1; level <= 30; level++) {
-      const result = getMissingCountries(`world-level-${level}`, countries, 3, 10)
-      expect(result.length).toBeGreaterThanOrEqual(3)
-      expect(result.length).toBeLessThanOrEqual(10)
+  /**
+   * The difficulty curve, which is the point of the whole thing. Moving level
+   * generation to the client dropped it: every level drew uniformly from all
+   * 170 countries, so level 7 asked for seven of them, mostly obscure. These
+   * pin the curve the server used to apply and players were actually getting.
+   */
+  it("asks for a single country through the first fifteen levels", () => {
+    for (let level = 1; level <= 15; level++) {
+      expect(getMissingCountries(`world-level-${level}`, countries, level)).toHaveLength(1)
+    }
+  })
+
+  it("grows the ask slowly, never faster than the curve allows", () => {
+    const bounds: [number, number, number][] = [
+      [20, 1, 3],
+      [40, 2, 4],
+      [80, 2, 5],
+      [200, 5, 10],
+      [400, 8, 15],
+    ]
+    for (const [level, min, max] of bounds) {
+      const size = getMissingCountries(`world-level-${level}`, countries, level).length
+      expect(size).toBeGreaterThanOrEqual(min)
+      expect(size).toBeLessThanOrEqual(max)
+    }
+  })
+
+  it("keeps early levels among the countries everyone knows", () => {
+    const wellKnown = new Set(COUNTRY_DIFFICULTY_ORDER.slice(0, 17))
+    for (let level = 1; level <= 15; level++) {
+      for (const country of getMissingCountries(`world-level-${level}`, countries, level)) {
+        expect(wellKnown.has(country.code)).toBe(true)
+      }
+    }
+  })
+
+  it("reaches the obscure ones eventually", () => {
+    const seen = new Set<string>()
+    for (let level = 900; level <= 1000; level++) {
+      for (const c of getMissingCountries(`world-level-${level}`, countries, level)) seen.add(c.code)
+    }
+    const tail = COUNTRY_DIFFICULTY_ORDER.slice(-40)
+    expect(tail.some((code) => seen.has(code))).toBe(true)
+  })
+
+  // Antarctica is in the dataset and second by area, so it used to surface in
+  // the very first levels of a game that asks for countries.
+  it("never asks for Antarctica", () => {
+    for (let level = 1; level <= 1200; level += 7) {
+      const codes = getMissingCountries(`world-level-${level}`, countries, level).map((c) => c.code)
+      expect(codes).not.toContain("ATA")
     }
   })
 
   it("never returns more countries than the pool holds", () => {
     const tiny = countries.slice(0, 2)
-    expect(getMissingCountries("x", tiny, 3, 10)).toHaveLength(2)
+    expect(getMissingCountries("x", tiny, 300).length).toBeLessThanOrEqual(2)
   })
 
   it("returns no duplicates", () => {
-    const result = getMissingCountries("world-level-9", countries, 3, 20)
-    expect(new Set(result.map((c) => c.code)).size).toBe(result.length)
+    for (const level of [9, 40, 120, 300, 900]) {
+      const result = getMissingCountries(`world-level-${level}`, countries, level)
+      expect(new Set(result.map((c) => c.code)).size).toBe(result.length)
+    }
   })
 
   it("only returns countries drawn from the pool", () => {
     const europe = getCountriesByContinent("EUROPE")
-    const result = getMissingCountries("continent-EUROPE-level-1", europe, 3, 10)
+    const result = getMissingCountries("continent-EUROPE-level-1", europe, 1)
     for (const country of result) {
       expect(europe.some((c) => c.code === country.code)).toBe(true)
+    }
+  })
+
+  // A small continent must still hand back what the level asked for.
+  it("fills the ask even from the smallest continent", () => {
+    const oceania = getCountriesByContinent("OCEANIA")
+    for (const level of [1, 40, 200, 900]) {
+      const result = getMissingCountries(`continent-OCEANIA-level-${level}`, oceania, level)
+      expect(result.length).toBeGreaterThan(0)
+      expect(result.length).toBeLessThanOrEqual(oceania.length)
     }
   })
 })
@@ -180,9 +239,13 @@ describe("createGameConfig", () => {
     expect(createGameConfig("world", 500).missingCountries.length).toBeLessThanOrEqual(20)
   })
 
-  it("keeps every level solvable: at least three countries to find", () => {
-    for (let level = 1; level <= 50; level++) {
-      expect(createGameConfig("world", level).missingCountries.length).toBeGreaterThanOrEqual(3)
+  // This used to demand three countries minimum, on the premise that fewer
+  // made a level trivial. It is the wrong premise: the game shipped with a
+  // single country through the early levels, which is what makes it learnable.
+  // What matters is that a level always has something to find.
+  it("always has at least one country to find", () => {
+    for (let level = 1; level <= 200; level++) {
+      expect(createGameConfig("world", level).missingCountries.length).toBeGreaterThanOrEqual(1)
     }
   })
 
@@ -207,17 +270,36 @@ describe("createGameConfig", () => {
     vi.useRealTimers()
   })
 
-  it("still scales daily difficulty with the level argument, sharing one seed", () => {
-    // The level id is date-only, so the shuffle order is identical; only the
-    // slice length changes. Callers always pass 1, but this documents that the
-    // argument is not fully ignored.
+  // The daily is always opened at "level 1", so reading the curve there would
+  // hand out one easy country every day. Its difficulty comes from the date
+  // instead, matching the 1-50 range the server draws for it.
+  it("ignores the level argument for the daily and derives difficulty from the date", () => {
     vi.useFakeTimers()
-    vi.setSystemTime(new Date(2026, 7, 2, 12, 0, 0))
-    const easy = createGameConfig("daily", 1).missingCountries.map((c) => c.code)
-    const hard = createGameConfig("daily", 99).missingCountries.map((c) => c.code)
-    expect(hard.length).toBeGreaterThan(easy.length)
-    expect(hard.slice(0, easy.length)).toEqual(easy)
-    vi.useRealTimers()
+    try {
+      vi.setSystemTime(new Date(Date.UTC(2026, 7, 2, 12, 0, 0)))
+      const asLevelOne = createGameConfig("daily", 1).missingCountries.map((c) => c.code)
+      const asLevelNinetyNine = createGameConfig("daily", 99).missingCountries.map((c) => c.code)
+
+      expect(asLevelNinetyNine).toEqual(asLevelOne)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it("gives the daily more substance than a first world level", () => {
+    const sizes: number[] = []
+    vi.useFakeTimers()
+    try {
+      for (let day = 1; day <= 28; day++) {
+        vi.setSystemTime(new Date(Date.UTC(2026, 7, day, 12, 0, 0)))
+        sizes.push(createGameConfig("daily", 1).missingCountries.length)
+      }
+    } finally {
+      vi.useRealTimers()
+    }
+    // Not every day needs to be big, but a month of one-country dailies would
+    // mean the date-derived difficulty is not being applied at all.
+    expect(Math.max(...sizes)).toBeGreaterThan(1)
   })
 })
 

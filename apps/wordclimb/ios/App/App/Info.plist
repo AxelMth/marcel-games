@@ -47,13 +47,6 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
-	<key>NSUserTrackingUsageDescription</key>
-	<string>We use your device identifier to provide personalized ads and support the game.</string>
-	<!-- The SDK reads this at launch: a missing or wrong value aborts the
-	     process, which is what got EarthHunt rejected under guideline 2.1.
-	     Must match ADMOB_APP_IDS.ios in lib/ad-constants.ts. -->
-	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-6271901101573718~8478860820</string>
 	<!-- Answers the export-compliance question at build time. Without it App
 	     Store Connect flags every upload "Missing Compliance" and refuses to
 	     attach the build to a submission until the questionnaire is answered by

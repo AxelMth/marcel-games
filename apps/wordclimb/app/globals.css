@@ -1,4 +1,9 @@
 @import 'tailwindcss';
+/* Tailwind v4 discovers sources from the project root but skips node_modules,
+   and the workspace packages resolve through a node_modules symlink. Without
+   this, a utility class used *only* inside a shared component silently produces
+   no CSS — the component renders unstyled and nothing warns. */
+@source '../../../packages/ui/src';
 @import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
@@ -119,8 +124,16 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    /* Painting html in the app colour keeps a rubber-band overscroll from
+       flashing white behind the page; overscroll-behavior stops the bounce
+       from happening at all. Same treatment as earthunt. */
+    background-color: var(--background);
+    overscroll-behavior: none;
+  }
   body {
     @apply bg-background text-foreground;
+    overscroll-behavior: none;
   }
 }
 
@@ -139,18 +152,10 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
-/* Safe area support for Capacitor */
-body {
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
-}
-
-/* Prevent overscroll */
-html, body {
-  overscroll-behavior: none;
-}
+/* No safe-area padding on <body>. It made the document taller than the
+   viewport — every screen is already a full-height (h-svh) box, so the insets
+   stacked and pushed the bottom of the page, input bar included, off screen.
+   Each screen insets its own chrome instead, the way earthunt does. */
 
 /* Touch action for mobile */
 button, a {

@@ -34,9 +34,37 @@ export const translations = {
       worldLevel: "World - Level {{level}}",
       continentLevel: "{{continent}} - Lvl {{level}}",
       enterCountryName: "Enter a country name...",
+      mapUnavailable:
+        "The map could not load. You can still play: type the names of the missing countries.",
       missing: "missing", // Used as "X missing" (plural)
       missingOne: "missing", // Used as "1 missing"
       allCountriesFound: "All countries have been found",
+    },
+    tour: {
+      skip: "Skip",
+      next: "Next",
+      done: "Got it!",
+      replay: "Replay the tutorial",
+      home: {
+        modes: "Pick how you want to play",
+        modesDesc:
+          "World covers the whole planet, Continent narrows it down, and the Daily Challenge is the same puzzle for everyone.",
+        switch: "Browse the modes",
+        switchDesc: "Swipe the card sideways, or use the arrows.",
+        stats: "Your progress",
+        statsDesc: "Levels completed, stars earned and your ranking live here.",
+      },
+      game: {
+        goal: "What you have to find",
+        goalDesc:
+          "Some countries have been removed from the map. This shows how many are left, and how long you have been at it.",
+        search: "Name a country",
+        searchDesc:
+          "Type it here — French or English, accents optional. Found countries turn green on the map.",
+        hints: "Stuck on one?",
+        hintsDesc:
+          "Ask for a hint: the first letter, then its position on the map, then the full name.",
+      },
     },
     helpBubble: {
       howToPlay: "How to Play",
@@ -145,9 +173,37 @@ export const translations = {
       worldLevel: "Monde - Niveau {{level}}",
       continentLevel: "{{continent}} - Niv. {{level}}",
       enterCountryName: "Tape le nom d'un pays...",
+      mapUnavailable:
+        "La carte n'a pas pu se charger. Tu peux quand même jouer : tape le nom des pays manquants.",
       missing: "manquants", // Used as "X manquants" (plural)
       missingOne: "manquant", // Used as "1 manquant"
       allCountriesFound: "Tous les pays ont été trouvés",
+    },
+    tour: {
+      skip: "Passer",
+      next: "Suivant",
+      done: "Compris !",
+      replay: "Revoir le tutoriel",
+      home: {
+        modes: "Choisis ta façon de jouer",
+        modesDesc:
+          "Monde couvre toute la planète, Continent resserre le jeu, et le Défi du jour est la même grille pour tout le monde.",
+        switch: "Parcours les modes",
+        switchDesc: "Fais glisser la carte sur le côté, ou utilise les flèches.",
+        stats: "Ta progression",
+        statsDesc: "Niveaux terminés, étoiles gagnées et classement sont réunis ici.",
+      },
+      game: {
+        goal: "Ce qu'il faut trouver",
+        goalDesc:
+          "Des pays ont été retirés de la carte. Ici s'affichent combien il en reste, et depuis combien de temps tu cherches.",
+        search: "Nomme un pays",
+        searchDesc:
+          "Tape-le ici — en français ou en anglais, avec ou sans accents. Les pays trouvés passent au vert sur la carte.",
+        hints: "Un pays qui résiste ?",
+        hintsDesc:
+          "Demande un indice : la première lettre, puis sa position sur la carte, puis le nom complet.",
+      },
     },
     helpBubble: {
       howToPlay: "Comment jouer",

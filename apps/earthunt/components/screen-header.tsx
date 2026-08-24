@@ -1,6 +1,7 @@
 "use client"
 
-import { ArrowLeft, Settings } from "lucide-react"
+import { Settings } from "lucide-react"
+import { ScreenHeader as SharedScreenHeader } from "@marcel-games/ui"
 import { useLanguage } from "@/components/language-provider"
 
 interface ScreenHeaderProps {
@@ -12,6 +13,11 @@ interface ScreenHeaderProps {
   onCogClick?: () => void
 }
 
+/**
+ * Earthunt's header: resolves i18n keys and supplies the cog, then defers the
+ * layout to the shared component. Props stay keys rather than strings so every
+ * call site reads the same as before.
+ */
 export function ScreenHeader({
   title = "app.title",
   subtitle,
@@ -23,41 +29,24 @@ export function ScreenHeader({
   const { t } = useLanguage()
 
   return (
-    <header className="flex w-full flex-row items-center justify-between px-5 pt-6">
-      <div className="flex min-w-0 flex-1 items-center gap-3">
-        {showBackButton && onBack ? (
+    <SharedScreenHeader
+      className="pt-6 text-[#0f2b3c]"
+      title={t(title)}
+      subtitle={subtitle ? t(subtitle) : undefined}
+      onBack={showBackButton ? onBack : undefined}
+      backLabel={t("profile.back")}
+      actions={
+        showCog && onCogClick ? (
           <button
-            onClick={onBack}
+            onClick={onCogClick}
+            data-tour="stats-cog"
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/30 backdrop-blur-sm transition-colors active:bg-white/50"
-            aria-label={t("profile.back")}
+            aria-label={t("profile.settings")}
           >
-            <ArrowLeft className="h-5 w-5 text-[#0f2b3c]" />
+            <Settings className="h-5 w-5 text-[#0f2b3c]" />
           </button>
-        ) : (
-          <div className="h-10 w-10 shrink-0" aria-hidden />
-        )}
-        <div className="min-w-0 flex-1 flex flex-col items-center justify-center">
-          <h1 className="text-3xl font-extrabold tracking-tight text-[#0f2b3c]">
-            {t(title)}
-          </h1>
-          {subtitle && (
-            <p className="text-sm font-medium text-[#0f2b3c]/80">
-              {t(subtitle)}
-            </p>
-          )}
-        </div>
-      </div>
-      {showCog && onCogClick ? (
-        <button
-          onClick={onCogClick}
-          className="ml-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/30 backdrop-blur-sm transition-colors active:bg-white/50"
-          aria-label={t("profile.settings")}
-        >
-          <Settings className="h-5 w-5 text-[#0f2b3c]" />
-        </button>
-      ) : (
-        <div className="h-10 w-10 shrink-0" aria-hidden />
-      )}
-    </header>
+        ) : undefined
+      }
+    />
   )
 }

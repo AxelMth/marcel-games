@@ -7,9 +7,11 @@ import { useGameStore } from "@/lib/game-store"
 import { countries, getCountryName } from "@/lib/countries"
 import { normalizeCountryName } from "@/lib/game-logic"
 
+import { GuidedTour } from "@/components/guided-tour"
 import { HelpBubble } from "@/components/help-bubble"
 import { useLanguage } from "@/components/language-provider"
-import { useKeyboardOffset } from "@/hooks/use-keyboard-offset"
+import { useKeyboardOffset } from "@marcel-games/lib"
+import { useNativeScrollLock } from "@/hooks/use-native-scroll-lock"
 
 import { GameIndicator } from "./game-indicator"
 import { WorldMap } from "./world-map"
@@ -26,6 +28,7 @@ export function GameScreen() {
     submitGuess,
     clearLastGuess,
     tick,
+    startTimer,
   } = useGameStore()
 
   const [input, setInput] = useState("")
@@ -34,14 +37,22 @@ export function GameScreen() {
   const [helpBubbleExpanded, setHelpBubbleExpanded] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [shouldShake, setShouldShake] = useState(false)
+  // The clock is the player's score, so it must not run while they are still
+  // staring at a loading map. The map settles either way — loaded or declared
+  // unavailable — so this can never leave the timer stopped for good.
+  const [boardReady, setBoardReady] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const { t, tReplace, lang } = useLanguage()
   const keyboardOffset = useKeyboardOffset()
+  // Only while the map is on screen: the lock belongs to the web view, so
+  // holding it app-wide would take scrolling away from the stats history.
+  useNativeScrollLock()
 
   useEffect(() => {
+    if (!boardReady) return
     const interval = setInterval(tick, 1000)
     return () => clearInterval(interval)
-  }, [tick])
+  }, [tick, boardReady])
 
   const suggestions = useMemo(() => {
     if (!input || input.length < 2) return []
@@ -101,6 +112,10 @@ export function GameScreen() {
         foundCountries={foundCountries}
         highlightedCountry={highlightedCountry}
         continent={gameConfig.continent}
+        onSettled={() => {
+          startTimer()
+          setBoardReady(true)
+        }}
       />
 
       {/* --- OVERLAYS ON TOP OF MAP --- */}
@@ -153,9 +168,18 @@ export function GameScreen() {
         }}
       />
 
-      {/* Guess feedback toast - only for correct guesses */}
+      {/* Guess feedback toast - only for correct guesses. It rides above the
+          search bar, so it has to clear the keyboard too: pressing Enter does
+          not blur the input, and a fixed offset would leave the confirmation
+          hidden behind the keyboard for its whole 2.5 s. */}
       {lastGuessResult?.type === "correct" && (
-        <div className="pointer-events-none absolute bottom-36 left-1/2 z-20 -translate-x-1/2">
+        <div
+          className="pointer-events-none absolute left-1/2 z-20 -translate-x-1/2"
+          style={{
+            bottom: keyboardOffset > 0 ? `calc(5rem + ${keyboardOffset}px)` : "9rem",
+            transition: "bottom 220ms ease-out",
+          }}
+        >
           <div className="rounded-xl bg-[#2ec4a0]/90 px-5 py-2.5 text-center text-sm font-bold text-white shadow-lg backdrop-blur-sm">
             {lastGuessResult.message}
           </div>
@@ -168,12 +192,17 @@ export function GameScreen() {
           The shake animation also uses `transform`, so the lift has to be a
           `bottom` offset or the two would fight over the same property. */}
       <div
+        data-tour="search-bar"
         className={`absolute left-0 right-0 z-10 p-4 pb-5 ${shouldShake ? "animate-search-bar-shake" : ""}`}
         style={{
           bottom:
             keyboardOffset > 0
               ? `calc(0.5rem + ${keyboardOffset}px)`
               : "calc(1.5rem + env(safe-area-inset-bottom, 0px))",
+          // keyboardWillShow fires as the keyboard starts animating in, so
+          // matching its duration keeps the bar riding on top of it rather
+          // than snapping up ahead of it.
+          transition: "bottom 220ms ease-out",
         }}
         onAnimationEnd={() => {
           if (shouldShake) {
@@ -240,6 +269,14 @@ export function GameScreen() {
           )}
         </div>
       </div>
+
+      {/* Guided tour. Held back until the map has settled — highlighting a
+          spinner would teach nothing — and while the keyboard is up, since it
+          would cover the very element being pointed at. */}
+      <GuidedTour
+        tour="game"
+        enabled={boardReady && keyboardOffset === 0 && !showHintsHelpSheet}
+      />
 
       {/* Hints & Help bottom sheet */}
       <HintsHelpSheet

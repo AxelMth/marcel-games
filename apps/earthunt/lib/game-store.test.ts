@@ -12,7 +12,130 @@ function startWorldLevel(level = 1) {
   return store().gameConfig!
 }
 
+/**
+ * Starts the first level that actually holds several countries.
+ *
+ * Early levels ask for a single country by design — that is the difficulty
+ * curve — so a test about moving from one country to the next has to look
+ * further up rather than hardcode a level number that the curve could move.
+ */
+function startMultiCountryLevel() {
+  for (let level = 1; level <= 300; level++) {
+    const config = startWorldLevel(level)
+    if (config.missingCountries.length >= 2) return config
+  }
+  throw new Error("no level with two countries to find")
+}
+
 describe("game store", () => {
+  describe("a paid hint outliving the level", () => {
+    // Exactly the reported scenario: pay for "show on map", leave the level,
+    // come back. The hint was remembered as spent but the map went dark, so the
+    // player had paid for nothing.
+    it("relights the country whose map hint was already paid for", () => {
+      const config = startWorldLevel(4)
+      const target = config.missingCountries[0].code
+      setPersistedHint("world", 4, "", target, "map", true)
+
+      startWorldLevel(4)
+
+      expect(store().highlightedCountry).toBe(target)
+    })
+
+    it("leaves the map dark when no map hint was paid for", () => {
+      const config = startWorldLevel(4)
+      // A first-letter hint is free and must not light the map.
+      setPersistedHint("world", 4, "", config.missingCountries[0].code, "letter", "A")
+
+      startWorldLevel(4)
+
+      expect(store().highlightedCountry).toBeNull()
+    })
+
+    it("does not leak a hint from one level into another", () => {
+      const config = startWorldLevel(4)
+      setPersistedHint("world", 4, "", config.missingCountries[0].code, "map", true)
+
+      startWorldLevel(5)
+
+      expect(store().highlightedCountry).toBeNull()
+    })
+
+    it("keys the hint per continent, so two continents do not share it", () => {
+      const europe = getCountriesByContinent("EUROPE")
+      store().setGameFromLevel(buildOfflineLevelParams("continent", 2, "EUROPE"))
+      const target = store().gameConfig!.missingCountries[0].code
+      setPersistedHint("continent", 2, "EUROPE", target, "map", true)
+
+      store().setGameFromLevel(buildOfflineLevelParams("continent", 2, "ASIA"))
+
+      expect(store().highlightedCountry).toBeNull()
+      expect(europe.length).toBeGreaterThan(0)
+    })
+  })
+
+  describe("the clock", () => {
+    // The map can take seconds to appear, and the player's time is their score:
+    // charging them for the load was the bug behind "the counter runs while
+    // everything is still loading".
+    it("stays at zero until the board is ready", () => {
+      startWorldLevel()
+      expect(store().startTime).toBeNull()
+
+      store().tick()
+      store().tick()
+
+      expect(store().elapsedTime).toBe(0)
+    })
+
+    it("counts from the moment the board is ready, not from the level opening", () => {
+      vi.useFakeTimers()
+      try {
+        vi.setSystemTime(new Date("2026-08-04T09:00:00Z"))
+        startWorldLevel()
+
+        // Five seconds of map loading, which must cost the player nothing.
+        vi.advanceTimersByTime(5000)
+        store().startTimer()
+
+        vi.advanceTimersByTime(3000)
+        store().tick()
+
+        expect(store().elapsedTime).toBe(3)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it("ignores a second start, so a re-settled map cannot rewind the clock", () => {
+      vi.useFakeTimers()
+      try {
+        vi.setSystemTime(new Date("2026-08-04T09:00:00Z"))
+        startWorldLevel()
+        store().startTimer()
+        const armedAt = store().startTime
+
+        vi.advanceTimersByTime(4000)
+        store().startTimer()
+
+        expect(store().startTime).toBe(armedAt)
+        store().tick()
+        expect(store().elapsedTime).toBe(4)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it("re-arms for the next level", () => {
+      startWorldLevel(1)
+      store().startTimer()
+      expect(store().startTime).not.toBeNull()
+
+      startWorldLevel(2)
+      expect(store().startTime).toBeNull()
+    })
+  })
+
   describe("setGameFromLevel", () => {
     it("enters the game screen with a fresh slate", () => {
       startWorldLevel(3)
@@ -32,29 +155,6 @@ describe("game store", () => {
     it("mirrors the level into continentLevels for continent mode", () => {
       store().setGameFromLevel(buildOfflineLevelParams("continent", 4, "EUROPE"))
       expect(store().continentLevels.EUROPE).toBe(4)
-    })
-
-    it("keeps the ad exemption available until something spends it", () => {
-      expect(store().adExemptionAvailable).toBe(true)
-
-      // Starting, leaving and restarting levels must not burn it: only an ad
-      // that is actually due does.
-      startWorldLevel(1)
-      store().goHome()
-      startWorldLevel(1)
-      store().nextLevel()
-      expect(store().adExemptionAvailable).toBe(true)
-
-      store().consumeAdExemption()
-      expect(store().adExemptionAvailable).toBe(false)
-    })
-
-    it("never restores the exemption once spent", () => {
-      store().consumeAdExemption()
-      startWorldLevel(1)
-      store().goHome()
-      startWorldLevel(1)
-      expect(store().adExemptionAvailable).toBe(false)
     })
 
     it("restricts allCountries to the continent in continent mode", () => {
@@ -148,16 +248,24 @@ describe("game store", () => {
       expect(store().consumeHintFullName("fr")).toBe(target.nameFr)
     })
 
-    it("highlights the country on the map, then clears it", () => {
+    // The highlight used to wipe itself after five seconds, while the rewarded
+    // video that pays for it runs fifteen to thirty: the country lit up and
+    // went dark again behind the ad, so the player came back to a blank map
+    // having paid for nothing.
+    it("keeps the country lit well past the length of a rewarded ad", () => {
       vi.useFakeTimers()
-      startWorldLevel(1)
-      const target = store().gameConfig!.missingCountries[0]
+      try {
+        startWorldLevel(1)
+        const target = store().gameConfig!.missingCountries[0]
 
-      expect(store().consumeHintShowOnMap()).toBe(target.code)
-      expect(store().highlightedCountry).toBe(target.code)
+        expect(store().consumeHintShowOnMap()).toBe(target.code)
+        expect(store().highlightedCountry).toBe(target.code)
 
-      vi.advanceTimersByTime(5000)
-      expect(store().highlightedCountry).toBeNull()
+        vi.advanceTimersByTime(60_000)
+        expect(store().highlightedCountry).toBe(target.code)
+      } finally {
+        vi.useRealTimers()
+      }
     })
 
     it("counts each hint, which is what costs the player stars", () => {
@@ -168,7 +276,7 @@ describe("game store", () => {
     })
 
     it("advances to the next country once the current one is found", () => {
-      const [first, second] = store().gameConfig!.missingCountries
+      const [first, second] = startMultiCountryLevel().missingCountries
       store().submitGuess(first.nameEn, "en")
       expect(store().consumeHintFullName("en")).toBe(second.nameEn)
     })

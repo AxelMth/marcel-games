@@ -5,6 +5,7 @@ import { Globe, Settings, Loader2 } from "lucide-react"
 import { useApp } from "@/lib/app-context"
 import { t } from "@/lib/i18n"
 import { ModeCarousel } from "./mode-carousel"
+import { ScreenHeader } from "./screen-header"
 
 export function HomeScreen() {
   const {
@@ -17,42 +18,35 @@ export function HomeScreen() {
 
   return (
     <div
-      className="flex min-h-[100dvh] flex-col relative overflow-hidden"
+      className="relative flex min-h-svh flex-col overflow-hidden"
       style={{
         background:
-          "linear-gradient(180deg, #55b3d1 0%, #69cbeb 40%, #c0e8f0 100%)",
-        paddingTop: "env(safe-area-inset-top)",
-        paddingBottom: "env(safe-area-inset-bottom)",
+          "linear-gradient(180deg, #69bf8e 0%, #7ed7a5 40%, #ccebda 100%)",
+        paddingTop: "max(1rem, env(safe-area-inset-top, 0px))",
       }}
     >
-      {/* Header: language + title + settings */}
-      <header className="flex w-full flex-row items-center justify-between px-4 pt-4">
-        <div className="flex min-w-0 flex-1 items-center gap-3">
-          <div className="h-10 w-10 shrink-0" aria-hidden />
-          <div className="min-w-0 flex-1 flex flex-col items-center justify-center">
-            <h1 className="text-2xl font-extrabold tracking-tight text-[#0A3D62] md:text-3xl">
-              {t(locale, "appName")}
-            </h1>
-          </div>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <button
-            onClick={() => setLocale(locale === "en" ? "fr" : "en")}
-            className="flex items-center gap-1.5 rounded-full bg-[rgba(255,255,255,0.3)] px-3 py-1.5 text-sm font-semibold text-[#0A3D62] backdrop-blur-sm transition-colors hover:bg-[rgba(255,255,255,0.5)]"
-            aria-label="Toggle language"
-          >
-            <Globe size={16} />
-            {locale === "en" ? "FR" : "EN"}
-          </button>
-          <button
-            onClick={() => goToStats()}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/30 text-[#0A3D62] backdrop-blur-sm transition-colors active:bg-white/50"
-            aria-label="Stats and settings"
-          >
-            <Settings className="h-5 w-5" />
-          </button>
-        </div>
-      </header>
+      <ScreenHeader
+        title="appName"
+        actions={
+          <>
+            <button
+              onClick={() => setLocale(locale === "en" ? "fr" : "en")}
+              className="flex items-center gap-1.5 rounded-full bg-white/30 px-3 py-1.5 text-sm font-semibold text-[#0A3D62] backdrop-blur-sm transition-colors active:bg-white/50"
+              aria-label="Toggle language"
+            >
+              <Globe size={16} />
+              {locale === "en" ? "FR" : "EN"}
+            </button>
+            <button
+              onClick={() => goToStats()}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/30 text-[#0A3D62] backdrop-blur-sm transition-colors active:bg-white/50"
+              aria-label="Stats and settings"
+            >
+              <Settings className="h-5 w-5" />
+            </button>
+          </>
+        }
+      />
 
       {/* Logo and subtitle */}
       <div className="flex flex-col items-center gap-2 px-4 pb-4">

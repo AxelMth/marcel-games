@@ -27,20 +27,9 @@
             android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
         </provider>
-
-        <!-- The SDK reads this at launch: without it the app crashes when
-             AdMob.initialize() runs. Must match ADMOB_APP_IDS.android in
-             lib/ad-constants.ts. -->
-        <meta-data
-            android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-6271901101573718~9736102177"
-        />
     </application>
 
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Advertising ID — required by AdMob on Android 13+ and declared in the
-         Play data-safety form. -->
-    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
 </manifest>

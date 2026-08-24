@@ -5,6 +5,8 @@ import mapboxgl from "mapbox-gl"
 import "mapbox-gl/dist/mapbox-gl.css"
 import type { Country, Continent } from "@/lib/countries"
 import { Spinner } from "@marcel-games/ui"
+import { useLanguage } from "@/components/language-provider"
+import { buildCountryFillExpression, COUNTRY_GREEN } from "@/lib/map-paint"
 
 interface GeoJsonFeature {
   type: "Feature"
@@ -23,10 +25,8 @@ const MAPBOX_STYLE = process.env.NEXT_PUBLIC_MAPBOX_STYLE_URL || "mapbox://style
 /** Set only for the store-screenshot build; never in a shipped bundle. */
 const SCREENSHOT_MODE = process.env.NEXT_PUBLIC_SCREENSHOT_MODE === "1"
 
-const COUNTRY_GREEN = "#6d9581"
 const COUNTRY_BORDER_WHITE = "#ffffff"
 /** Yellow highlight for "Show on Map" hint (matches previous version). */
-const COUNTRY_HIGHLIGHT_COLOR = "#FFD700"
 
 /** Centers and zoom levels aligned with earthunt Map.tsx. */
 const continentCenters: Record<Continent, { center: [number, number]; zoom: number }> = {
@@ -92,23 +92,40 @@ function filterGeoJsonFeatures(
   return { type: "FeatureCollection", features }
 }
 
+// Past this, the map is treated as unavailable and the player is let through.
+// A level that never finishes loading is indistinguishable from a broken app —
+// it is the exact shape of the guideline 2.1 rejection this app already had.
+const MAP_LOAD_TIMEOUT_MS = 8000
+
 interface WorldMapProps {
   missingCountries: Country[]
   foundCountries: Country[]
   highlightedCountry: string | null
   continent?: Continent
+  /**
+   * Fired once the map has finished loading, or given up trying. Callers use it
+   * to hold the clock until the player can actually see the board.
+   */
+  onSettled?: () => void
 }
 
 export function WorldMap({
   missingCountries,
   foundCountries,
   highlightedCountry,
-  continent
+  continent,
+  onSettled
 }: WorldMapProps) {
+  const { t } = useLanguage()
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<mapboxgl.Map | null>(null)
   const initialized = useRef(false)
   const [mapReady, setMapReady] = useState(false)
+  const [mapUnavailable, setMapUnavailable] = useState(false)
+  // Kept in a ref so the init effect never has to re-run when the parent
+  // re-renders with a new callback identity.
+  const onSettledRef = useRef(onSettled)
+  onSettledRef.current = onSettled
   const [fullGeoJson, setFullGeoJson] = useState<GeoJsonFeatureCollection | null>(null)
 
   // GeoJSON uses ADM0_A3 (3-letter codes); Country.code is 3-letter
@@ -130,40 +147,27 @@ export function WorldMap({
 
   const updateMapLayers = useCallback(() => {
     const m = map.current
-    if (!m || !m.isStyleLoaded()) return
-    if (!m.getLayer("country-fills")) return
+    // Only the layer's existence is required: setPaintProperty is safe from the
+    // moment it exists. Gating on isStyleLoaded() as well made this a silent
+    // no-op whenever it happened to be false — and since nothing retried, the
+    // colours simply never updated again.
+    if (!m || !m.getLayer("country-fills")) return
 
-    // Paint by ADM0_A3 (3-letter): highlight > found > default
-    const fillExpression: mapboxgl.ExpressionSpecification = [
-      "case",
-      ["in", ["get", "ADM0_A3"], ["literal", foundCodes]],
-      COUNTRY_GREEN,
-      COUNTRY_GREEN,
-    ]
+    const fillExpression = buildCountryFillExpression(
+      highlightedCode,
+      foundCodes
+    ) as mapboxgl.ExpressionSpecification
 
     if (m.getLayer("country-fills")) {
       m.setPaintProperty("country-fills", "fill-color", fillExpression)
       m.setPaintProperty("country-fills", "fill-opacity", 1)
     }
 
-    const highlightedFillExpression: mapboxgl.ExpressionSpecification = [
-      "case",
-      highlightedCode
-        ? ["==", ["get", "ADM0_A3"], highlightedCode]
-        : ["literal", false],
-      COUNTRY_HIGHLIGHT_COLOR,
-      COUNTRY_GREEN,
-    ]
-    if (m.getLayer("country-fills-highlighted")) {
-      m.setPaintProperty("country-fills-highlighted", "fill-color", highlightedFillExpression)
-      m.setPaintProperty("country-fills-highlighted", "fill-opacity", 1)
-    }
-
     const borderWidthExpression: mapboxgl.ExpressionSpecification = [
       "case",
       highlightedCode
         ? ["==", ["get", "ADM0_A3"], highlightedCode]
-        : ["literal", false],
+        : false,
       2.5,
       ["in", ["get", "ADM0_A3"], ["literal", foundCodes]],
       1,
@@ -174,7 +178,7 @@ export function WorldMap({
       "case",
       highlightedCode
         ? ["==", ["get", "ADM0_A3"], highlightedCode]
-        : ["literal", false],
+        : false,
       1,
       ["in", ["get", "ADM0_A3"], ["literal", foundCodes]],
       1,
@@ -209,9 +213,12 @@ export function WorldMap({
     if (!mapContainer.current || initialized.current) return
     if (!MAPBOX_TOKEN) {
       setMapReady(true)
+      setMapUnavailable(true)
+      onSettledRef.current?.()
       return
     }
     setMapReady(false)
+    setMapUnavailable(false)
     initialized.current = true
 
     mapboxgl.accessToken = MAPBOX_TOKEN
@@ -234,6 +241,36 @@ export function WorldMap({
       // out blank in any screenshot. Keeping the buffer costs memory and is
       // only enabled for the store-screenshot build.
       preserveDrawingBuffer: SCREENSHOT_MODE,
+    })
+
+    // Every path out of "loading" goes through here exactly once, so the player
+    // is never left watching a spinner: the map either becomes usable, or it is
+    // declared unavailable and the game carries on without it. Guessing is done
+    // by typing, so a missing map costs the visual aid, not the level.
+    let settled = false
+    const settle = () => {
+      if (settled) return
+      settled = true
+      clearTimeout(giveUpTimer)
+      setMapReady(true)
+      onSettledRef.current?.()
+    }
+
+    const giveUpTimer = setTimeout(() => {
+      setMapUnavailable(true)
+      settle()
+    }, MAP_LOAD_TIMEOUT_MS)
+
+    m.on("error", (event) => {
+      const status = (event?.error as { status?: number } | undefined)?.status
+      // 401/403 mean the token is missing, wrong or unauthorised — retrying
+      // cannot help, so stop waiting immediately instead of burning the
+      // timeout. Tile-level errors carry no such status and are ignored: the
+      // map is still perfectly usable with a few tiles missing.
+      if (status === 401 || status === 403) {
+        setMapUnavailable(true)
+        settle()
+      }
     })
 
     m.on("style.load", () => {
@@ -271,26 +308,6 @@ export function WorldMap({
       )
 
       m.addLayer({
-        id: "country-fills-highlighted",
-        type: "fill",
-        source: "country-boundaries",
-        paint: {
-          "fill-color": COUNTRY_HIGHLIGHT_COLOR,
-          "fill-opacity": 1,
-        },
-      })
-
-      m.addLayer({
-        id: "country-fills-found",
-        type: "fill",
-        source: "country-boundaries",
-        paint: {
-          "fill-color": COUNTRY_GREEN,
-          "fill-opacity": 1,
-        },
-      })
-
-      m.addLayer({
         id: "country-borders",
         type: "line",
         source: "country-boundaries",
@@ -302,12 +319,13 @@ export function WorldMap({
       })
 
       updateMapLayers()
-      m.once("idle", () => setMapReady(true))
+      m.once("idle", settle)
     })
 
     map.current = m
 
     return () => {
+      clearTimeout(giveUpTimer)
       m.remove()
       map.current = null
       initialized.current = false
@@ -325,9 +343,20 @@ export function WorldMap({
     updateMapLayers()
   }, [filteredGeoJson, updateMapLayers, mapReady])
 
-  // Update layers when game state changes
+  // Update layers when game state changes.
+  //
+  // Also once more on the next idle: Mapbox can drop a paint set while the
+  // style is still settling, and this effect only re-runs when the game state
+  // itself changes — so a dropped update would never be retried and the hint
+  // would stay invisible for the rest of the level.
   useEffect(() => {
     updateMapLayers()
+    const m = map.current
+    if (!m) return
+    m.once("idle", updateMapLayers)
+    return () => {
+      m.off("idle", updateMapLayers)
+    }
   }, [updateMapLayers])
 
   // Fly to highlighted country when "Show on map" hint is used
@@ -366,6 +395,13 @@ export function WorldMap({
           aria-hidden
         >
           <Spinner className="size-10 text-primary" />
+        </div>
+      )}
+      {mapReady && mapUnavailable && (
+        <div className="pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 justify-center px-8">
+          <p className="rounded-2xl bg-white/85 px-5 py-4 text-center text-sm font-medium text-[#0f2b3c] shadow-md backdrop-blur-sm">
+            {t("game.mapUnavailable")}
+          </p>
         </div>
       )}
     </div>

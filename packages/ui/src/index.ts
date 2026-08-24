@@ -25,6 +25,7 @@ export {
   SheetDescription,
 } from "./sheet";
 export { Spinner } from "./spinner";
+export { ScreenHeader, type ScreenHeaderProps } from "./screen-header";
 export { Toggle, toggleVariants } from "./toggle";
 export { ToggleGroup, ToggleGroupItem } from "./toggle-group";
 export { cn } from "./utils";

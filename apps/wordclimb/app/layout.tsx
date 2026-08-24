@@ -29,11 +29,15 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#55b3d1',
+  // Teinte haute du dégradé de l'accueil, reprise du vert du logo. C'est ce
+  // que le système peint autour de la web view, donc il doit s'accorder au
+  // haut de la page, pas au bleu d'earthunt d'où il avait été copié.
+  themeColor: '#69bf8e',
   width: 'device-width',
   initialScale: 1,
+  // No userScalable:false — blocking pinch-zoom fails WCAG 1.4.4 and is
+  // occasionally flagged in App Store review. Same call as earthunt.
   viewportFit: 'cover',
-  userScalable: false,
 }
 
 export default function RootLayout({

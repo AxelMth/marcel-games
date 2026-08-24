@@ -1,4 +1,5 @@
 import { type Country, type Continent, countries, getCountriesByContinent } from "./countries"
+import { COUNTRY_DIFFICULTY_ORDER } from "./country-difficulty"
 
 function hashString(str: string): number {
   let hash = 0
@@ -21,16 +22,73 @@ function seededShuffle<T>(arr: T[], seed: number): T[] {
   return shuffled
 }
 
+const DIFFICULTY_RANK = new Map(COUNTRY_DIFFICULTY_ORDER.map((code, i) => [code, i]))
+
+/**
+ * How many countries a level asks for.
+ *
+ * Ported from the curve the server used to apply, which is what players were
+ * actually getting: one country up to level 15, then a slow climb. Generating
+ * on the client lost it, and levels jumped to six to twelve countries drawn
+ * from the whole world — level 7 asked for seven, most of them obscure.
+ */
+function countForLevel(level: number, seed: number): number {
+  // A second value off the same seed, so the count is as reproducible as the
+  // draw itself.
+  const spread = (n: number) => Math.floor(seed / 7) % n
+
+  if (level <= 15) return 1
+  if (level <= 30) return spread(3) + 1
+  if (level <= 50) return spread(3) + 2
+  if (level <= 100) return spread(4) + 2
+  if (level <= 250) return spread(6) + 5
+  if (level <= 500) return spread(8) + 8
+  if (level <= 1000) return spread(4) + 12
+  return spread(6) + 15
+}
+
+/**
+ * How far down the recognisability order a level is allowed to reach, as a
+ * share of the pool. Early levels stay among the countries everyone knows.
+ */
+function windowForLevel(level: number, poolSize: number): number {
+  const share =
+    level <= 15 ? 0.1
+    : level <= 30 ? 0.2
+    : level <= 50 ? 0.3
+    : level <= 100 ? 0.4
+    : level <= 250 ? 0.6
+    : level <= 500 ? 0.75
+    : level <= 1000 ? 0.85
+    : 1
+  return Math.round(poolSize * share)
+}
+
+/** The pool, hardest-last, with anything outside the ordering dropped. */
+function byRecognisability(pool: Country[]): Country[] {
+  return pool
+    .filter((c) => DIFFICULTY_RANK.has(c.code))
+    .sort((a, b) => DIFFICULTY_RANK.get(a.code)! - DIFFICULTY_RANK.get(b.code)!)
+}
+
 export function getMissingCountries(
   levelId: string,
   pool: Country[],
-  minMissing: number = 3,
-  maxMissing: number = 10
+  level: number
 ): Country[] {
   const seed = hashString(levelId)
-  const shuffled = seededShuffle(pool, seed)
-  const count = minMissing + (seed % (maxMissing - minMissing + 1))
-  return shuffled.slice(0, Math.min(count, pool.length))
+  const ordered = byRecognisability(pool)
+  if (ordered.length === 0) return []
+
+  const count = Math.min(countForLevel(level, seed), ordered.length)
+  // The window can never be smaller than the number of countries to draw, or a
+  // small continent pool would hand back fewer than the level asked for.
+  const window = Math.min(
+    Math.max(windowForLevel(level, ordered.length), count),
+    ordered.length
+  )
+
+  return seededShuffle(ordered.slice(0, window), seed).slice(0, count)
 }
 
 /**
@@ -73,6 +131,9 @@ export function createGameConfig(
 ): GameConfig {
   let levelId: string
   let pool: Country[]
+  // The difficulty the curve is asked for, which is the player's level
+  // everywhere except the daily.
+  let difficulty = level
 
   switch (mode) {
     case "world":
@@ -86,17 +147,19 @@ export function createGameConfig(
     case "daily":
       levelId = getDailyLevelId()
       pool = countries
+      // The daily is always "level 1", so reading the curve at that level would
+      // make it a single easy country every day. The server picks a level
+      // between 1 and 50 for it; derive the same range from the date so the
+      // offline daily is a real puzzle too.
+      difficulty = 1 + (hashString(levelId) % 50)
       break
   }
-
-  const minMissing = Math.min(3 + Math.floor(level / 2), 15)
-  const maxMissing = Math.min(5 + level, 20)
 
   return {
     mode,
     continent,
     level,
-    missingCountries: getMissingCountries(levelId, pool, minMissing, maxMissing),
+    missingCountries: getMissingCountries(levelId, pool, difficulty),
     allCountries: mode === "continent" ? pool : countries,
   }
 }
