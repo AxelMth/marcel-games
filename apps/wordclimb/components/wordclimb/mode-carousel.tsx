@@ -114,30 +114,29 @@ export function ModeCarousel() {
               disabled={isDailyDisabled}
               className="flex w-full shrink-0 snap-center px-2 py-1 transition-transform active:scale-[0.97] disabled:opacity-60"
             >
+              {/* No white panel: the card sits straight on the gradient, the
+                  way earthunt's mode card does. Text colours move off the grey
+                  greys, which only read against white. */}
               <div
-                className="flex w-full flex-col items-center justify-center gap-3 rounded-[20px] bg-white/92 p-6 shadow-lg backdrop-blur-sm"
+                className="flex w-full flex-col items-center justify-center gap-3 p-6"
                 style={{ minHeight: "180px" }}
               >
                 <div
-                  className="flex items-center justify-center rounded-full"
-                  style={{
-                    width: 56,
-                    height: 56,
-                    backgroundColor: `${color}20`,
-                  }}
+                  className="flex items-center justify-center rounded-full bg-white/40 backdrop-blur-sm"
+                  style={{ width: 56, height: 56 }}
                 >
                   <Icon size={28} color={color} strokeWidth={2.2} />
                 </div>
-                <span className="text-center text-lg font-bold" style={{ color }}>
+                <span className="text-center text-lg font-bold text-[#0A3D62]">
                   {t(locale, titleKey(key))}
                 </span>
-                <span className="min-h-[2.5rem] w-full text-center text-sm leading-relaxed text-[#50555C]">
+                <span className="min-h-[2.5rem] w-full text-center text-sm leading-relaxed text-[#0A3D62]/80">
                   {key === "daily" && dailyDone
                     ? t(locale, "doneForToday")
                     : t(locale, descKey(key))}
                 </span>
                 {key === "classic" && (
-                  <span className="w-full text-center text-xs font-medium text-[#50555C]/80">
+                  <span className="w-full text-center text-xs font-medium text-[#0A3D62]/60">
                     {t(locale, "level")} {classicLevel}
                   </span>
                 )}

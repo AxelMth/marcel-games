@@ -30,14 +30,25 @@ export function useKeyboardOffset(): number {
         const { Capacitor } = await import("@capacitor/core")
         if (Capacitor.isNativePlatform()) {
           const { Keyboard } = await import("@capacitor/keyboard")
-          const shown = await Keyboard.addListener("keyboardWillShow", (info) => {
+          const apply = (info: { keyboardHeight: number }) => {
             setOffset(Math.max(0, Math.round(info.keyboardHeight)))
-          })
+          }
+          const shown = await Keyboard.addListener("keyboardWillShow", apply)
+          // `keyboardDidShow` is not redundant. Registering these listeners
+          // takes two dynamic imports and a bridge round-trip, and a screen
+          // that focuses its input on mount — wordclimb's play screen does —
+          // raises the keyboard before any of that finishes, so
+          // `keyboardWillShow` fires into the void and the bar never lifts for
+          // the first word of every level. `didShow` lands after the ~300ms
+          // presentation animation, long enough to be caught, and carries the
+          // same height. Whichever arrives first wins; the second is a no-op.
+          const didShow = await Keyboard.addListener("keyboardDidShow", apply)
           const hidden = await Keyboard.addListener("keyboardWillHide", () => {
             setOffset(0)
           })
           const remove = () => {
             void shown.remove()
+            void didShow.remove()
             void hidden.remove()
           }
           // The listeners are registered asynchronously, so an unmount can beat
