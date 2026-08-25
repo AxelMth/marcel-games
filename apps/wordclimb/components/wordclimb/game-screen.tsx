@@ -200,9 +200,7 @@ export function GameScreen() {
   const modeLabel =
     state.mode === "classic"
       ? `${t(locale, "level")} ${getClassicProgress() + 1}`
-      : state.mode === "daily"
-        ? t(locale, "dailyChallenge")
-        : t(locale, "random")
+      : t(locale, "dailyChallenge")
 
   return (
     // h-svh with no padding of its own: the box measures exactly one
@@ -284,6 +282,7 @@ export function GameScreen() {
                     word={word}
                     state={isFound ? "found" : isCurrent ? "current" : "hidden"}
                     highlight={isCurrent}
+                    typed={isCurrent ? input : undefined}
                   />
                 </div>
                 <div className="w-0.5 h-3 bg-[#D0D0D0]" />

@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils"
 
 interface LetterBoxProps {
+  /** Already redacted by the caller when the player is not meant to see it. */
   letter: string
   state: "given" | "found" | "current" | "hidden"
   highlight?: boolean
@@ -24,7 +25,7 @@ export function LetterBox({ letter, state, highlight }: LetterBoxProps) {
         highlight && state === "current" && "animate-pulse border-[#D4782F]"
       )}
     >
-      {state === "hidden" ? "?" : letter}
+      {letter}
     </div>
   )
 }

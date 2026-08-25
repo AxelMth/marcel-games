@@ -9,7 +9,6 @@ import {
   Globe,
   BookOpen,
   Calendar,
-  Shuffle,
   Star,
 } from "lucide-react"
 import { useApp } from "@/lib/app-context"
@@ -18,22 +17,23 @@ import { getProfile, type GameHistoryEntry, type ProfileResponse } from "@/lib/a
 import { LegalModal } from "@/components/wordclimb/legal-modal"
 import { ScreenHeader } from "./screen-header"
 
-type GameModeFilter = "all" | "NORMAL" | "RANDOM" | "LEVEL_OF_THE_DAY"
+type GameModeFilter = "all" | "NORMAL" | "LEVEL_OF_THE_DAY"
 
 /** The filters, in carousel order, with the icon and label each mode already uses. */
 const MODE_FILTERS: {
   value: GameModeFilter
   icon: typeof BookOpen | null
-  labelKey: "filterAll" | "classic" | "random" | "dailyChallenge"
+  labelKey: "filterAll" | "classic" | "dailyChallenge"
 }[] = [
   { value: "all", icon: null, labelKey: "filterAll" },
   { value: "NORMAL", icon: BookOpen, labelKey: "classic" },
-  { value: "RANDOM", icon: Shuffle, labelKey: "random" },
   { value: "LEVEL_OF_THE_DAY", icon: Calendar, labelKey: "dailyChallenge" },
 ]
 
 function formatGameMode(locale: "en" | "fr", mode: string): string {
   const filter = MODE_FILTERS.find((f) => f.value === mode)
+  // Falls through to the raw enum for a mode no filter covers — RANDOM, which
+  // the app no longer offers but whose old history rows still exist.
   if (!filter || filter.value === "all") return mode
   return t(locale, filter.labelKey)
 }
@@ -56,7 +56,7 @@ function filterHistory(
 }
 
 export function StatsScreen() {
-  const { locale, goHome, userId } = useApp()
+  const { locale, setLocale, goHome, userId } = useApp()
   const [data, setData] = useState<ProfileResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -222,7 +222,43 @@ export function StatsScreen() {
           </>
         )}
 
-        <footer className="mt-auto pt-6 text-center">
+        {/* Settings. The language lived in the home header, where it sat
+            beside the title and pushed it off centre; earthunt's header carries
+            nothing but the cog. */}
+        <section className="mt-auto pt-6">
+          <h2 className="mb-2 text-sm font-bold text-[#0A3D62]">
+            {t(locale, "settingsTitle")}
+          </h2>
+          <div className="flex items-center justify-between rounded-2xl bg-white/60 px-4 py-3 backdrop-blur-sm">
+            <div className="flex items-center gap-2 text-[#0A3D62]">
+              <Globe className="h-5 w-5" />
+              <span className="text-sm font-semibold">{t(locale, "language")}</span>
+            </div>
+            <div
+              className="flex gap-1 rounded-full bg-[#0A3D62]/10 p-1"
+              role="group"
+              aria-label={t(locale, "language")}
+            >
+              {(["fr", "en"] as const).map((code) => (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => setLocale(code)}
+                  aria-pressed={locale === code}
+                  className={`rounded-full px-3 py-1 text-xs font-bold uppercase transition-colors ${
+                    locale === code
+                      ? "bg-white text-[#0A3D62] shadow-sm"
+                      : "text-[#0A3D62]/60"
+                  }`}
+                >
+                  {code}
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <footer className="pt-6 text-center">
           <button
             type="button"
             onClick={() => setLegalOpen(true)}

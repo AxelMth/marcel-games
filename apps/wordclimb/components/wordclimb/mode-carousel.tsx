@@ -2,7 +2,7 @@
 
 import { useRef, useState, useCallback, type MouseEvent, type TouchEvent } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { BookOpen, Calendar, Shuffle } from "lucide-react"
+import { BookOpen, Calendar } from "lucide-react"
 import { useApp } from "@/lib/app-context"
 import { t } from "@/lib/i18n"
 import type { GameMode } from "@/lib/game-store"
@@ -10,7 +10,6 @@ import type { GameMode } from "@/lib/game-store"
 const modes: { key: GameMode; icon: typeof BookOpen; color: string }[] = [
   { key: "classic", icon: BookOpen, color: "#1D70A2" },
   { key: "daily", icon: Calendar, color: "#2E8B57" },
-  { key: "random", icon: Shuffle, color: "#D4782F" },
 ]
 
 export function ModeCarousel() {
@@ -53,8 +52,6 @@ export function ModeCarousel() {
         return "classic" as const
       case "daily":
         return "dailyChallenge" as const
-      case "random":
-        return "random" as const
     }
   }
 
@@ -64,8 +61,6 @@ export function ModeCarousel() {
         return "classicDesc" as const
       case "daily":
         return "dailyChallengeDesc" as const
-      case "random":
-        return "randomDesc" as const
     }
   }
 
