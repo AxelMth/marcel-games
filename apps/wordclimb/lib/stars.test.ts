@@ -28,9 +28,16 @@ describe("getStars", () => {
     expect(getStars(23, 16, 0)).toBe(2)
   })
 
-  // A level finished without a single guess — every word revealed by a hint —
-  // must not divide by zero.
-  it("treats a level with no attempts as perfect rather than dividing by zero", () => {
+  // A level finished without a single guess must not divide by zero. Without
+  // hints that is genuinely perfect...
+  it("treats a level with no attempts and no hints as perfect", () => {
     expect(getStars(0, 3, 0)).toBe(3)
+  })
+
+  // ...but a level finished entirely ON hints is not. This used to score three
+  // stars, because attempts <= 0 returned before hintsUsed was ever read.
+  it("refuses three stars for a level solved entirely with hints", () => {
+    expect(getStars(0, 3, 2)).toBe(2)
+    expect(getStars(0, 3, 3)).toBe(1)
   })
 })

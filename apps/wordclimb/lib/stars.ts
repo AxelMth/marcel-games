@@ -17,8 +17,10 @@ export function getStars(
   wordCount: number,
   hintsUsed: number
 ): number {
-  if (attempts <= 0) return 3
-  const accuracy = Math.round((wordCount * 100) / attempts)
+  // No guesses is perfect ACCURACY, not a perfect run: a level finished
+  // entirely on hints used to short-circuit to 3 here, before hintsUsed was
+  // ever read. Feeding 100 into the ordinary rule lets the hint clause bite.
+  const accuracy = attempts <= 0 ? 100 : Math.round((wordCount * 100) / attempts)
   if (accuracy >= 90 && hintsUsed === 0) return 3
   if (accuracy >= 70 && hintsUsed <= 2) return 2
   return 1

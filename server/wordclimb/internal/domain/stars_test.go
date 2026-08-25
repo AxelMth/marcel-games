@@ -16,7 +16,12 @@ func TestComputeStars_MatchesClient(t *testing.T) {
 		want      int
 	}{
 		{"no attempts", 0, 0, 0, 3},
-		{"negative attempts", -1, 5, 9, 3},
+		// No guesses is perfect accuracy, so the hint count decides. These two
+		// rows used to be 3: attempts <= 0 returned before hintsUsed was read,
+		// which handed a perfect score to a level solved entirely on hints.
+		{"negative attempts with hints", -1, 5, 9, 1},
+		{"no attempts, within the hint budget", 0, 3, 2, 2},
+		{"no attempts, past the hint budget", 0, 3, 3, 1},
 		{"perfect", 10, 10, 0, 3},
 		{"90 percent no hints", 10, 9, 0, 3},
 		{"90 percent one hint", 10, 9, 1, 2},
