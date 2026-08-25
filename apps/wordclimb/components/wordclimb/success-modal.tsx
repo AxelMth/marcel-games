@@ -71,7 +71,11 @@ export function SuccessModal({
 
         {/* Stats */}
         <div className="px-5 py-4">
-          <div className="flex justify-around gap-3">
+          {/* Une grille, pas justify-around : ce dernier répartit l'espace autour de
+              colonnes dimensionnées par leur contenu, or « MOTS TROUVES » fait le
+              double de « TEMPS ». Les pastilles et les valeurs ne tombaient donc
+              pas sur une colonne commune. */}
+          <div className="grid grid-cols-3 gap-3">
             {stats.map((stat, i) => (
               <div key={i} className="flex flex-col items-center gap-1.5">
                 <div

@@ -116,7 +116,7 @@ export function ModeCarousel() {
                   way earthunt's mode card does. Text colours move off the grey
                   greys, which only read against white. */}
               <div
-                className="flex w-full flex-col items-center justify-center gap-3 p-6"
+                className="flex w-full flex-col items-center gap-3 p-6"
                 style={{ minHeight: "180px" }}
               >
                 <div
@@ -133,11 +133,13 @@ export function ModeCarousel() {
                     ? t(locale, "doneForToday")
                     : t(locale, descKey(key))}
                 </span>
-                {key === "classic" && (
-                  <span className="w-full text-center text-xs font-medium text-[#0A3D62]/60">
-                    {t(locale, "level")} {classicLevel}
-                  </span>
-                )}
+                {/* La ligne de niveau garde sa place même quand elle est vide :
+                    seule la carte « classique » la porte, et sans réserve la
+                    pastille et le titre des autres cartes descendaient d'une
+                    dizaine de pixels — un saut vertical à chaque glissement. */}
+                <span className="min-h-4 w-full text-center text-xs font-medium text-[#0A3D62]/60">
+                  {key === "classic" ? `${t(locale, "level")} ${classicLevel}` : ""}
+                </span>
               </div>
             </button>
           )

@@ -15,6 +15,7 @@ import { useApp } from "@/lib/app-context"
 import { t } from "@/lib/i18n"
 import { getProfile, type GameHistoryEntry, type ProfileResponse } from "@/lib/api"
 import { LegalModal } from "@/components/wordclimb/legal-modal"
+import { StarRating } from "@marcel-games/ui"
 import { hasRank } from "@/lib/ranking"
 import { ScreenHeader } from "./screen-header"
 
@@ -96,7 +97,7 @@ export function StatsScreen() {
     >
       <ScreenHeader title="statsTitle" onBack={goHome} />
 
-      <div className="flex flex-1 flex-col gap-6 px-4 py-6">
+      <div className="flex flex-1 flex-col gap-6 px-5 py-6">
         {loading && (
           <div className="flex items-center justify-center gap-2 py-12">
             <Loader2 className="h-6 w-6 animate-spin text-[#0A3D62]" />
@@ -205,19 +206,13 @@ export function StatsScreen() {
                       </span>
                     </div>
                     {entry.stars != null && (
-                      <div className="flex gap-0.5">
-                        {[1, 2, 3].map((star) => (
-                          <Star
-                            key={star}
-                            className={`h-4 w-4 ${
-                              star <= (entry.stars ?? 0)
-                                ? "fill-[#f0a830] text-[#f0a830]"
-                                : "fill-none text-[#b0d8e4]"
-                            }`}
-                            strokeWidth={1.5}
-                          />
-                        ))}
-                      </div>
+                      <StarRating
+                        variant="inline"
+                        stars={entry.stars}
+                        className="shrink-0"
+                        earnedClassName="fill-[#2E8B57] text-[#2E8B57]"
+                        emptyClassName="fill-none text-[#0A3D62]/20"
+                      />
                     )}
                   </li>
                 ))}

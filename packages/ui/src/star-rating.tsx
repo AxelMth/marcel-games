@@ -9,7 +9,12 @@ export interface StarRatingProps {
   /** How many of `total` are earned. Clamped into range. */
   stars: number
   total?: number
-  /** Styling for an earned star's disc. */
+  /**
+   * `disc` is the end-of-level verdict: three large filled circles. `inline` is
+   * the same score at list scale — bare stars, no disc — for a history row.
+   */
+  variant?: "disc" | "inline"
+  /** Styling for an earned star (its disc in `disc`, the glyph in `inline`). */
   earnedClassName?: string
   /** Styling for an unearned one. */
   emptyClassName?: string
@@ -31,35 +36,45 @@ export interface StarRatingProps {
 export function StarRating({
   stars,
   total = 3,
-  earnedClassName = "bg-amber-400 text-white",
-  emptyClassName = "bg-white/40 text-white/60",
+  variant = "disc",
+  earnedClassName,
+  emptyClassName,
   className,
 }: StarRatingProps) {
   const earnedCount = Math.max(0, Math.min(total, Math.round(stars)))
+  const inline = variant === "inline"
+  const earned = earnedClassName ?? (inline ? "text-amber-400" : "bg-amber-400 text-white")
+  const empty = emptyClassName ?? (inline ? "text-black/20" : "bg-white/40 text-white/60")
 
   return (
     <div
-      className={cn("flex gap-2", className)}
+      className={cn("flex", inline ? "gap-0.5" : "gap-2", className)}
       role="img"
       aria-label={`${earnedCount} / ${total}`}
     >
       {Array.from({ length: total }, (_, i) => {
-        const earned = i < earnedCount
+        const isEarned = i < earnedCount
+        const star = (
+          <Star
+            className={cn(inline ? "h-4 w-4" : "h-6 w-6", inline && (isEarned ? earned : empty))}
+            fill={isEarned ? "currentColor" : "none"}
+            stroke="currentColor"
+            strokeWidth={1.5}
+          />
+        )
+
+        if (inline) return <span key={i} aria-hidden>{star}</span>
+
         return (
           <div
             key={i}
             aria-hidden
             className={cn(
               "flex h-10 w-10 items-center justify-center rounded-full",
-              earned ? earnedClassName : emptyClassName
+              isEarned ? earned : empty
             )}
           >
-            <Star
-              className="h-6 w-6"
-              fill={earned ? "currentColor" : "none"}
-              stroke="currentColor"
-              strokeWidth={1.5}
-            />
+            {star}
           </div>
         )
       })}
