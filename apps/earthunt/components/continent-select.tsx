@@ -230,7 +230,7 @@ export function ContinentSelect() {
           <ChevronRight className="h-6 w-6" />
         </button>
       </div>
-      <p className="mt-4 max-w-sm px-4 text-center text-sm font-medium text-[#0f2b3c]/80">
+      <p className="mx-auto mt-4 max-w-sm px-4 text-center text-sm font-medium text-[#0f2b3c]/80">
         {t("continentSelect.scrollToSelect")}
       </p>
       <ProfileModal

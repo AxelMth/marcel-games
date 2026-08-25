@@ -267,7 +267,7 @@ export function GameScreen() {
               </button>
               <button
                 onClick={() => setShowHelp(true)}
-                className="text-[#50555C]"
+                className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-[#50555C] active:bg-[#1D70A2]/10"
                 aria-label="Help"
               >
                 <HelpCircle size={20} />
@@ -390,13 +390,23 @@ export function GameScreen() {
       {/* Feedback toast */}
       {state.feedback && (
         <div
-          className={`absolute left-1/2 -translate-x-1/2 bottom-24 px-4 py-2 rounded-full text-sm font-bold shadow-lg z-20 transition-all animate-in fade-in slide-in-from-bottom-2 ${
+          className={`pointer-events-none absolute left-1/2 z-20 -translate-x-1/2 rounded-full px-4 py-2 text-sm font-bold shadow-lg animate-in fade-in slide-in-from-bottom-2 ${
             state.feedback === "correct"
               ? "bg-[#2E8B57] text-[#F8F8F8]"
               : state.feedback === "wrong"
                 ? "bg-[#DC3545] text-[#F8F8F8]"
                 : "bg-[#D4782F] text-[#F8F8F8]"
           }`}
+          style={{
+            // Sous KeyboardResize.None la vue ne rétrécit jamais, donc un
+            // décalage fixe laisse le toast derrière le clavier — et le clavier
+            // est ouvert en permanence, le barreau prenant le focus au montage.
+            bottom:
+              keyboardOffset > 0
+                ? `calc(2rem + ${keyboardOffset}px)`
+                : "calc(2rem + env(safe-area-inset-bottom, 0px))",
+            transition: "bottom 220ms ease-out",
+          }}
         >
           {state.feedback === "correct"
             ? t(locale, "correct")

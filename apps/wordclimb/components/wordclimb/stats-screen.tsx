@@ -15,6 +15,7 @@ import { useApp } from "@/lib/app-context"
 import { t } from "@/lib/i18n"
 import { getProfile, type GameHistoryEntry, type ProfileResponse } from "@/lib/api"
 import { LegalModal } from "@/components/wordclimb/legal-modal"
+import { hasRank } from "@/lib/ranking"
 import { ScreenHeader } from "./screen-header"
 
 type GameModeFilter = "all" | "NORMAL" | "LEVEL_OF_THE_DAY"
@@ -136,7 +137,9 @@ export function StatsScreen() {
                   <Trophy className="h-6 w-6 text-[#0A3D62]" />
                 </div>
                 <p className="text-2xl font-bold text-[#0A3D62]">
-                  #{data.stats.lastLevelRank}
+                  {hasRank(data.stats.lastLevelRank)
+                    ? `#${data.stats.lastLevelRank}`
+                    : t(locale, "profileNotRanked")}
                 </p>
                 <p className="text-center text-xs font-medium text-[#0A3D62]/80">
                   {t(locale, "profileTodaysRank")}
@@ -147,7 +150,9 @@ export function StatsScreen() {
                   <Globe className="h-6 w-6 text-[#0A3D62]" />
                 </div>
                 <p className="text-2xl font-bold text-[#0A3D62]">
-                  #{data.stats.globalRank}
+                  {hasRank(data.stats.globalRank)
+                    ? `#${data.stats.globalRank}`
+                    : t(locale, "profileNotRanked")}
                 </p>
                 <p className="text-center text-xs font-medium text-[#0A3D62]/80">
                   {t(locale, "profileGlobalRank")}
