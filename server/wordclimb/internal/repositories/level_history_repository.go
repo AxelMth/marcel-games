@@ -73,61 +73,25 @@ func GetUserDailyLevelCount(ctx context.Context, userID string) int {
 
 // GetUserRankForLastDailyLevel returns the user's rank for the most recent daily level
 func GetUserRankForLastDailyLevel(ctx context.Context, userID string) (int, error) {
-	// Get user's last daily level
 	userLastLevel, err := db.Client().LevelHistory.FindFirst(
 		db.LevelHistory.UserID.Equals(userID),
-		db.LevelHistory.GameMode.Equals(db.GameMode("LEVEL_OF_THE_DAY")),
+		db.LevelHistory.GameMode.Equals(db.GameMode(dailyGameMode)),
 	).OrderBy(
 		db.LevelHistory.CreatedAt.Order(db.DESC),
 	).Exec(ctx)
-
 	if err != nil {
 		return 0, err
 	}
 
-	// Get the date range for that level
-	levelDate := userLastLevel.CreatedAt
-	dayStart := time.Date(levelDate.Year(), levelDate.Month(), levelDate.Day(), 0, 0, 0, 0, levelDate.Location())
-	dayEnd := dayStart.Add(24 * time.Hour)
-
-	// Count users with better performance (fewer attempts or same attempts but less time)
-	// Since Prisma Go doesn't support OR directly, we need to use two separate queries
-	// First, get users with fewer attempts
-	fewerAttempts, err := db.Client().LevelHistory.FindMany(
-		db.LevelHistory.GameMode.Equals(db.GameMode("LEVEL_OF_THE_DAY")),
-		db.LevelHistory.CreatedAt.Gte(dayStart),
-		db.LevelHistory.CreatedAt.Lt(dayEnd),
-		db.LevelHistory.Attempts.Lt(userLastLevel.Attempts),
-	).Exec(ctx)
-
+	from, to := dayBounds(userLastLevel.CreatedAt)
+	better, err := countBetterPlayers(
+		ctx, dailyGameMode, from, to,
+		userLastLevel.TimeSpent, userLastLevel.Attempts,
+	)
 	if err != nil {
 		return 0, err
 	}
-
-	// Then, get users with same attempts but less time
-	sameAttemptsLessTime, err := db.Client().LevelHistory.FindMany(
-		db.LevelHistory.GameMode.Equals(db.GameMode("LEVEL_OF_THE_DAY")),
-		db.LevelHistory.CreatedAt.Gte(dayStart),
-		db.LevelHistory.CreatedAt.Lt(dayEnd),
-		db.LevelHistory.Attempts.Equals(userLastLevel.Attempts),
-		db.LevelHistory.TimeSpent.Lt(userLastLevel.TimeSpent),
-	).Exec(ctx)
-
-	if err != nil {
-		return 0, err
-	}
-
-	// Combine results and remove duplicates
-	betterUsersMap := make(map[string]bool)
-	for _, history := range fewerAttempts {
-		betterUsersMap[history.UserID] = true
-	}
-	for _, history := range sameAttemptsLessTime {
-		betterUsersMap[history.UserID] = true
-	}
-
-	// Rank is number of unique better users + 1
-	return len(betterUsersMap) + 1, nil
+	return rankAmong(better), nil
 }
 
 // DailyLevelStats holds statistics for a daily level
@@ -140,125 +104,21 @@ type DailyLevelStats struct {
 
 // GetUserGlobalDailyRank calculates the user's global rank based on all daily levels
 func GetUserGlobalDailyRank(ctx context.Context, userID string) (int, error) {
-	// Get all user's daily levels
-	userLevels, err := db.Client().LevelHistory.FindMany(
-		db.LevelHistory.UserID.Equals(userID),
-		db.LevelHistory.GameMode.Equals(db.GameMode("LEVEL_OF_THE_DAY")),
-	).OrderBy(
-		db.LevelHistory.CreatedAt.Order(db.ASC),
-	).Exec(ctx)
-
-	if err != nil || len(userLevels) == 0 {
+	better, err := countBetterGlobally(ctx, userID)
+	if err != nil {
 		return 0, err
 	}
-
-	// Calculate average rank across all daily levels
-	totalScore := 0.0
-	for _, level := range userLevels {
-		// Get the date range for this level
-		levelDate := level.CreatedAt
-		dayStart := time.Date(levelDate.Year(), levelDate.Month(), levelDate.Day(), 0, 0, 0, 0, levelDate.Location())
-		dayEnd := dayStart.Add(24 * time.Hour)
-
-		// Count users with better performance for this specific day
-		// Split into two queries
-		fewerAttempts, _ := db.Client().LevelHistory.FindMany(
-			db.LevelHistory.GameMode.Equals(db.GameMode("LEVEL_OF_THE_DAY")),
-			db.LevelHistory.CreatedAt.Gte(dayStart),
-			db.LevelHistory.CreatedAt.Lt(dayEnd),
-			db.LevelHistory.Attempts.Lt(level.Attempts),
-		).Exec(ctx)
-
-		sameAttemptsLessTime, _ := db.Client().LevelHistory.FindMany(
-			db.LevelHistory.GameMode.Equals(db.GameMode("LEVEL_OF_THE_DAY")),
-			db.LevelHistory.CreatedAt.Gte(dayStart),
-			db.LevelHistory.CreatedAt.Lt(dayEnd),
-			db.LevelHistory.Attempts.Equals(level.Attempts),
-			db.LevelHistory.TimeSpent.Lt(level.TimeSpent),
-		).Exec(ctx)
-
-		// Combine and deduplicate
-		betterUsersMap := make(map[string]bool)
-		for _, history := range fewerAttempts {
-			betterUsersMap[history.UserID] = true
-		}
-		for _, history := range sameAttemptsLessTime {
-			betterUsersMap[history.UserID] = true
-		}
-
-		dayRank := len(betterUsersMap) + 1
-		// Weight recent performances more heavily
-		weight := 1.0
-		totalScore += float64(dayRank) * weight
+	// Un joueur sans aucun défi du jour n'apparaît pas dans l'agrégat : la
+	// requête ne rend aucune ligne, et il vaut mieux le dire « non classé » que
+	// lui donner la première place par défaut.
+	played, err := db.Client().LevelHistory.FindFirst(
+		db.LevelHistory.UserID.Equals(userID),
+		db.LevelHistory.GameMode.Equals(db.GameMode(dailyGameMode)),
+	).Exec(ctx)
+	if err != nil || played == nil {
+		return 0, nil
 	}
-
-	avgRank := totalScore / float64(len(userLevels))
-
-	// Now compare with other users' average ranks
-	allUsers, _ := db.Client().User.FindMany().Exec(ctx)
-
-	betterUsersCount := 0
-	for _, otherUser := range allUsers {
-		if otherUser.ID == userID {
-			continue
-		}
-
-		otherUserLevels, _ := db.Client().LevelHistory.FindMany(
-			db.LevelHistory.UserID.Equals(otherUser.ID),
-			db.LevelHistory.GameMode.Equals(db.GameMode("LEVEL_OF_THE_DAY")),
-		).Exec(ctx)
-
-		if len(otherUserLevels) == 0 {
-			continue
-		}
-
-		// Calculate other user's average rank
-		otherTotalScore := 0.0
-		for _, level := range otherUserLevels {
-			levelDate := level.CreatedAt
-			dayStart := time.Date(levelDate.Year(), levelDate.Month(), levelDate.Day(), 0, 0, 0, 0, levelDate.Location())
-			dayEnd := dayStart.Add(24 * time.Hour)
-
-			// Split into two queries
-			fewerAttempts, _ := db.Client().LevelHistory.FindMany(
-				db.LevelHistory.GameMode.Equals(db.GameMode("LEVEL_OF_THE_DAY")),
-				db.LevelHistory.CreatedAt.Gte(dayStart),
-				db.LevelHistory.CreatedAt.Lt(dayEnd),
-				db.LevelHistory.Attempts.Lt(level.Attempts),
-			).Exec(ctx)
-
-			sameAttemptsLessTime, _ := db.Client().LevelHistory.FindMany(
-				db.LevelHistory.GameMode.Equals(db.GameMode("LEVEL_OF_THE_DAY")),
-				db.LevelHistory.CreatedAt.Gte(dayStart),
-				db.LevelHistory.CreatedAt.Lt(dayEnd),
-				db.LevelHistory.Attempts.Equals(level.Attempts),
-				db.LevelHistory.TimeSpent.Lt(level.TimeSpent),
-			).Exec(ctx)
-
-			// Combine and deduplicate
-			betterUsersMap := make(map[string]bool)
-			for _, history := range fewerAttempts {
-				betterUsersMap[history.UserID] = true
-			}
-			for _, history := range sameAttemptsLessTime {
-				betterUsersMap[history.UserID] = true
-			}
-
-			dayRank := len(betterUsersMap) + 1
-			otherTotalScore += float64(dayRank)
-		}
-
-		otherAvgRank := otherTotalScore / float64(len(otherUserLevels))
-
-		// Consider both average rank and number of levels completed
-		// Users with more levels completed and better average rank are ranked higher
-		if len(otherUserLevels) > len(userLevels) ||
-			(len(otherUserLevels) == len(userLevels) && otherAvgRank < avgRank) {
-			betterUsersCount++
-		}
-	}
-
-	return betterUsersCount + 1, nil
+	return rankAmong(better), nil
 }
 
 // GameHistoryEntry holds a single level history record for the profile API
@@ -274,65 +134,24 @@ type GameHistoryEntry struct {
 	Rank       int      `json:"rank"`
 }
 
-// getRankForLevelEntry returns the user's rank for a given level history entry.
-// For LEVEL_OF_THE_DAY: scope by createdAt day.
-// For NORMAL/RANDOM: scope by level and gameMode.
 func getRankForLevelEntry(ctx context.Context, h db.LevelHistoryModel) (int, error) {
-	var dayStart, dayEnd time.Time
-	if string(h.GameMode) == "LEVEL_OF_THE_DAY" {
-		levelDate := h.CreatedAt
-		dayStart = time.Date(levelDate.Year(), levelDate.Month(), levelDate.Day(), 0, 0, 0, 0, levelDate.Location())
-		dayEnd = dayStart.Add(24 * time.Hour)
-	}
-
-	var fewerAttempts, sameAttemptsLessTime []db.LevelHistoryModel
-	var err error
-
-	if string(h.GameMode) == "LEVEL_OF_THE_DAY" {
-		fewerAttempts, err = db.Client().LevelHistory.FindMany(
-			db.LevelHistory.GameMode.Equals(db.GameMode("LEVEL_OF_THE_DAY")),
-			db.LevelHistory.CreatedAt.Gte(dayStart),
-			db.LevelHistory.CreatedAt.Lt(dayEnd),
-			db.LevelHistory.Attempts.Lt(h.Attempts),
-		).Exec(ctx)
+	// Le défi du jour se compare à la journée, les autres modes au niveau : deux
+	// joueurs n'ont joué le même défi que s'ils l'ont joué le même jour, alors
+	// que le niveau 12 du mode classique est le même pour tout le monde.
+	if string(h.GameMode) == dailyGameMode {
+		from, to := dayBounds(h.CreatedAt)
+		better, err := countBetterPlayers(ctx, dailyGameMode, from, to, h.TimeSpent, h.Attempts)
 		if err != nil {
 			return 0, err
 		}
-		sameAttemptsLessTime, err = db.Client().LevelHistory.FindMany(
-			db.LevelHistory.GameMode.Equals(db.GameMode("LEVEL_OF_THE_DAY")),
-			db.LevelHistory.CreatedAt.Gte(dayStart),
-			db.LevelHistory.CreatedAt.Lt(dayEnd),
-			db.LevelHistory.Attempts.Equals(h.Attempts),
-			db.LevelHistory.TimeSpent.Lt(h.TimeSpent),
-		).Exec(ctx)
-	} else {
-		fewerAttempts, err = db.Client().LevelHistory.FindMany(
-			db.LevelHistory.Level.Equals(h.Level),
-			db.LevelHistory.GameMode.Equals(h.GameMode),
-			db.LevelHistory.Attempts.Lt(h.Attempts),
-		).Exec(ctx)
-		if err != nil {
-			return 0, err
-		}
-		sameAttemptsLessTime, err = db.Client().LevelHistory.FindMany(
-			db.LevelHistory.Level.Equals(h.Level),
-			db.LevelHistory.GameMode.Equals(h.GameMode),
-			db.LevelHistory.Attempts.Equals(h.Attempts),
-			db.LevelHistory.TimeSpent.Lt(h.TimeSpent),
-		).Exec(ctx)
+		return rankAmong(better), nil
 	}
+
+	better, err := countBetterOnLevel(ctx, string(h.GameMode), h.Level, h.TimeSpent, h.Attempts)
 	if err != nil {
 		return 0, err
 	}
-
-	betterUsersMap := make(map[string]bool)
-	for _, history := range fewerAttempts {
-		betterUsersMap[history.UserID] = true
-	}
-	for _, history := range sameAttemptsLessTime {
-		betterUsersMap[history.UserID] = true
-	}
-	return len(betterUsersMap) + 1, nil
+	return rankAmong(better), nil
 }
 
 // GetUserLevelHistory returns recent level history for a user, ordered by createdAt DESC
