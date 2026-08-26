@@ -26,6 +26,7 @@ export {
 } from "./sheet";
 export { Spinner } from "./spinner";
 export { ScreenHeader, type ScreenHeaderProps } from "./screen-header";
+export { StarRating, type StarRatingProps } from "./star-rating";
 export { Toggle, toggleVariants } from "./toggle";
 export { ToggleGroup, ToggleGroupItem } from "./toggle-group";
 export { cn } from "./utils";

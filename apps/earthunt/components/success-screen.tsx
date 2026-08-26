@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
-import { Clock, Target, Lightbulb, Home, ArrowRight, Star } from "lucide-react"
+import { Clock, Target, Lightbulb, Home, ArrowRight } from "lucide-react"
+import { StarRating } from "@marcel-games/ui"
 import { useGameStore } from "@/lib/game-store"
 import { useLanguage } from "@/components/language-provider"
 import { useLevelApi } from "@/hooks/use-level"
@@ -190,29 +191,13 @@ export function SuccessScreen() {
         {rating.label}
       </h1>
 
-      {/* Stars */}
-      <div className="mb-6 flex gap-2">
-        {[1, 2, 3].map((star) => {
-          const earned = star <= rating.stars
-          return (
-            <div
-              key={star}
-              className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                earned
-                  ? "bg-[#f0a830] text-white"
-                  : "bg-white/40 text-[#b0d8e4]"
-              }`}
-            >
-              <Star
-                className="h-6 w-6"
-                fill={earned ? "currentColor" : "none"}
-                stroke="currentColor"
-                strokeWidth={1.5}
-              />
-            </div>
-          )
-        })}
-      </div>
+      {/* Stars — shared with wordclimb, which ends a level the same way. */}
+      <StarRating
+        className="mb-6"
+        stars={rating.stars}
+        earnedClassName="bg-[#f0a830] text-white"
+        emptyClassName="bg-white/40 text-[#b0d8e4]"
+      />
 
       {/* Stats cards (staggered entrance) */}
       <div className="mx-auto mb-8 grid w-full max-w-sm grid-cols-2 gap-3">

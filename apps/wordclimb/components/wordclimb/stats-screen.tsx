@@ -9,31 +9,33 @@ import {
   Globe,
   BookOpen,
   Calendar,
-  Shuffle,
   Star,
 } from "lucide-react"
 import { useApp } from "@/lib/app-context"
 import { t } from "@/lib/i18n"
 import { getProfile, type GameHistoryEntry, type ProfileResponse } from "@/lib/api"
 import { LegalModal } from "@/components/wordclimb/legal-modal"
+import { StarRating } from "@marcel-games/ui"
+import { hasRank } from "@/lib/ranking"
 import { ScreenHeader } from "./screen-header"
 
-type GameModeFilter = "all" | "NORMAL" | "RANDOM" | "LEVEL_OF_THE_DAY"
+type GameModeFilter = "all" | "NORMAL" | "LEVEL_OF_THE_DAY"
 
 /** The filters, in carousel order, with the icon and label each mode already uses. */
 const MODE_FILTERS: {
   value: GameModeFilter
   icon: typeof BookOpen | null
-  labelKey: "filterAll" | "classic" | "random" | "dailyChallenge"
+  labelKey: "filterAll" | "classic" | "dailyChallenge"
 }[] = [
   { value: "all", icon: null, labelKey: "filterAll" },
   { value: "NORMAL", icon: BookOpen, labelKey: "classic" },
-  { value: "RANDOM", icon: Shuffle, labelKey: "random" },
   { value: "LEVEL_OF_THE_DAY", icon: Calendar, labelKey: "dailyChallenge" },
 ]
 
 function formatGameMode(locale: "en" | "fr", mode: string): string {
   const filter = MODE_FILTERS.find((f) => f.value === mode)
+  // Falls through to the raw enum for a mode no filter covers — RANDOM, which
+  // the app no longer offers but whose old history rows still exist.
   if (!filter || filter.value === "all") return mode
   return t(locale, filter.labelKey)
 }
@@ -56,7 +58,7 @@ function filterHistory(
 }
 
 export function StatsScreen() {
-  const { locale, goHome, userId } = useApp()
+  const { locale, setLocale, goHome, userId } = useApp()
   const [data, setData] = useState<ProfileResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -95,7 +97,7 @@ export function StatsScreen() {
     >
       <ScreenHeader title="statsTitle" onBack={goHome} />
 
-      <div className="flex flex-1 flex-col gap-6 px-4 py-6">
+      <div className="flex flex-1 flex-col gap-6 px-5 py-6">
         {loading && (
           <div className="flex items-center justify-center gap-2 py-12">
             <Loader2 className="h-6 w-6 animate-spin text-[#0A3D62]" />
@@ -136,7 +138,9 @@ export function StatsScreen() {
                   <Trophy className="h-6 w-6 text-[#0A3D62]" />
                 </div>
                 <p className="text-2xl font-bold text-[#0A3D62]">
-                  #{data.stats.lastLevelRank}
+                  {hasRank(data.stats.lastLevelRank)
+                    ? `#${data.stats.lastLevelRank}`
+                    : t(locale, "profileNotRanked")}
                 </p>
                 <p className="text-center text-xs font-medium text-[#0A3D62]/80">
                   {t(locale, "profileTodaysRank")}
@@ -147,7 +151,9 @@ export function StatsScreen() {
                   <Globe className="h-6 w-6 text-[#0A3D62]" />
                 </div>
                 <p className="text-2xl font-bold text-[#0A3D62]">
-                  #{data.stats.globalRank}
+                  {hasRank(data.stats.globalRank)
+                    ? `#${data.stats.globalRank}`
+                    : t(locale, "profileNotRanked")}
                 </p>
                 <p className="text-center text-xs font-medium text-[#0A3D62]/80">
                   {t(locale, "profileGlobalRank")}
@@ -200,19 +206,13 @@ export function StatsScreen() {
                       </span>
                     </div>
                     {entry.stars != null && (
-                      <div className="flex gap-0.5">
-                        {[1, 2, 3].map((star) => (
-                          <Star
-                            key={star}
-                            className={`h-4 w-4 ${
-                              star <= (entry.stars ?? 0)
-                                ? "fill-[#f0a830] text-[#f0a830]"
-                                : "fill-none text-[#b0d8e4]"
-                            }`}
-                            strokeWidth={1.5}
-                          />
-                        ))}
-                      </div>
+                      <StarRating
+                        variant="inline"
+                        stars={entry.stars}
+                        className="shrink-0"
+                        earnedClassName="fill-[#2E8B57] text-[#2E8B57]"
+                        emptyClassName="fill-none text-[#0A3D62]/20"
+                      />
                     )}
                   </li>
                 ))}
@@ -222,7 +222,43 @@ export function StatsScreen() {
           </>
         )}
 
-        <footer className="mt-auto pt-6 text-center">
+        {/* Settings. The language lived in the home header, where it sat
+            beside the title and pushed it off centre; earthunt's header carries
+            nothing but the cog. */}
+        <section className="mt-auto pt-6">
+          <h2 className="mb-2 text-sm font-bold text-[#0A3D62]">
+            {t(locale, "settingsTitle")}
+          </h2>
+          <div className="flex items-center justify-between rounded-2xl bg-white/60 px-4 py-3 backdrop-blur-sm">
+            <div className="flex items-center gap-2 text-[#0A3D62]">
+              <Globe className="h-5 w-5" />
+              <span className="text-sm font-semibold">{t(locale, "language")}</span>
+            </div>
+            <div
+              className="flex gap-1 rounded-full bg-[#0A3D62]/10 p-1"
+              role="group"
+              aria-label={t(locale, "language")}
+            >
+              {(["fr", "en"] as const).map((code) => (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => setLocale(code)}
+                  aria-pressed={locale === code}
+                  className={`rounded-full px-3 py-1 text-xs font-bold uppercase transition-colors ${
+                    locale === code
+                      ? "bg-white text-[#0A3D62] shadow-sm"
+                      : "text-[#0A3D62]/60"
+                  }`}
+                >
+                  {code}
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <footer className="pt-6 text-center">
           <button
             type="button"
             onClick={() => setLegalOpen(true)}

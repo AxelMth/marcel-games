@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { Globe, Settings, Loader2 } from "lucide-react"
+import { Settings, Loader2 } from "lucide-react"
 import { useApp } from "@/lib/app-context"
 import { t } from "@/lib/i18n"
 import { ModeCarousel } from "./mode-carousel"
@@ -10,7 +10,6 @@ import { ScreenHeader } from "./screen-header"
 export function HomeScreen() {
   const {
     locale,
-    setLocale,
     goToStats,
     isLoadingProgress,
     gameError,
@@ -28,23 +27,13 @@ export function HomeScreen() {
       <ScreenHeader
         title="appName"
         actions={
-          <>
-            <button
-              onClick={() => setLocale(locale === "en" ? "fr" : "en")}
-              className="flex items-center gap-1.5 rounded-full bg-white/30 px-3 py-1.5 text-sm font-semibold text-[#0A3D62] backdrop-blur-sm transition-colors active:bg-white/50"
-              aria-label="Toggle language"
-            >
-              <Globe size={16} />
-              {locale === "en" ? "FR" : "EN"}
-            </button>
-            <button
-              onClick={() => goToStats()}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/30 text-[#0A3D62] backdrop-blur-sm transition-colors active:bg-white/50"
-              aria-label="Stats and settings"
-            >
-              <Settings className="h-5 w-5" />
-            </button>
-          </>
+          <button
+            onClick={() => goToStats()}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/30 text-[#0A3D62] backdrop-blur-sm transition-colors active:bg-white/50"
+            aria-label="Stats and settings"
+          >
+            <Settings className="h-5 w-5" />
+          </button>
         }
       />
 

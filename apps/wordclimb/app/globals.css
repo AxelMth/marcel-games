@@ -8,8 +8,25 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Tailwind v4 ne fournit aucun utilitaire scrollbar-*, et aucun plugin n'est
+   installé : la classe `scrollbar-none` que les carrousels portaient depuis le
+   début ne produisait aucune règle. Vérifié sur le bundle : zéro occurrence
+   dans le CSS généré. Seul un style inline masquait la barre, et pas sur le
+   chemin ::-webkit-scrollbar des WebViews. Déclarée ici, sous le même nom dans
+   les deux apps. */
+@utility scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 :root {
-  --background: #F8F8F8;
+  /* Palier bas du dégradé de l'accueil, pas un gris neutre. C'est ce que
+     html et body peignent, donc la première image du web view : un gris ici
+     faisait clignoter l'écran entre le lancement natif et le dégradé. */
+  --background: #ccebda;
   --foreground: #0A3D62;
   --card: #FFFFFF;
   --card-foreground: #0A3D62;

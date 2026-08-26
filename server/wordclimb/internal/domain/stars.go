@@ -15,12 +15,16 @@ import "math"
 // 2 stars: accuracy >= 70 && hintsUsed <= 2
 // 1 star: else
 func ComputeStars(attempts, wordCount, hintsUsed int) int {
-	if attempts <= 0 {
-		return 3
+	// No guesses is perfect ACCURACY, not a perfect run: a level finished
+	// entirely on hints used to short-circuit to 3 stars here, before the hint
+	// count was ever read. Feeding 100 into the ordinary rule lets the hint
+	// clause do its job.
+	accuracy := 100
+	if attempts > 0 {
+		// Rounded, not truncated: integer division scored 16/23 (69.56 %) as
+		// 69, giving 1 star where the client formula gives 2.
+		accuracy = int(math.Round(float64(wordCount) * 100 / float64(attempts)))
 	}
-	// Rounded, not truncated: integer division scored 16/23 (69.56 %) as 69,
-	// giving 1 star where the client formula gives 2.
-	accuracy := int(math.Round(float64(wordCount) * 100 / float64(attempts)))
 	if accuracy >= 90 && hintsUsed == 0 {
 		return 3
 	}

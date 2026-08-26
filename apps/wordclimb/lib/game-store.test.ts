@@ -12,13 +12,6 @@ describe("toBackendGameMode", () => {
   it("maps the UI modes onto the server enum", () => {
     expect(toBackendGameMode("classic")).toBe("NORMAL")
     expect(toBackendGameMode("daily")).toBe("LEVEL_OF_THE_DAY")
-    expect(toBackendGameMode("random")).toBe("RANDOM")
-  })
-
-  // Random used to be sent as the classic mode, so every shuffled puzzle
-  // advanced the classic progression on the server.
-  it("keeps random separate from classic", () => {
-    expect(toBackendGameMode("random")).not.toBe(toBackendGameMode("classic"))
   })
 })
 

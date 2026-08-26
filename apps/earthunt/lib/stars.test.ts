@@ -13,9 +13,13 @@ export const STAR_PARITY_CASES: Array<{
   hintsUsed: number
   expected: number
 }> = [
-  // No attempts recorded — both sides short-circuit to 3.
+  // No attempts recorded is perfect ACCURACY, so the hint count decides. The
+  // last two rows used to expect 3: attempts <= 0 returned before hintsUsed was
+  // ever read, handing a perfect score to a level solved entirely on hints.
   { attempts: 0, countryCount: 0, hintsUsed: 0, expected: 3 },
-  { attempts: -1, countryCount: 5, hintsUsed: 9, expected: 3 },
+  { attempts: -1, countryCount: 5, hintsUsed: 9, expected: 1 },
+  { attempts: 0, countryCount: 3, hintsUsed: 2, expected: 2 },
+  { attempts: 0, countryCount: 3, hintsUsed: 3, expected: 1 },
 
   // Perfect and near-perfect runs.
   { attempts: 10, countryCount: 10, hintsUsed: 0, expected: 3 },

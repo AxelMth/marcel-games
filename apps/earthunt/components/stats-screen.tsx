@@ -11,7 +11,7 @@ import { useGameStore } from "@/lib/game-store"
 import { useLanguage } from "@/components/language-provider"
 import { ScreenHeader } from "@/components/screen-header"
 import { LegalModal } from "@/components/legal-modal"
-import { ToggleGroup, ToggleGroupItem } from "@marcel-games/ui"
+import { StarRating, ToggleGroup, ToggleGroupItem } from "@marcel-games/ui"
 import { bestRankForMode, hasRank } from "@/lib/ranking"
 import { getProfile, type ProfileResponse, type GameHistoryEntry } from "@/lib/api"
 
@@ -256,20 +256,20 @@ export function StatsScreen() {
                           </span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <div className="flex gap-0.5">
-                            {[1, 2, 3].map((star) => (
-                              <Star
-                                key={star}
-                                className={`h-4 w-4 ${
-                                  star <= entry.stars
-                                    ? "fill-[#f0a830] text-[#f0a830]"
-                                    : "fill-none text-[#b0d8e4]"
-                                }`}
-                                strokeWidth={1.5}
-                              />
-                            ))}
+                          <StarRating
+                            variant="inline"
+                            stars={entry.stars}
+                            earnedClassName="fill-[#f0a830] text-[#f0a830]"
+                            emptyClassName="fill-none text-[#b0d8e4]"
+                          />
+                          {/* Gouttière fixe : RankDisplay rend « — », une
+                              médaille, « #7 » ou « #128 », des largeurs qui vont
+                              du simple au triple. Calé à droite sans réserve, il
+                              déplaçait la colonne d'étoiles d'une ligne à
+                              l'autre. */}
+                          <div className="flex w-10 shrink-0 items-center justify-end">
+                            <RankDisplay rank={entry.rank} />
                           </div>
-                          <RankDisplay rank={entry.rank} />
                         </div>
                       </li>
                     )

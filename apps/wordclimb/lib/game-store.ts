@@ -3,21 +3,12 @@
 import { CATALOGUE, type Level } from "@/lib/data/catalogue"
 import type { BackendGameMode, BackendLocale } from "@/lib/api"
 
-export type GameMode = "classic" | "daily" | "random"
+export type GameMode = "classic" | "daily"
 
-/**
- * Maps the UI's modes onto the GameMode enum the server stores.
- *
- * "random" used to be folded into the classic mode, which made every shuffled
- * puzzle count towards the classic progression. They are separate modes on the
- * server and are kept separate here.
- */
 export function toBackendGameMode(mode: GameMode): BackendGameMode {
   switch (mode) {
     case "daily":
       return "LEVEL_OF_THE_DAY"
-    case "random":
-      return "RANDOM"
     case "classic":
     default:
       return "NORMAL"
@@ -111,13 +102,6 @@ export function setDailyCompleted(): void {
   localStorage.setItem("wordclimb-daily-completed", utcDateString())
 }
 
-// Get a random level
-export function getRandomLevel(locale: "en" | "fr" = getSavedLocale()): Level {
-  const levels = levelsForLocale(locale)
-  const index = Math.floor(Math.random() * levels.length)
-  return levels[index]
-}
-
 /**
  * Picks a level out of the bundled catalogue — the offline fallback for when
  * the API is unreachable.
@@ -141,8 +125,6 @@ export function getLevelForMode(
     case "daily": {
       return levels[getDailyLevelIndex(locale)]
     }
-    case "random":
-      return getRandomLevel(locale)
   }
 }
 
