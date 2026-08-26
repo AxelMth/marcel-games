@@ -1,21 +1,19 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import type { ComponentType } from "react"
 import {
-  Loader2,
-  ArrowLeft,
   CalendarCheck,
   Trophy,
   Globe,
   BookOpen,
   Calendar,
-  Star,
 } from "lucide-react"
 import { useApp } from "@/lib/app-context"
 import { t } from "@/lib/i18n"
 import { getProfile, type GameHistoryEntry, type ProfileResponse } from "@/lib/api"
 import { LegalModal } from "@/components/wordclimb/legal-modal"
-import { StarRating } from "@marcel-games/ui"
+import { Spinner, StarRating, ToggleGroup, ToggleGroupItem } from "@marcel-games/ui"
 import { hasRank } from "@/lib/ranking"
 import { ScreenHeader } from "./screen-header"
 
@@ -55,6 +53,44 @@ function filterHistory(
 ): ProfileResponse["gameHistory"] {
   if (filter === "all") return entries
   return entries.filter((e) => e.gameMode === filter)
+}
+
+/**
+ * One tile of the top stats row. `isFallback` shrinks the value down to a
+ * plain-text size — "Non classé"/"Not ranked" at the same size as a number
+ * like "#42" wraps onto two lines and stretches the whole row, since grid
+ * cells on one row share their tallest neighbour's height.
+ */
+function StatCard({
+  icon: Icon,
+  value,
+  label,
+  isFallback,
+}: {
+  icon: ComponentType<{ className?: string }>
+  value: string
+  label: string
+  isFallback?: boolean
+}) {
+  return (
+    <div className="flex flex-col items-center gap-1.5 rounded-xl bg-white/80 p-3 shadow-sm">
+      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0A3D62]/15">
+        <Icon className="h-5 w-5 text-[#0A3D62]" />
+      </div>
+      <p
+        className={
+          isFallback
+            ? "text-sm font-semibold text-[#0A3D62]"
+            : "text-xl font-bold text-[#0A3D62]"
+        }
+      >
+        {value}
+      </p>
+      <p className="text-center text-xs font-medium text-[#0A3D62]/80">
+        {label}
+      </p>
+    </div>
+  )
 }
 
 export function StatsScreen() {
@@ -100,7 +136,7 @@ export function StatsScreen() {
       <div className="flex flex-1 flex-col gap-6 px-5 py-6">
         {loading && (
           <div className="flex items-center justify-center gap-2 py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-[#0A3D62]" />
+            <Spinner className="h-6 w-6 text-[#0A3D62]" />
             <span className="text-sm font-medium text-[#0A3D62]/80">
               {t(locale, "profileLoading")}
             </span>
@@ -122,103 +158,96 @@ export function StatsScreen() {
         {!loading && !error && userId && data && (
           <>
             <div className="grid grid-cols-3 gap-3">
-              <div className="flex flex-col items-center gap-2 rounded-xl bg-white/80 p-4 shadow-sm">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0A3D62]/15">
-                  <CalendarCheck className="h-6 w-6 text-[#0A3D62]" />
-                </div>
-                <p className="text-2xl font-bold text-[#0A3D62]">
-                  {data.stats.dailyLevelsCompleted}
-                </p>
-                <p className="text-center text-xs font-medium text-[#0A3D62]/80">
-                  {t(locale, "profileDaysCompleted")}
-                </p>
-              </div>
-              <div className="flex flex-col items-center gap-2 rounded-xl bg-white/80 p-4 shadow-sm">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0A3D62]/15">
-                  <Trophy className="h-6 w-6 text-[#0A3D62]" />
-                </div>
-                <p className="text-2xl font-bold text-[#0A3D62]">
-                  {hasRank(data.stats.lastLevelRank)
+              <StatCard
+                icon={CalendarCheck}
+                value={String(data.stats.dailyLevelsCompleted)}
+                label={t(locale, "profileDaysCompleted")}
+              />
+              <StatCard
+                icon={Trophy}
+                value={
+                  hasRank(data.stats.lastLevelRank)
                     ? `#${data.stats.lastLevelRank}`
-                    : t(locale, "profileNotRanked")}
-                </p>
-                <p className="text-center text-xs font-medium text-[#0A3D62]/80">
-                  {t(locale, "profileTodaysRank")}
-                </p>
-              </div>
-              <div className="flex flex-col items-center gap-2 rounded-xl bg-white/80 p-4 shadow-sm">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0A3D62]/15">
-                  <Globe className="h-6 w-6 text-[#0A3D62]" />
-                </div>
-                <p className="text-2xl font-bold text-[#0A3D62]">
-                  {hasRank(data.stats.globalRank)
+                    : t(locale, "profileNotRanked")
+                }
+                label={t(locale, "profileTodaysRank")}
+                isFallback={!hasRank(data.stats.lastLevelRank)}
+              />
+              <StatCard
+                icon={Globe}
+                value={
+                  hasRank(data.stats.globalRank)
                     ? `#${data.stats.globalRank}`
-                    : t(locale, "profileNotRanked")}
-                </p>
-                <p className="text-center text-xs font-medium text-[#0A3D62]/80">
-                  {t(locale, "profileGlobalRank")}
-                </p>
-              </div>
+                    : t(locale, "profileNotRanked")
+                }
+                label={t(locale, "profileGlobalRank")}
+                isFallback={!hasRank(data.stats.globalRank)}
+              />
             </div>
 
-            {/* Game mode filter */}
+            <div>
+              <h3 className="mb-3 text-sm font-semibold text-[#0A3D62]">
+                {t(locale, "profileGameMode")}
+              </h3>
+              <ToggleGroup
+                type="single"
+                value={gameModeFilter}
+                onValueChange={(v) => v && setGameModeFilter(v as GameModeFilter)}
+                variant="outline"
+                className="w-full justify-stretch bg-white"
+              >
+                {MODE_FILTERS.map(({ value, icon: Icon, labelKey }) => (
+                  <ToggleGroupItem
+                    key={value}
+                    value={value}
+                    className="flex flex-1 items-center justify-center gap-1.5 px-2 py-2 text-xs"
+                    aria-label={t(locale, labelKey)}
+                  >
+                    {Icon && <Icon className="h-4 w-4 shrink-0" />}
+                    {t(locale, labelKey)}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+            </div>
+
             <div>
               <h3 className="mb-3 text-sm font-semibold text-[#0A3D62]">
                 {t(locale, "profileGameHistory")}
               </h3>
-              <div className="flex flex-wrap gap-2">
-                {MODE_FILTERS.map(({ value, icon: Icon, labelKey }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setGameModeFilter(value)}
-                    className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
-                      gameModeFilter === value
-                        ? "bg-[#0A3D62] text-white"
-                        : "bg-white/80 text-[#0A3D62]"
-                    }`}
-                  >
-                    {Icon && <Icon className="h-4 w-4 shrink-0" />}
-                    {t(locale, labelKey)}
-                  </button>
-                ))}
-              </div>
+              {filteredHistory.length === 0 ? (
+                <p className="rounded-xl bg-white/60 py-8 text-center text-sm text-[#0A3D62]/70">
+                  {t(locale, "profileNoHistory")}
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {filteredHistory.map((entry, i) => (
+                    <li
+                      key={i}
+                      className="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-4 py-3 shadow-sm"
+                    >
+                      <div className="flex min-w-0 flex-col gap-0.5">
+                        <span className="font-medium text-[#0A3D62]">
+                          {formatGameMode(locale, entry.gameMode)} —{" "}
+                          {t(locale, "level")} {entry.level}
+                        </span>
+                        <span className="truncate text-xs text-[#0A3D62]/70">
+                          {formatLadder(entry)}
+                        </span>
+                      </div>
+                      {entry.stars != null && (
+                        <StarRating
+                          variant="inline"
+                          stars={entry.stars}
+                          className="shrink-0"
+                          earnedClassName="fill-[#2E8B57] text-[#2E8B57]"
+                          emptyClassName="fill-none text-[#0A3D62]/20"
+                        />
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-
-            {filteredHistory.length === 0 ? (
-              <p className="rounded-xl bg-white/60 py-8 text-center text-sm text-[#0A3D62]/70">
-                {t(locale, "profileNoHistory")}
-              </p>
-            ) : (
-              <ul className="space-y-2">
-                {filteredHistory.map((entry, i) => (
-                  <li
-                    key={i}
-                    className="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-4 py-3 shadow-sm"
-                  >
-                    <div className="flex min-w-0 flex-col gap-0.5">
-                      <span className="font-medium text-[#0A3D62]">
-                        {formatGameMode(locale, entry.gameMode)} —{" "}
-                        {t(locale, "level")} {entry.level}
-                      </span>
-                      <span className="truncate text-xs text-[#0A3D62]/70">
-                        {formatLadder(entry)}
-                      </span>
-                    </div>
-                    {entry.stars != null && (
-                      <StarRating
-                        variant="inline"
-                        stars={entry.stars}
-                        className="shrink-0"
-                        earnedClassName="fill-[#2E8B57] text-[#2E8B57]"
-                        emptyClassName="fill-none text-[#0A3D62]/20"
-                      />
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-
           </>
         )}
 
