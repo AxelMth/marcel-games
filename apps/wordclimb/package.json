@@ -21,7 +21,8 @@
     "ios:archive": "xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release -destination 'generic/platform=iOS' -archivePath build/WordClimb.xcarchive -allowProvisioningUpdates archive",
     "ios:export": "xcodebuild -exportArchive -archivePath build/WordClimb.xcarchive -exportOptionsPlist ios/ExportOptions.plist -exportPath build/ipa -allowProvisioningUpdates",
     "ios:bump": "node scripts/bump-build-number.mjs",
-    "ios:archive:organizer": "node scripts/archive-to-organizer.mjs"
+    "ios:archive:organizer": "node scripts/archive-to-organizer.mjs",
+    "assets": "capacitor-assets generate"
   },
   "dependencies": {
     "@capacitor/core": "^8.1.0",
