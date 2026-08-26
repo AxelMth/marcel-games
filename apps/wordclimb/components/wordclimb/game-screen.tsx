@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import {
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  useLayoutEffect,
+} from "react";
 import { Lightbulb, HelpCircle } from "lucide-react";
 import { useApp } from "@/lib/app-context";
 import { t } from "@/lib/i18n";
@@ -33,6 +39,15 @@ export function GameScreen() {
   const [showSuccess, setShowSuccess] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const ladderRef = useRef<HTMLDivElement>(null);
+  const columnRef = useRef<HTMLDivElement>(null);
+  const currentRowRef = useRef<HTMLDivElement>(null);
+  // Where to lay the input, in the ladder column's own coordinates.
+  const [rungBox, setRungBox] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+  } | null>(null);
   const keyboardOffset = useKeyboardOffset();
 
   const state = gameState!;
@@ -246,6 +261,38 @@ export function GameScreen() {
     inputRef.current?.focus();
   }, []);
 
+  /**
+   * Keeps the input laid over the rung being solved.
+   *
+   * Measured rather than positioned by CSS, because the field lives outside
+   * the ladder so that solving a word moves it instead of replacing it — see
+   * the comment where it is rendered. useLayoutEffect so it never paints a
+   * frame at the old rung, and a resize listener because the row's width
+   * follows the word length.
+   */
+  useLayoutEffect(() => {
+    const place = () => {
+      const row = currentRowRef.current;
+      const column = columnRef.current;
+      if (!row || !column) {
+        setRungBox(null);
+        return;
+      }
+      const rowRect = row.getBoundingClientRect();
+      const columnRect = column.getBoundingClientRect();
+      setRungBox({
+        top: rowRect.top - columnRect.top,
+        left: rowRect.left - columnRect.left,
+        width: rowRect.width,
+        height: rowRect.height,
+      });
+    };
+
+    place();
+    window.addEventListener("resize", place);
+    return () => window.removeEventListener("resize", place);
+  }, [state.currentWordIndex, state.isComplete, wordLadder]);
+
   // "Next level" swaps the puzzle without unmounting this screen, so the paid
   // rungs have to be forgotten explicitly — otherwise rung 0 of every later
   // level would be free, having been paid for once on the first one.
@@ -329,7 +376,7 @@ export function GameScreen() {
           transition: "padding-bottom 220ms ease-out",
         }}
       >
-        <div className="flex flex-col items-center gap-3">
+        <div ref={columnRef} className="relative flex flex-col items-center gap-3">
           {/* End word at top */}
           <WordRow
             word={endWord}
@@ -352,45 +399,63 @@ export function GameScreen() {
                 key={`word-${actualIdx}`}
                 className="flex flex-col items-center gap-3"
               >
-                <div data-current={isCurrent || undefined} className="relative">
+                <div
+                  ref={isCurrent ? currentRowRef : undefined}
+                  data-current={isCurrent || undefined}
+                  className="relative"
+                >
                   <WordRow
                     word={word}
                     state={isFound ? "found" : isCurrent ? "current" : "hidden"}
                     highlight={isCurrent}
                     typed={isCurrent ? input : undefined}
                   />
-                  {/*
-                    The keyboard's anchor, laid exactly over the rung being
-                    solved. It has to be a real, full-size, tappable field:
-                    WKWebView refuses to raise the keyboard for an input that
-                    has no meaningful box, which is why a 1px offscreen one did
-                    nothing at all. Transparent rather than hidden, so the
-                    letters the row draws are the only ones visible.
-
-                    Being the tap target itself also means no programmatic
-                    focus() is needed — iOS grants the keyboard to a genuine
-                    touch, and refuses it to a script.
-                  */}
-                  {isCurrent && (
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      value={input}
-                      onChange={(e) => handleType(e.target.value)}
-                      className="absolute inset-0 h-full w-full bg-transparent text-transparent caret-transparent outline-none"
-                      aria-label={t(locale, "enterWord")}
-                      inputMode="text"
-                      autoCapitalize="none"
-                      autoCorrect="off"
-                      autoComplete="off"
-                      spellCheck="false"
-                    />
-                  )}
                 </div>
                 <div className="w-0.5 h-3 bg-[#D0D0D0]" />
               </div>
             );
           })}
+
+          {/*
+            The keyboard's anchor, laid exactly over the rung being solved. It
+            has to be a real, full-size, tappable field: WKWebView refuses to
+            raise the keyboard for an input that has no meaningful box, which
+            is why a 1px offscreen one did nothing at all. Transparent rather
+            than hidden, so the letters the row draws are the only ones
+            visible.
+
+            It sits outside the ladder and is moved onto the current rung,
+            rather than being rendered inside it. Rendered inside, solving a
+            word unmounted it from one row and mounted a new one on the next —
+            and an unmounted field takes the keyboard down with it, so the
+            player had to tap again for every single rung. Focusing the new
+            one from script does not bring it back: iOS grants the keyboard to
+            a genuine touch and refuses it to a script, which is the same
+            reason this field is the tap target in the first place.
+          */}
+          <input
+            ref={inputRef}
+            type="text"
+            value={input}
+            onChange={(e) => handleType(e.target.value)}
+            className="absolute bg-transparent text-transparent caret-transparent outline-none"
+            style={{
+              top: rungBox?.top ?? 0,
+              left: rungBox?.left ?? 0,
+              width: rungBox?.width ?? 0,
+              height: rungBox?.height ?? 0,
+              // No rung to solve — mid-completion, before the success sheet
+              // opens. Nothing to type into, and nothing to intercept taps.
+              pointerEvents: rungBox ? "auto" : "none",
+              opacity: rungBox ? 1 : 0,
+            }}
+            aria-label={t(locale, "enterWord")}
+            inputMode="text"
+            autoCapitalize="none"
+            autoCorrect="off"
+            autoComplete="off"
+            spellCheck="false"
+          />
 
           {/* Begin word at bottom */}
           <WordRow
