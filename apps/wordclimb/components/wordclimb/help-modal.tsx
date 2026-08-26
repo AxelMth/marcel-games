@@ -1,6 +1,14 @@
 "use client"
 
-import { X, BookOpen, ArrowUpDown, Lightbulb } from "lucide-react"
+import { BookOpen, ArrowUpDown, Lightbulb } from "lucide-react"
+import {
+  Button,
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@marcel-games/ui"
 import { useApp } from "@/lib/app-context"
 import { t } from "@/lib/i18n"
 
@@ -8,92 +16,82 @@ interface HelpModalProps {
   onClose: () => void
 }
 
+/** L'échelle d'exemple. Les deux extrémités sont données, le reste se trouve. */
+const EXAMPLE = [
+  { word: "COLD", given: true },
+  { word: "CORD", given: false },
+  { word: "CARD", given: false },
+  { word: "WARD", given: true },
+]
+
 export function HelpModal({ onClose }: HelpModalProps) {
   const { locale } = useApp()
 
   const rules = [
-    {
-      icon: BookOpen,
-      text: t(locale, "helpRule1"),
-      color: "#1D70A2",
-    },
-    {
-      icon: ArrowUpDown,
-      text: t(locale, "helpRule2"),
-      color: "#2E8B57",
-    },
-    {
-      icon: Lightbulb,
-      text: t(locale, "helpRule3"),
-      color: "#D4782F",
-    },
+    { icon: BookOpen, text: t(locale, "helpRule1"), color: "#1D70A2" },
+    { icon: ArrowUpDown, text: t(locale, "helpRule2"), color: "#2E8B57" },
+    { icon: Lightbulb, text: t(locale, "helpRule3"), color: "#D4782F" },
   ]
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-[rgba(0,0,0,0.5)] animate-in fade-in duration-200"
-        onClick={onClose}
-      />
+    <Sheet open onOpenChange={(open) => !open && onClose()}>
+      <SheetContent
+        side="bottom"
+        className="max-h-[85vh] overflow-y-auto rounded-t-[20px] bg-[#F8F8F8] pb-[env(safe-area-inset-bottom)]"
+      >
+        <div className="mx-auto mt-2 h-1 w-12 shrink-0 rounded-full bg-[#0A3D62]/20" />
 
-      {/* Modal */}
-      <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[20px] bg-[#F8F8F8] shadow-2xl animate-in slide-in-from-bottom-4 duration-300 overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E0E0E0]">
-          <h2 className="text-lg font-bold text-[#0A3D62]">{t(locale, "helpTitle")}</h2>
-          <button
-            onClick={onClose}
-            className="text-[#50555C] hover:text-[#0A3D62] transition-colors"
-            aria-label="Close"
-          >
-            <X size={20} />
-          </button>
-        </div>
+        <SheetHeader className="pb-0">
+          <SheetTitle className="text-lg font-bold text-[#0A3D62]">
+            {t(locale, "helpTitle")}
+          </SheetTitle>
+        </SheetHeader>
 
-        {/* Content */}
-        <div className="px-5 py-5">
+        <div className="px-4">
           <div className="flex flex-col gap-4">
             {rules.map((rule, i) => (
               <div key={i} className="flex items-start gap-3">
                 <div
-                  className="flex items-center justify-center w-8 h-8 rounded-full shrink-0 mt-0.5"
-                  style={{ backgroundColor: `${rule.color}15` }}
+                  className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+                  style={{ backgroundColor: `${rule.color}26` }}
                 >
                   <rule.icon size={16} style={{ color: rule.color }} />
                 </div>
-                <p className="text-sm text-[#333] leading-relaxed">{rule.text}</p>
+                <p className="text-sm leading-relaxed text-[#50555C]">{rule.text}</p>
               </div>
             ))}
           </div>
 
-          {/* Example */}
-          <div className="mt-5 rounded-2xl bg-[rgba(29,112,162,0.06)] p-4">
-            <p className="text-xs font-bold text-[#1D70A2] uppercase tracking-wider mb-2">
+          <div className="mt-5 rounded-2xl bg-[#1D70A2]/10 p-4">
+            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-[#1D70A2]">
               {locale === "en" ? "Example" : "Exemple"}
             </p>
-            <div className="flex items-center gap-2 text-sm font-semibold text-[#333]">
-              <span className="px-2 py-1 rounded-lg bg-[#1D70A2] text-[#F8F8F8] text-xs">COLD</span>
-              <span className="text-[#D0D0D0]">{">"}</span>
-              <span className="px-2 py-1 rounded-lg bg-[#2E8B57] text-[#F8F8F8] text-xs">CORD</span>
-              <span className="text-[#D0D0D0]">{">"}</span>
-              <span className="px-2 py-1 rounded-lg bg-[#2E8B57] text-[#F8F8F8] text-xs">CARD</span>
-              <span className="text-[#D0D0D0]">{">"}</span>
-              <span className="px-2 py-1 rounded-lg bg-[#1D70A2] text-[#F8F8F8] text-xs">WARD</span>
+            {/* Les mêmes couleurs que le plateau : bleu pour un mot donné, vert
+                pour un mot trouvé. L'exemple ment moins s'il se lit comme le
+                jeu. */}
+            <div className="flex flex-wrap items-center gap-2 text-sm font-semibold">
+              {EXAMPLE.map(({ word, given }, i) => (
+                <span key={word} className="flex items-center gap-2">
+                  {i > 0 && <span className="text-[#0A3D62]/25">{">"}</span>}
+                  <span
+                    className={`rounded-lg px-2 py-1 text-xs text-[#F8F8F8] ${
+                      given ? "bg-[#1D70A2]" : "bg-[#2E8B57]"
+                    }`}
+                  >
+                    {word}
+                  </span>
+                </span>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="px-5 py-4 border-t border-[#E0E0E0]">
-          <button
-            onClick={onClose}
-            className="w-full rounded-xl bg-[#1D70A2] py-2.5 text-sm font-bold text-[#F8F8F8] shadow-sm transition-colors hover:bg-[#165d8a]"
-          >
+        <SheetFooter>
+          <Button size="lg" className="w-full" onClick={onClose}>
             {t(locale, "understand")}
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   )
 }
