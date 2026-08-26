@@ -45,3 +45,11 @@ any indirect or incidental damages arising from your use of the app.
 
 **Changes.** We may update these terms and the privacy policy. Continued use after
 changes means you accept them.
+
+## Credits
+
+Word definitions shown in the app are derived from
+[Wiktionary](https://en.wiktionary.org) and
+[Wiktionnaire](https://fr.wiktionary.org), used under the
+[Creative Commons Attribution-ShareAlike licence](https://creativecommons.org/licenses/by-sa/4.0/).
+Entries were extracted and shortened to a single sense.

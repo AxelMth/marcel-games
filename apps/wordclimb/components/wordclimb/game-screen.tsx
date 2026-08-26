@@ -4,7 +4,6 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { Lightbulb, HelpCircle } from "lucide-react";
 import { useApp } from "@/lib/app-context";
 import { t } from "@/lib/i18n";
-import { getDefinition } from "@/lib/data/definitions";
 import { ScreenHeader } from "@marcel-games/ui";
 import { useKeyboardOffset } from "@marcel-games/lib";
 import {
@@ -178,8 +177,16 @@ export function GameScreen() {
   );
 
   const handleHint = useCallback(
-    (type: "firstLetter" | "fullWord") => {
+    (type: "firstLetter" | "fullWord" | "definition") => {
       if (state.isComplete) return;
+
+      // La définition ne fait pas avancer la partie et ne referme pas la
+      // feuille : elle s'y affiche. Elle coûte un indice comme les autres,
+      // parce que la règle du jeu est de taper le mot sans aide.
+      if (type === "definition") {
+        setGameState({ ...state, hintsUsed: state.hintsUsed + 1 });
+        return;
+      }
 
       if (type === "firstLetter") {
         setInput(currentTargetWord[0]);
@@ -373,18 +380,6 @@ export function GameScreen() {
             label={locale === "en" ? "START" : "DEBUT"}
           />
         </div>
-
-        {/* Definition card */}
-        {!state.isComplete && currentTargetWord && (
-          <div className="mt-6 mx-auto max-w-sm rounded-2xl bg-[rgba(255,255,255,0.95)] border border-[#E0E0E0] p-4 shadow-sm">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#1D70A2] mb-1 block">
-              {t(locale, "definition")}
-            </span>
-            <p className="text-sm text-[#333] leading-relaxed">
-              {getDefinition(currentTargetWord, locale)}
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Feedback toast */}
@@ -418,7 +413,11 @@ export function GameScreen() {
 
       {/* Modals */}
       {showHints && (
-        <HintsModal onClose={() => setShowHints(false)} onHint={handleHint} />
+        <HintsModal
+          onClose={() => setShowHints(false)}
+          onHint={handleHint}
+          targetWord={currentTargetWord}
+        />
       )}
       {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
       {showSuccess && (

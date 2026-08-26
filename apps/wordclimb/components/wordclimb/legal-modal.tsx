@@ -92,6 +92,12 @@ const COPY: Record<"en" | "fr", { privacy: Section[]; terms: Section[] }> = {
           "We may update these terms and the privacy policy. Continued use after changes means you accept them.",
         ],
       },
+      {
+        heading: "Credits",
+        body: [
+          "Word definitions are derived from Wiktionary (en.wiktionary.org) and Wiktionnaire (fr.wiktionary.org), used under the Creative Commons Attribution-ShareAlike licence (creativecommons.org/licenses/by-sa/4.0). Entries were extracted and shortened to a single sense.",
+        ],
+      },
     ],
   },
   fr: {
@@ -155,6 +161,12 @@ const COPY: Record<"en" | "fr", { privacy: Section[]; terms: Section[] }> = {
         heading: "Modifications",
         body: [
           "Nous pouvons mettre a jour ces conditions et la politique de confidentialite. Continuer a utiliser l'application vaut acceptation.",
+        ],
+      },
+      {
+        heading: "Credits",
+        body: [
+          "Les definitions des mots proviennent du Wiktionnaire (fr.wiktionary.org) et de Wiktionary (en.wiktionary.org), reutilisees sous licence Creative Commons Attribution - Partage dans les memes conditions (creativecommons.org/licenses/by-sa/4.0). Les entrees ont ete extraites et reduites a un seul sens.",
         ],
       },
     ],
