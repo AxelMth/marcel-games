@@ -57,18 +57,85 @@ function readLevels(file) {
 }
 
 /**
- * Easiest first. The number of rungs dominates — that is how many words the
- * player has to find — and word length breaks ties, longer words having fewer
- * one-letter neighbours to guess from.
+ * Difficulty band: how many words the player has to find, then how long they
+ * are — longer words have fewer one-letter neighbours to guess from. Levels
+ * sharing a band are equally hard, so their order within it is free.
  */
+function bandOf(level) {
+  return `${level.wordLadder.length}:${level.beginWord.length}`
+}
+
 function byDifficulty(a, b) {
   if (a.wordLadder.length !== b.wordLadder.length) {
     return a.wordLadder.length - b.wordLadder.length
   }
-  if (a.beginWord.length !== b.beginWord.length) {
-    return a.beginWord.length - b.beginWord.length
+  return a.beginWord.length - b.beginWord.length
+}
+
+/**
+ * Deterministic PRNG (mulberry32). Seeded, because the catalogue is generated
+ * twice — once for the client, once for the server — and because a rebuild
+ * that reshuffled everything would move every level number under the players
+ * already partway through.
+ */
+function randomFrom(seed) {
+  let t = seed
+  return () => {
+    t = (t + 0x6d2b79f5) | 0
+    let x = Math.imul(t ^ (t >>> 15), 1 | t)
+    x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x
+    return ((x ^ (x >>> 14)) >>> 0) / 4294967296
   }
-  return a.beginWord.localeCompare(b.beginWord)
+}
+
+function shuffled(items, random) {
+  const out = [...items]
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1))
+    ;[out[i], out[j]] = [out[j], out[i]]
+  }
+  return out
+}
+
+/** What makes two levels feel like the same puzzle to the player. */
+function echoesOf(level) {
+  return [`rungs:${level.wordLadder.join("|")}`, `from:${level.beginWord}`]
+}
+
+/**
+ * Orders one difficulty band so that consecutive levels do not feel repeated.
+ *
+ * Sorting alphabetically — which is what the last tie-break used to do — put
+ * every level starting with the same word back to back, and the generator
+ * builds many of those: 1440 English levels held only 319 distinct rung pairs.
+ * The first four levels all had the player type "bank, band", and 61% of
+ * levels opened on the same word as the one before.
+ *
+ * So: shuffle, then walk the pool taking the first level that echoes nothing
+ * in the last LOOKBACK. When the pool has nothing else left to offer — the
+ * tail of a band is all near-duplicates — it takes the least-bad option
+ * rather than giving up, which is why the result is checked rather than
+ * assumed.
+ */
+const LOOKBACK = 8
+
+function spaced(levels, random) {
+  const pool = shuffled(levels, random)
+  const out = []
+  const recent = []
+
+  while (pool.length > 0) {
+    let pick = pool.findIndex((level) =>
+      echoesOf(level).every((echo) => !recent.includes(echo))
+    )
+    if (pick === -1) pick = 0
+
+    const [level] = pool.splice(pick, 1)
+    out.push(level)
+    recent.push(...echoesOf(level))
+    while (recent.length > LOOKBACK * 2) recent.shift()
+  }
+  return out
 }
 
 function buildLocale(locale, file) {
@@ -82,9 +149,23 @@ function buildLocale(locale, file) {
     else rejected.push({ level, problems })
   }
 
+  // Difficulty still drives the order — bands are played easiest first — but
+  // within a band the levels are spread so the same puzzle does not come round
+  // again a moment later. The seed is per locale so the two do not shuffle in
+  // lockstep, and fixed so a rebuild reproduces this exact catalogue.
   kept.sort(byDifficulty)
+  const random = randomFrom(locale === "en" ? 0x57ac1e : 0xec4e11e)
+  const ordered = []
+  for (let i = 0; i < kept.length; ) {
+    const band = bandOf(kept[i])
+    let end = i
+    while (end < kept.length && bandOf(kept[end]) === band) end++
+    ordered.push(...spaced(kept.slice(i, end), random))
+    i = end
+  }
+
   // Renumber so ids follow the played order rather than generation order.
-  const renumbered = kept.map((level, i) => ({
+  const renumbered = ordered.map((level, i) => ({
     id: i + 1,
     beginWord: level.beginWord,
     endWord: level.endWord,
