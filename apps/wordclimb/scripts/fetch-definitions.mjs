@@ -26,6 +26,7 @@ import { createGunzip } from "node:zlib"
 import { Readable } from "node:stream"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
+import { wordKey } from "./lib/word-key.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const SOURCE_DIR = join(__dirname, "..", "data-sources")
@@ -112,15 +113,13 @@ if (!SOURCES[locale]) {
 const LANG_HINT = `"lang_code": "${locale}"`
 const WORD_HINT = new RegExp(`"word": "[a-zà-öø-ÿ]{${MIN_LEN},${MAX_LEN}}"`)
 
-/**
- * The ladders are played without accents — generate-levels.mjs only ever picks
- * `^[a-z]+$` — while Wiktionary indexes the accented spelling. Keying on the
- * stripped form is what lets the rung "cles" find the entry for "clés"; 186 of
- * the 1123 French rungs are only reachable this way.
- */
-function key(word) {
-  return word.normalize("NFD").replace(/\p{Diacritic}/gu, "")
-}
+// The ladders are played without accents — generate-levels.mjs only ever picks
+// `^[a-z]+$` — while Wiktionary indexes the accented spelling. Keying on the
+// stripped form is what lets the rung "cles" find the entry for "clés"; 186 of
+// the 1123 French rungs are only reachable this way. build-definitions.mjs
+// masks with the same function, which is the point of it being one function:
+// the two disagreeing is what printed "pièce" in the definition of "piece".
+const key = wordKey
 
 const words = new Map()
 let scanned = 0
@@ -145,6 +144,9 @@ for await (const line of rl) {
 
   const word = entry.word
   if (entry.lang_code !== locale || typeof word !== "string") continue
+  // Proper nouns are not what the ladders are built from, and wordKey folds
+  // case, so the capitals have to be refused before it does.
+  if (word !== word.toLowerCase()) continue
 
   const plain = key(word)
   // The length test is on the stripped form, since that is what the player

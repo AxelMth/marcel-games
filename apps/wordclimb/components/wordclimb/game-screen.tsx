@@ -50,6 +50,11 @@ export function GameScreen() {
   // here so the "next level" tap does not have to make a second round trip.
   const nextLevelRef = useRef<GameState["level"] | null>(null);
 
+  // Rungs whose definition has already been charged for. A ref rather than
+  // game state: it never leaves this screen, so it stays out of what gets
+  // serialised and posted to the server.
+  const definitionsPaid = useRef<Set<number>>(new Set());
+
   /**
    * Records a finished level: locally first, so progression survives with no
    * network, then against the API. A result that cannot be sent is queued and
@@ -183,7 +188,14 @@ export function GameScreen() {
       // La définition ne fait pas avancer la partie et ne referme pas la
       // feuille : elle s'y affiche. Elle coûte un indice comme les autres,
       // parce que la règle du jeu est de taper le mot sans aide.
+      //
+      // Mais elle ne coûte qu'une fois par mot. Sans ce garde, rouvrir la
+      // feuille pour relire un texte déjà payé le refacturait : trois
+      // relectures du même mot suffisaient à faire tomber le niveau à une
+      // étoile, alors que le joueur n'a rien appris de plus.
       if (type === "definition") {
+        if (definitionsPaid.current.has(state.currentWordIndex)) return;
+        definitionsPaid.current.add(state.currentWordIndex);
         setGameState({ ...state, hintsUsed: state.hintsUsed + 1 });
         return;
       }
@@ -233,6 +245,13 @@ export function GameScreen() {
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+
+  // "Next level" swaps the puzzle without unmounting this screen, so the paid
+  // rungs have to be forgotten explicitly — otherwise rung 0 of every later
+  // level would be free, having been paid for once on the first one.
+  useEffect(() => {
+    definitionsPaid.current = new Set();
+  }, [state.startTime]);
 
   const modeLabel =
     state.mode === "classic"

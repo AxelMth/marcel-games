@@ -10,6 +10,11 @@ import { DEFINITIONS, getDefinition } from "@/lib/data/definitions"
  * word must not resolve through `lang: "en"` just because the key exists
  * somewhere.
  */
+/** Same word-identity rule as scripts/lib/word-key.mjs, restated on purpose. */
+function strip(word: string) {
+  return word.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase()
+}
+
 function rungsOf(locale: "en" | "fr") {
   const words = new Set<string>()
   for (const level of CATALOGUE[locale]) {
@@ -48,12 +53,39 @@ describe("getDefinition", () => {
 describe("the shipped definitions", () => {
   for (const locale of ["en", "fr"] as const) {
     describe(locale, () => {
-      it("never spells out the word it defines", () => {
+      it("never spells out the word it defines, accents included", () => {
+        // Deliberately not the generator's own check. The first version of
+        // both was `\b${word}\b`, which is ASCII-only and accent-blind, so the
+        // test agreed with the bug: it read "pièce" in the definition of
+        // "piece" as a different word and passed while the answer shipped.
         const leaking = Object.entries(DEFINITIONS[locale]).filter(
           ([word, definition]) =>
-            new RegExp(`\\b${word}\\b`, "i").test(definition)
+            (definition.match(/\p{L}+/gu) ?? []).some(
+              (token) => strip(token) === strip(word)
+            )
         )
         expect(leaking).toEqual([])
+      })
+
+      it("never blanks out a longer word it happens to sit inside", () => {
+        // The mirror failure: masking "sent" turned "présent" into "pré•••",
+        // because ASCII \b sees a boundary between "é" and "s".
+        const mangled = Object.entries(DEFINITIONS[locale]).filter(
+          ([, definition]) =>
+            /\p{L}•••/u.test(definition) || /•••\p{L}/u.test(definition)
+        )
+        expect(mangled).toEqual([])
+      })
+
+      it("carries no leftover Wiktionary markup", () => {
+        const dirty = Object.entries(DEFINITIONS[locale]).filter(
+          ([, d]) =>
+            d.includes("→ voir") ||
+            /\^\(\[\d+\]\)/.test(d) ||
+            /[:,;]$/.test(d) ||
+            (d.split("(").length !== d.split(")").length)
+        )
+        expect(dirty).toEqual([])
       })
 
       it("has no empty definition", () => {
@@ -66,12 +98,16 @@ describe("the shipped definitions", () => {
       it("covers all but a handful of the rungs the catalogue can ask for", () => {
         // beginWord and endWord are on screen from the first frame, so they
         // are deliberately absent. A rung is a word the player has to type.
-        const rungs = rungsOf(locale)
-        const uncovered = rungs.filter((word) => !DEFINITIONS[locale][word])
-        // The stragglers are catalogue oddities Wiktionary has no French
-        // entry for — "mlle", and English words the French word list let
-        // through. They fall back, which is the point of having a fallback.
-        expect(uncovered.length / rungs.length).toBeLessThan(0.02)
+        const uncovered = rungsOf(locale)
+          .filter((word) => !DEFINITIONS[locale][word])
+          .sort()
+        // Named rather than given a percentage: the gaps are catalogue
+        // oddities Wiktionary has no French entry for — "mlle", and English
+        // words the French list let through. A ratio wide enough to hold
+        // these five would also sit quietly through twenty more.
+        expect(uncovered).toEqual(
+          locale === "fr" ? ["back", "juan", "line", "mlle", "sine"] : []
+        )
       })
     })
   }
