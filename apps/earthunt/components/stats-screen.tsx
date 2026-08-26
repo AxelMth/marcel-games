@@ -3,15 +3,13 @@
 import { useEffect, useState } from "react"
 import Image from "next/image"
 import {
-  Loader2,
-  Star,
   Medal,
 } from "lucide-react"
 import { useGameStore } from "@/lib/game-store"
 import { useLanguage } from "@/components/language-provider"
 import { ScreenHeader } from "@/components/screen-header"
 import { LegalModal } from "@/components/legal-modal"
-import { StarRating, ToggleGroup, ToggleGroupItem } from "@marcel-games/ui"
+import { Spinner, StarRating, ToggleGroup, ToggleGroupItem } from "@marcel-games/ui"
 import { bestRankForMode, hasRank } from "@/lib/ranking"
 import { getProfile, type ProfileResponse, type GameHistoryEntry } from "@/lib/api"
 
@@ -117,7 +115,7 @@ export function StatsScreen() {
       <div className="flex flex-1 flex-col gap-6 px-5 pt-2">
         {loading && (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-[#0f2b3c]" />
+            <Spinner className="h-6 w-6 text-[#0f2b3c]" />
             <span className="text-sm font-medium text-[#0f2b3c]/80">
               {t("profile.loading")}
             </span>
