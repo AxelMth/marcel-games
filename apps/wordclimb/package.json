@@ -12,6 +12,8 @@
     "test:watch": "vitest",
     "generate:levels": "node scripts/generate-levels.mjs",
     "build:catalogue": "node scripts/build-catalogue.mjs",
+    "build:definitions": "node scripts/build-definitions.mjs",
+    "fetch:definitions": "node scripts/fetch-definitions.mjs",
     "generate:ladders": "node scripts/generate-word-ladders.mjs",
     "find-all-ladders-fr": "node scripts/find-all-ladders-fr.mjs",
     "mobile": "next build && node scripts/assert-shippable-build.mjs && npx cap sync",
