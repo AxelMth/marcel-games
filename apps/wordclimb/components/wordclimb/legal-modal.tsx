@@ -1,6 +1,12 @@
 "use client"
 
-import { X } from "lucide-react"
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@marcel-games/ui"
 import { useApp } from "@/lib/app-context"
 import { t } from "@/lib/i18n"
 
@@ -177,22 +183,22 @@ export function LegalModal({ onClose }: LegalModalProps) {
   const copy = COPY[locale] ?? COPY.en
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
-      <div
-        className="absolute inset-0 bg-[rgba(0,0,0,0.5)] animate-in fade-in duration-200"
-        onClick={onClose}
-      />
-      <div className="relative mx-4 mb-4 flex max-h-[85vh] w-full max-w-sm flex-col overflow-hidden rounded-[20px] bg-[#F8F8F8] shadow-2xl animate-in slide-in-from-bottom-4 duration-300 sm:mb-0">
-        <div className="flex items-center justify-between border-b border-[#E0E0E0] px-5 py-4">
-          <h2 className="text-lg font-bold text-[#0A3D62]">{t(locale, "legalOpen")}</h2>
-          <button
-            onClick={onClose}
-            className="text-[#50555C] transition-colors hover:text-[#0A3D62]"
-            aria-label={t(locale, "legalClose")}
-          >
-            <X size={20} />
-          </button>
-        </div>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      {/*
+        grid-rows-[auto_minmax(0,1fr)_auto] est ce qui rend le texte long
+        atteignable. Les pistes d'un grid sont en `auto` par défaut, donc
+        dimensionnées par leur contenu, et une piste `auto` ne se compresse
+        jamais sous son max-content : un max-h posé dessus ne rétrécit rien, il
+        rogne. Le overflow-y-auto interne n'avait alors aucune hauteur
+        contrainte et ne déclenchait aucun ascenseur — c'est exactement ce qui
+        coupait les CGU d'earthunt, e-mail de contact compris.
+      */}
+      <DialogContent className="grid max-h-[85vh] max-w-sm grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden rounded-[20px] border-0 bg-[#F8F8F8] p-0">
+        <DialogHeader className="border-b border-[#E0E0E0] px-5 py-4 text-left">
+          <DialogTitle className="text-lg font-bold text-[#0A3D62]">
+            {t(locale, "legalOpen")}
+          </DialogTitle>
+        </DialogHeader>
 
         <div className="flex flex-col gap-6 overflow-y-auto px-5 py-5">
           <p className="text-xs text-[#50555C]">
@@ -213,14 +219,11 @@ export function LegalModal({ onClose }: LegalModalProps) {
         </div>
 
         <div className="border-t border-[#E0E0E0] px-5 py-4">
-          <button
-            onClick={onClose}
-            className="w-full rounded-xl bg-[#1D70A2] py-2.5 text-sm font-bold text-[#F8F8F8] shadow-sm transition-colors hover:bg-[#165d8a]"
-          >
+          <Button size="lg" className="w-full" onClick={onClose}>
             {t(locale, "legalClose")}
-          </button>
+          </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }
