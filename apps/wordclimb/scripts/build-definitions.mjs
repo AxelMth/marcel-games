@@ -17,6 +17,7 @@
 import { readFileSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
+import { maskWord } from "./lib/word-key.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = join(__dirname, "..", "lib", "data")
@@ -52,13 +53,20 @@ function rungsOf(catalogue, locale) {
 }
 
 /**
- * Whole-word occurrences of the answer, blanked. What this catches is the
- * senses phrased on the word's own root — "Action de traquer" for "traque" —
- * where no other sense exists to prefer. Incidental substrings are left alone:
- * "cocaïne" does not spell out "coca" to a player mid-guess.
+ * Wiktionary leaves markup behind that means nothing on a hint card: a
+ * footnote marker, a cross-reference to related entries, an unclosed
+ * parenthesis left by an earlier trim.
  */
-function maskWord(text, word) {
-  return text.replace(new RegExp(`\\b${word}\\b`, "gi"), MASK)
+function tidy(text) {
+  return text
+    .replace(/\s*→\s*voir.*$/i, "")
+    .replace(/\s*\^\(\[\d+\]\)\.?/g, "")
+    .replace(/\s*\([^)]*$/, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    // Wiktionary hangs sub-senses off a colon ("To have on:"); with the list
+    // left behind, the dangling punctuation reads as a truncation.
+    .replace(/[:,;]$/, ".")
 }
 
 function load(locale) {
@@ -73,9 +81,9 @@ function definitionsFor(locale, words, dictionary) {
   const missing = []
 
   for (const word of words) {
-    const raw = dictionary.get(word)?.trim()
+    const raw = dictionary.get(word)
     // A definition that is nothing but the masked word says nothing at all.
-    const masked = raw ? maskWord(raw, word) : null
+    const masked = raw ? tidy(maskWord(raw, word, MASK)) : null
     if (!masked || masked.replaceAll(MASK, "").trim().length < 3) {
       missing.push(word)
       continue
@@ -117,6 +125,11 @@ const body = `${banner}
 export const DEFINITIONS: Record<"en" | "fr", Record<string, string>> = {
   en: ${JSON.stringify(byLocale.en, null, 2)},
   fr: ${JSON.stringify(byLocale.fr, null, 2)},
+}
+
+/** Whether a word has a definition worth charging a hint for. */
+export function hasDefinition(word: string | undefined, lang: "en" | "fr"): boolean {
+  return Boolean(word && DEFINITIONS[lang][word.toLowerCase()])
 }
 
 export function getDefinition(word: string, lang: "en" | "fr"): string {
