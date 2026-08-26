@@ -13,7 +13,7 @@ import {
 } from "@marcel-games/ui"
 import { useApp } from "@/lib/app-context"
 import { t } from "@/lib/i18n"
-import { getDefinition } from "@/lib/data/definitions"
+import { getDefinition, hasDefinition } from "@/lib/data/definitions"
 import { HintChoice } from "./hint-choice"
 
 interface HintsModalProps {
@@ -103,10 +103,12 @@ export function HintsModal({ onClose, onHint, targetWord }: HintsModalProps) {
               title={t(locale, "definition")}
               description={t(locale, "definitionHintDesc")}
               onClick={revealDefinition}
-              // Le bouton d'indices reste ouvrable pendant les 600 ms qui
-              // séparent le dernier mot trouvé de la modale de réussite, et il
-              // n'y a alors plus de barreau à définir.
-              disabled={!targetWord}
+              // Deux cas où il n'y a rien à vendre. Le bouton d'indices reste
+              // ouvrable pendant les 600 ms qui séparent le dernier mot trouvé
+              // de la modale de réussite ; et cinq barreaux du catalogue n'ont
+              // pas de définition, où l'indice facturé n'aurait affiché que le
+              // texte bouche-trou « Trouve le prochain mot ».
+              disabled={!hasDefinition(targetWord, locale)}
             />
           </div>
         )}
