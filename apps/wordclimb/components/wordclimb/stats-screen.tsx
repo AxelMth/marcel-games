@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import type { ComponentType } from "react"
 import {
   CalendarCheck,
@@ -8,10 +8,16 @@ import {
   Globe,
   BookOpen,
   Calendar,
+  WifiOff,
 } from "lucide-react"
 import { useApp } from "@/lib/app-context"
 import { t } from "@/lib/i18n"
-import { getProfile, type GameHistoryEntry, type ProfileResponse } from "@/lib/api"
+import {
+  ApiHttpError,
+  getProfile,
+  type GameHistoryEntry,
+  type ProfileResponse,
+} from "@/lib/api"
 import { LegalModal } from "@/components/wordclimb/legal-modal"
 import { Spinner, StarRating, ToggleGroup, ToggleGroupItem } from "@marcel-games/ui"
 import { hasRank } from "@/lib/ranking"
@@ -98,24 +104,38 @@ export function StatsScreen() {
   const [data, setData] = useState<ProfileResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Told apart from a server error on purpose: ranks and history only exist
+  // server-side, so with no network there is nothing to show and nothing the
+  // player did wrong. A raw fetch message ("Failed to fetch") reads as a bug.
+  const [offline, setOffline] = useState(false)
   const [gameModeFilter, setGameModeFilter] =
     useState<GameModeFilter>("all")
   const [legalOpen, setLegalOpen] = useState(false)
+
+  const load = useCallback(() => {
+    if (!userId) return
+    setLoading(true)
+    setError(null)
+    setOffline(false)
+    return getProfile(userId)
+      .then(setData)
+      .catch((e) => {
+        if (e instanceof ApiHttpError) {
+          setError(e.message)
+        } else {
+          setOffline(true)
+        }
+      })
+      .finally(() => setLoading(false))
+  }, [userId])
 
   useEffect(() => {
     if (!userId) {
       setData(null)
       return
     }
-    setLoading(true)
-    setError(null)
-    getProfile(userId)
-      .then(setData)
-      .catch((e) =>
-        setError(e instanceof Error ? e.message : "Failed to load")
-      )
-      .finally(() => setLoading(false))
-  }, [userId])
+    void load()
+  }, [userId, load])
 
   const filteredHistory = data
     ? filterHistory(data.gameHistory, gameModeFilter)
@@ -149,13 +169,31 @@ export function StatsScreen() {
           </p>
         )}
 
+        {offline && !loading && (
+          <div className="flex flex-col items-center gap-3 py-10 text-center">
+            <WifiOff className="h-8 w-8 text-[#0A3D62]/50" />
+            <p className="text-sm font-semibold text-[#0A3D62]">
+              {t(locale, "statsOffline")}
+            </p>
+            <p className="text-sm text-[#0A3D62]/70">
+              {t(locale, "statsOfflineHint")}
+            </p>
+            <button
+              onClick={() => void load()}
+              className="mt-1 rounded-xl bg-[#1D70A2] px-4 py-2 text-sm font-semibold text-white active:opacity-80"
+            >
+              {t(locale, "retry")}
+            </button>
+          </div>
+        )}
+
         {!userId && !loading && (
           <p className="py-8 text-center text-sm text-[#0A3D62]/70">
             {t(locale, "profileNoUser")}
           </p>
         )}
 
-        {!loading && !error && userId && data && (
+        {!loading && !error && !offline && userId && data && (
           <>
             <div className="grid grid-cols-3 gap-3">
               <StatCard
