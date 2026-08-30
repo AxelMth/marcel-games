@@ -103,6 +103,22 @@ describe.each(["en", "fr"] as const)("the shipped %s catalogue", (locale) => {
     expect(commonest / levels.length).toBeLessThan(0.15)
   })
 
+  it("never ships the same puzzle twice, in either direction", () => {
+    // Half the catalogue is reversed, so a puzzle can reappear as its own
+    // mirror — which is why the generator's curated dedup compares sorted
+    // word pairs. Nothing downstream would catch a duplicate: build-catalogue
+    // only spaces levels out, and validateCatalogue checks each one alone.
+    const seen = new Map<string, number>()
+    const duplicates: string[] = []
+    for (const level of levels) {
+      const key = [level.beginWord, level.endWord].sort().join("|")
+      const first = seen.get(key)
+      if (first !== undefined) duplicates.push(`${key} (levels ${first} and ${level.id})`)
+      else seen.set(key, level.id)
+    }
+    expect(duplicates).toEqual([])
+  })
+
   it("does not always climb towards the end of the alphabet", () => {
     // The enumeration only emits a pair when the neighbour sorts after the
     // start, so every single level used to run a→z. Half are now reversed.

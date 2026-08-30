@@ -4,6 +4,7 @@ import {
   type BackendGameMode,
   type BackendLocale,
 } from "./api"
+import { confirmReportedSpend } from "./coins"
 
 /**
  * Offline queue for finished-level results.
@@ -139,6 +140,9 @@ export async function flushPendingResults(
           wordLadder: head.wordLadder,
           coinsSpent: head.coinsSpent ?? 0,
         })
+        // Accepted, so the server's balance now accounts for this level's
+        // hints and the local ledger can stop holding them back.
+        confirmReportedSpend(head.coinsSpent ?? 0)
         sent++
         queue = rest
         writeQueue(queue)

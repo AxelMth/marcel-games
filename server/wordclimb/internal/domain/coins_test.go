@@ -89,29 +89,59 @@ func Test_RefillCoins(t *testing.T) {
 	})
 }
 
+func Test_MaxCoinsForLadder(t *testing.T) {
+	// A level's spend accumulates over every rung, so the ceiling has to scale
+	// with the ladder. A flat one was worse than none: it clamped a real spend
+	// down, the server answered with a balance higher than the player's, and
+	// the client's reconcile handed the difference back as free coins.
+	cases := []struct {
+		rungs, want int
+	}{
+		{1, 5},
+		{2, 10},
+		{5, 25},
+		{9, 45},
+		// Defensive: an empty or malformed ladder still allows one rung rather
+		// than zero, so a legitimate single hint is not clawed back.
+		{0, 5},
+		{-3, 5},
+	}
+
+	for _, c := range cases {
+		if got := MaxCoinsForLadder(c.rungs); got != c.want {
+			t.Errorf("MaxCoinsForLadder(%d) = %d, want %d", c.rungs, got, c.want)
+		}
+	}
+}
+
 func Test_DebitCoins(t *testing.T) {
 	cases := []struct {
-		name           string
-		balance, spent int
-		want           int
+		name                  string
+		balance, spent, limit int
+		want                  int
 	}{
-		{"ordinary spend", 10, 3, 7},
-		{"spending nothing", 10, 0, 10},
-		{"exactly empties", 3, 3, 0},
+		{"ordinary spend", 10, 3, 25, 7},
+		{"spending nothing", 10, 0, 25, 10},
+		{"exactly empties", 3, 3, 25, 0},
+		// A whole ladder solved on hints is a legitimate spend, and must be
+		// charged in full rather than clamped — clamping refunded the rest.
+		{"charges a full multi-rung spend", 30, 27, 45, 3},
 		// Offline spending is only reported when the level is banked, by which
 		// time the server may have reconciled: the player must not end up in
 		// debt through a race they cannot see.
-		{"never goes negative", 2, 3, 0},
+		{"never goes negative", 2, 3, 25, 0},
 		// A tampered payload must not be able to zero an account...
-		{"clamps an absurd claim", 10, 999, 5},
+		{"clamps a claim beyond what the ladder allows", 50, 999, 10, 40},
 		// ...nor mint coins by spending a negative amount.
-		{"refuses a negative spend", 10, -5, 10},
+		{"refuses a negative spend", 10, -5, 25, 10},
+		{"treats a negative limit as zero", 10, 4, -1, 10},
 	}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			if got := DebitCoins(c.balance, c.spent); got != c.want {
-				t.Errorf("DebitCoins(%d, %d) = %d, want %d", c.balance, c.spent, got, c.want)
+			if got := DebitCoins(c.balance, c.spent, c.limit); got != c.want {
+				t.Errorf("DebitCoins(%d, %d, %d) = %d, want %d",
+					c.balance, c.spent, c.limit, got, c.want)
 			}
 		})
 	}

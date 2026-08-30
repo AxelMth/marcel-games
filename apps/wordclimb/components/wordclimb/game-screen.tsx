@@ -27,6 +27,7 @@ import { postFinishLevel } from "@/lib/api";
 import { enqueuePendingResult, flushPendingResults } from "@/lib/pending-results";
 import {
   HINT_COSTS,
+  confirmReportedSpend,
   getCoinBalance,
   reconcileCoins,
   spendCoins,
@@ -109,10 +110,17 @@ export function GameScreen() {
   // here so the "next level" tap does not have to make a second round trip.
   const nextLevelRef = useRef<GameState["level"] | null>(null);
 
-  // Rungs whose definition has already been charged for. A ref rather than
-  // game state: it never leaves this screen, so it stays out of what gets
+  // Hints already paid for, keyed "<rung>:<type>". A ref rather than game
+  // state: it never leaves this screen, so it stays out of what gets
   // serialised and posted to the server.
-  const definitionsPaid = useRef<Set<number>>(new Set());
+  //
+  // Buying the same hint twice on the same rung tells the player nothing they
+  // did not already have — the definition text is unchanged, the first letter
+  // is the same letter — so it is granted again for free. It also bounds what
+  // one rung can cost at 1 + 1 + 3, which is the ceiling the server checks
+  // against (domain.MaxCoinsPerRung). Revealing the whole word advances the
+  // rung, so it cannot repeat.
+  const paidHints = useRef<Set<string>>(new Set());
 
   /**
    * Brings the rung being solved back into view, if it has left.
@@ -190,10 +198,13 @@ export function GameScreen() {
           if (response.stats) {
             setProgress((p) => (p ? { ...p, stats: response.stats } : p));
           }
-          // The server has now applied this level's spend; its number wins.
+          // The server has now applied this level's spend, so the ledger stops
+          // holding it back — in that order, or reconcile would subtract it a
+          // second time from a balance that already accounts for it.
+          confirmReportedSpend(finished.coinsSpent);
           if (typeof response.coins === "number") {
             reconcileCoins(response.coins);
-            setCoins(response.coins);
+            setCoins(getCoinBalance());
           }
           // The server is reachable right now, which is the best moment to
           // clear anything banked while it was not.
@@ -323,23 +334,26 @@ export function GameScreen() {
     (type: "firstLetter" | "fullWord" | "definition") => {
       if (state.isComplete) return;
 
-      // La définition ne fait pas avancer la partie et ne referme pas la
-      // feuille : elle s'y affiche. Elle coûte un indice comme les autres,
-      // parce que la règle du jeu est de taper le mot sans aide.
+      // Un indice ne se paie qu'une fois par barreau. Sans ce garde, rouvrir
+      // la feuille pour relire une définition déjà payée la refacturait —
+      // trois relectures du même mot suffisaient à faire tomber le niveau à
+      // une étoile, alors que le joueur n'a rien appris de plus — et
+      // redemander la première lettre reprenait une pièce pour réécrire la
+      // même lettre.
       //
-      // Mais elle ne coûte qu'une fois par mot. Sans ce garde, rouvrir la
-      // feuille pour relire un texte déjà payé le refacturait : trois
-      // relectures du même mot suffisaient à faire tomber le niveau à une
-      // étoile, alors que le joueur n'a rien appris de plus.
+      // Le garde passe avant le débit, délibérément : c'est lui qui rend la
+      // relecture gratuite, et facturer d'abord prendrait les pièces avant
+      // qu'il ne refuse.
       const cost = HINT_COSTS[type];
+      const paidKey = `${state.currentWordIndex}:${type}`;
+      const alreadyPaid = paidHints.current.has(paidKey);
 
       if (type === "definition") {
-        // The re-read guard comes before the charge, deliberately: reopening
-        // the sheet to read a definition already paid for must stay free, and
-        // charging first would take the coins before this line refuses.
-        if (definitionsPaid.current.has(state.currentWordIndex)) return;
+        // La définition ne fait pas avancer la partie et ne referme pas la
+        // feuille : elle s'y affiche.
+        if (alreadyPaid) return;
         if (!spendCoins(cost)) return;
-        definitionsPaid.current.add(state.currentWordIndex);
+        paidHints.current.add(paidKey);
         setCoins(getCoinBalance());
         setGameState({
           ...state,
@@ -349,9 +363,17 @@ export function GameScreen() {
         return;
       }
 
+      if (type === "firstLetter" && alreadyPaid) {
+        // Déjà payée : on la réaffiche sans repasser à la caisse.
+        setInput(currentTargetWord[0]);
+        setShowHints(false);
+        return;
+      }
+
       // The sheet disables what cannot be afforded, but the check belongs here
       // too: this is the only place that grants the hint.
       if (!spendCoins(cost)) return;
+      paidHints.current.add(paidKey);
       setCoins(getCoinBalance());
 
       if (type === "firstLetter") {
@@ -460,7 +482,7 @@ export function GameScreen() {
   // rungs have to be forgotten explicitly — otherwise rung 0 of every later
   // level would be free, having been paid for once on the first one.
   useEffect(() => {
-    definitionsPaid.current = new Set();
+    paidHints.current = new Set();
   }, [state.startTime]);
 
   const modeLabel =

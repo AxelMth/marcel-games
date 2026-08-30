@@ -88,37 +88,74 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Registering the device is what creates the user server-side; until it runs,
   // every other endpoint is being called with an id the backend never issued.
-  const hasLaunched = useRef(false)
-  useEffect(() => {
-    if (!deviceUuid || hasLaunched.current) return
-    hasLaunched.current = true
+  //
+  // Retried rather than attempted once. An install first opened with no network
+  // — downloaded on wifi, opened on a plane — got no id, and a one-shot attempt
+  // left it that way for the whole session: results could only ever be queued,
+  // never sent. Combined with the offline cap that is a dead end the player
+  // cannot leave, so every reconnection chance tries again.
+  const launching = useRef<Promise<string | null> | null>(null)
+  const userIdRef = useRef<string | null>(null)
+  userIdRef.current = userId
 
-    const launch = async () => {
-      try {
-        const deviceInfo = await getLaunchDeviceInfo()
-        const data = await postLaunch({
-          deviceUUID: deviceUuid,
-          ...deviceInfo,
-          gameMode: "NORMAL",
-          locale: toBackendLocale(locale),
-        })
-        setUserId(data.userId)
-        await storeUserId(data.userId)
-        // A reinstall gets its balance back here, before any screen asks.
-        if (typeof data.coins === "number") reconcileCoins(data.coins)
-        // Results banked while offline are replayed in order, oldest first.
-        await flushPendingResults(data.userId)
-      } catch {
-        // Offline: the stored id (if any) still drives the local experience,
-        // and the next launch retries.
-      }
+  const ensureUser = useCallback(async (): Promise<string | null> => {
+    if (userIdRef.current) return userIdRef.current
+    if (!deviceUuid) return null
+    // Concurrent callers share one in-flight registration: the drain effect and
+    // startGame can both ask at once, and postLaunch is an upsert that bumps
+    // openCount every time it lands.
+    if (!launching.current) {
+      launching.current = (async () => {
+        try {
+          const deviceInfo = await getLaunchDeviceInfo()
+          const data = await postLaunch({
+            deviceUUID: deviceUuid,
+            ...deviceInfo,
+            gameMode: "NORMAL",
+            locale: toBackendLocale(locale),
+          })
+          setUserId(data.userId)
+          userIdRef.current = data.userId
+          await storeUserId(data.userId)
+          // A reinstall gets its balance back here, before any screen asks.
+          if (typeof data.coins === "number") reconcileCoins(data.coins)
+          return data.userId
+        } catch {
+          // Still offline. The stored id, if any, drives the local experience.
+          return null
+        } finally {
+          launching.current = null
+        }
+      })()
     }
-
-    void launch()
-    // locale is read once, at launch: changing language must not re-register
-    // the device.
+    return launching.current
+    // locale is read at registration time: changing language must not
+    // re-register the device.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deviceUuid])
+
+  useEffect(() => {
+    if (!deviceUuid) return
+    void ensureUser().then((id) => {
+      // Results banked while offline are replayed in order, oldest first.
+      if (id) void flushPendingResults(id)
+    })
+  }, [deviceUuid, ensureUser])
+
+  /**
+   * The cached progression, with today's daily answered locally.
+   *
+   * `dailyCompleted` is the one cached field that expires: it is a statement
+   * about a particular UTC day, and replaying yesterday's `true` locked the
+   * player out of today's puzzle for a whole offline session — the one puzzle
+   * an offline player is entitled to. The local record is keyed by day, so it
+   * is the right answer here even though it only knows about this device.
+   */
+  const cachedProgress = useCallback((): ProgressResponse | null => {
+    const cached = getProgressCache()
+    if (!cached) return null
+    return { ...cached, dailyCompleted: isDailyCompleted() }
+  }, [])
 
   const refreshProgress = useCallback(
     (id: string) => {
@@ -133,10 +170,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         })
         // Offline, the last confirmed progression is a far better answer than
         // none: a null here rendered "Level 1" to a player forty levels in.
-        .catch(() => setProgress(getProgressCache()))
+        .catch(() => setProgress(cachedProgress()))
         .finally(() => setLoadingProgress(false))
     },
-    []
+    [cachedProgress]
   )
 
   useEffect(() => {
@@ -156,12 +193,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
    * fact rather than a guess.
    */
   useEffect(() => {
-    if (!userId) return
-
+    // Registered on every session, with or without a user id: an install that
+    // has never reached the server is exactly the one that needs these events,
+    // because its first successful registration can only happen here.
     const drain = () => {
-      void flushPendingResults(userId).then((outcome) => {
-        // Only worth a round trip if the queue actually moved.
-        if (outcome.sent > 0) void refreshProgress(userId)
+      void ensureUser().then((id) => {
+        if (!id) return
+        void flushPendingResults(id).then((outcome) => {
+          // Only worth a round trip if the queue actually moved.
+          if (outcome.sent > 0) void refreshProgress(id)
+        })
       })
     }
 
@@ -175,7 +216,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("online", drain)
       document.removeEventListener("visibilitychange", onVisible)
     }
-  }, [userId, refreshProgress])
+  }, [ensureUser, refreshProgress])
 
   const setLocale = useCallback((l: Locale) => {
     setLocaleState(l)
@@ -223,10 +264,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       // The server did not answer and a stack of finished levels is already
       // waiting to be sent. One last attempt to drain it — the connection may
-      // have come back since the queue was filled — and if it is still stuck,
-      // stop here rather than letting the unsynced pile grow.
-      if (!state && userId && shouldBlockOfflineStart(mode, pendingResultCount())) {
-        await flushPendingResults(userId)
+      // have come back since the queue was filled, and an install that has
+      // never registered gets its id here — and if it is still stuck, stop
+      // rather than letting the unsynced pile grow.
+      if (!state && shouldBlockOfflineStart(mode, pendingResultCount())) {
+        const id = await ensureUser()
+        if (id) await flushPendingResults(id)
       }
       if (!state && shouldBlockOfflineStart(mode, pendingResultCount())) {
         setGameError(t(locale, "offlineLimit"))
@@ -238,7 +281,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setScreen("game")
       setStartingGame(false)
     },
-    [userId, locale]
+    [userId, locale, ensureUser]
   )
 
   const goHome = useCallback(() => {

@@ -21,13 +21,13 @@ import (
 // A read failure returns nil rather than a zero balance: the client keeps its
 // own mirror, and "no answer" leaves it alone, while zero would wipe it.
 func coinBalance(ctx context.Context, userID string) *int {
-	return chargeCoins(ctx, userID, 0)
+	return chargeCoins(ctx, userID, 0, 0)
 }
 
 // chargeCoins refills if due, debits what a finished level reported spending,
-// and writes the result back. spent is clamped by domain.DebitCoins — it comes
-// from the client and is not trusted.
-func chargeCoins(ctx context.Context, userID string, spent int) *int {
+// and writes the result back. spent is clamped by domain.DebitCoins against
+// `limit` — it comes from the client and is not trusted.
+func chargeCoins(ctx context.Context, userID string, spent, limit int) *int {
 	if userID == "" {
 		return nil
 	}
@@ -40,7 +40,7 @@ func chargeCoins(ctx context.Context, userID string, spent int) *int {
 	}
 
 	balance, week := domain.RefillCoins(user.Coins, user.CoinsWeek, time.Now())
-	balance = domain.DebitCoins(balance, spent)
+	balance = domain.DebitCoins(balance, spent, limit)
 
 	if balance != user.Coins || week != user.CoinsWeek {
 		if err := repositories.SetUserCoins(ctx, userID, balance, week); err != nil {

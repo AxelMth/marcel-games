@@ -19,12 +19,28 @@ const (
 	// WeeklyCoinAllowance is granted at the start of each ISO week.
 	WeeklyCoinAllowance = 10
 
-	// MaxCoinsSpentPerLevel bounds what one level may report spending: first
-	// letter (1) + definition (1) + full word (3) on a single rung. The client
-	// is not trusted to send a sane number — a tampered payload must not be
-	// able to zero an account or, with a negative value, mint coins.
-	MaxCoinsSpentPerLevel = 5
+	// MaxCoinsPerRung bounds what a single rung may cost: first letter (1) +
+	// definition (1) + full word (3). Each is charged at most once per rung —
+	// the client guards repeat purchases, and this is the server-side ceiling
+	// that holds whether or not it does.
+	MaxCoinsPerRung = 5
 )
+
+// MaxCoinsForLadder bounds what a whole level may report spending.
+//
+// It has to scale with the ladder, because a level's spend accumulates over
+// every rung: catalogue ladders run from 2 to 9 rungs, so a legitimate level
+// can report anywhere up to 45. A flat per-rung ceiling here was worse than no
+// ceiling at all — the server clamped a real 9-coin spend down to 5, replied
+// with a balance higher than the player's own, and the client's reconcile
+// handed the difference back. Hints ended up costing 5 a level however many
+// were bought.
+func MaxCoinsForLadder(rungs int) int {
+	if rungs < 1 {
+		rungs = 1
+	}
+	return MaxCoinsPerRung * rungs
+}
 
 // ISOWeekID names the ISO-8601 week a moment falls in, as "2026-W35".
 //
@@ -57,18 +73,24 @@ func RefillCoins(balance int, storedWeek string, now time.Time) (int, string) {
 	return balance, week
 }
 
-// DebitCoins subtracts what a finished level reported spending.
+// DebitCoins subtracts what a finished level reported spending, bounded by
+// what that level could plausibly have cost.
 //
-// Clamped at both ends. A balance never goes negative: coins spent offline are
-// only reported when the level is banked, by which time the server may have
-// already refilled or reconciled, and a player must not be able to end up in
-// debt through a race they cannot see.
-func DebitCoins(balance, spent int) int {
+// Clamped at both ends, because the amount comes from the client: a negative
+// would mint coins, and an absurd one would zero an account. `limit` is the
+// ceiling for the ladder actually solved — see MaxCoinsForLadder. A balance
+// never goes negative either: spends made offline are only reported when the
+// level is banked, by which time the server may have refilled, and a player
+// must not land in debt through a race they cannot see.
+func DebitCoins(balance, spent, limit int) int {
 	if spent < 0 {
 		spent = 0
 	}
-	if spent > MaxCoinsSpentPerLevel {
-		spent = MaxCoinsSpentPerLevel
+	if limit < 0 {
+		limit = 0
+	}
+	if spent > limit {
+		spent = limit
 	}
 	if balance-spent < 0 {
 		return 0

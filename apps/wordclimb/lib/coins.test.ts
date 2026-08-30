@@ -3,7 +3,9 @@ import {
   HINT_COSTS,
   WEEKLY_COIN_ALLOWANCE,
   canAfford,
+  confirmReportedSpend,
   getCoinBalance,
+  getUnreportedSpend,
   isoWeekId,
   reconcileCoins,
   spendCoins,
@@ -118,6 +120,66 @@ describe("reconciling with the server", () => {
     expect(getCoinBalance(at("2026-08-30"))).toBe(25)
   })
 
+  // The exploit this ledger exists to close: a spend only reaches the server
+  // when the level is banked, so abandoning a level and going back to the menu
+  // used to refund every hint bought in it — and the unfinished level served
+  // the same puzzle again, so it could be mined indefinitely.
+  it("does not refund hints the server has not been told about", () => {
+    getCoinBalance(at("2026-08-30"))
+    spendCoins(HINT_COSTS.fullWord, at("2026-08-30"))
+    expect(getCoinBalance(at("2026-08-30"))).toBe(7)
+
+    // Going home refetches progress; the server still reports the old balance.
+    reconcileCoins(WEEKLY_COIN_ALLOWANCE, at("2026-08-30"))
+
+    expect(getCoinBalance(at("2026-08-30"))).toBe(7)
+    expect(getUnreportedSpend()).toBe(HINT_COSTS.fullWord)
+  })
+
+  it("stops holding a spend back once the server has applied it", () => {
+    getCoinBalance(at("2026-08-30"))
+    spendCoins(3, at("2026-08-30"))
+
+    // The level banks: the server debits and answers with the new balance.
+    confirmReportedSpend(3)
+    reconcileCoins(7, at("2026-08-30"))
+
+    expect(getCoinBalance(at("2026-08-30"))).toBe(7)
+    expect(getUnreportedSpend()).toBe(0)
+  })
+
+  it("does not subtract a reported spend twice", () => {
+    getCoinBalance(at("2026-08-30"))
+    spendCoins(3, at("2026-08-30"))
+    confirmReportedSpend(3)
+
+    // A later, unrelated progress refresh must not re-apply the same spend.
+    reconcileCoins(7, at("2026-08-30"))
+    reconcileCoins(7, at("2026-08-30"))
+
+    expect(getCoinBalance(at("2026-08-30"))).toBe(7)
+  })
+
+  it("clears the ledger at the weekly refill", () => {
+    // A spend on an abandoned level is never acknowledged. Left in the ledger
+    // it would be subtracted from every refilled balance for ever.
+    getCoinBalance(at("2026-08-30"))
+    spendCoins(4, at("2026-08-30"))
+    expect(getUnreportedSpend()).toBe(4)
+
+    expect(getCoinBalance(at("2026-09-01"))).toBe(WEEKLY_COIN_ALLOWANCE)
+    expect(getUnreportedSpend()).toBe(0)
+  })
+
+  it("reads a record written before the ledger existed", () => {
+    window.localStorage.setItem(
+      "wordclimb-coins",
+      JSON.stringify({ balance: 6, week: "2026-W35" })
+    )
+    expect(getCoinBalance(at("2026-08-30"))).toBe(6)
+    expect(getUnreportedSpend()).toBe(0)
+  })
+
   it("never stores a negative balance", () => {
     reconcileCoins(-5, at("2026-08-30"))
     expect(getCoinBalance(at("2026-08-30"))).toBe(0)
@@ -129,6 +191,7 @@ describe("reconciling with the server", () => {
     expect(storedCoins()).toEqual({
       balance: WEEKLY_COIN_ALLOWANCE,
       week: "2026-W35",
+      unreported: 0,
     })
   })
 })

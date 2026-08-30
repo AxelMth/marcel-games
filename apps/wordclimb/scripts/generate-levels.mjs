@@ -151,19 +151,31 @@ function flipSome(ladders, random) {
   )
 }
 
+/**
+ * What makes two ladders the same puzzle, whichever way round they are read.
+ *
+ * Sorted rather than taken as written, because half the catalogue is reversed
+ * below. Eight of the fifteen curated English levels already run the other way
+ * (love→hate, soft→hard, west→east…) while the enumeration only ever emits a
+ * pair in alphabetical order, so a directed key never matched them: their
+ * reverses sat in the pool, and whether the catalogue shipped the same puzzle
+ * twice came down to the seed.
+ */
+function undirectedKey(ladder) {
+  return [ladder.beginWord, ladder.endWord].sort().join("|")
+}
+
 function write(locale, ladders, curated = []) {
-  const curatedKeys = new Set(curated.map((l) => `${l.beginWord}|${l.endWord}`))
-  const pool = ladders.filter(
-    (l) => !curatedKeys.has(`${l.beginWord}|${l.endWord}`)
-  )
+  const curatedKeys = new Set(curated.map(undirectedKey))
+  const pool = ladders.filter((l) => !curatedKeys.has(undirectedKey(l)))
   const selected = selectSpread(pool, {
     limit: PER_LOCALE - curated.length,
     seed: SELECTION_SEED[locale],
   })
 
   // Curated levels keep their direction: cold→warm is the intended hook, and
-  // warm→cold would read as a mistake. Dedup above compares undirected keys,
-  // so flipping after selection cannot resurrect a curated pair.
+  // warm→cold would read as a mistake. The dedup above is undirected, so
+  // flipping after selection cannot resurrect a curated pair.
   const flipped = flipSome(selected, randomFrom(FLIP_SEED[locale]))
 
   const levels = [...curated, ...flipped].map((level, i) => ({

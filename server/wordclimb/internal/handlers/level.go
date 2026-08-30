@@ -201,7 +201,13 @@ func FinishLevelHandler(c *gin.Context) {
 		// Charged only once the level is banked. Hints taken offline ride
 		// along on this field, which is why there is no debit endpoint of its
 		// own — one would be unreachable in the exact situation it exists for.
-		Coins: chargeCoins(ctx, req.UserID, req.CoinsSpent),
+		// Bounded by the ladder that was actually solved, not by a flat number.
+		Coins: chargeCoins(
+			ctx,
+			req.UserID,
+			req.CoinsSpent,
+			domain.MaxCoinsForLadder(len(req.WordLadder)),
+		),
 	}
 
 	c.JSON(http.StatusOK, response)
