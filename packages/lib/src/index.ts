@@ -9,3 +9,8 @@ export { useKeyboardOffset } from "./use-keyboard-offset"
 
 // Shared utilities
 export { getLanguage, type Language } from "./language"
+export {
+  triggerHaptic,
+  triggerNotificationHaptic,
+  type HapticStyle,
+} from "./haptics"

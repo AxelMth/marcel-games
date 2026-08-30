@@ -7,9 +7,19 @@ interface LetterBoxProps {
   letter: string
   state: "given" | "found" | "current" | "hidden"
   highlight?: boolean
+  /** Feedback on the guess that was just played. */
+  animation?: "found" | "wrong"
+  /** Milliseconds to hold before this box animates, for a left-to-right run. */
+  animationDelay?: number
 }
 
-export function LetterBox({ letter, state, highlight }: LetterBoxProps) {
+export function LetterBox({
+  letter,
+  state,
+  highlight,
+  animation,
+  animationDelay,
+}: LetterBoxProps) {
   return (
     <div
       className={cn(
@@ -22,8 +32,19 @@ export function LetterBox({ letter, state, highlight }: LetterBoxProps) {
           "bg-[#F0F0F0] text-[#1D70A2] border-[#1D70A2] shadow-md",
         state === "hidden" &&
           "bg-[#E8E8E8] text-[#E8E8E8] border-[#D0D0D0]",
-        highlight && state === "current" && "animate-pulse border-[#D4782F]"
+        // The pulse marks where the next keystroke lands; it would fight the
+        // feedback animation for the same properties, so it stands down while
+        // one is playing.
+        highlight &&
+          state === "current" &&
+          !animation &&
+          "animate-pulse border-[#D4782F]",
+        animation === "found" && "wc-letter-found",
+        animation === "wrong" && "wc-letter-wrong"
       )}
+      style={
+        animationDelay ? { animationDelay: `${animationDelay}ms` } : undefined
+      }
     >
       {letter}
     </div>
