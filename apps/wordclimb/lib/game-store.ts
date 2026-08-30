@@ -28,6 +28,12 @@ export interface GameState {
   attempts: number
   startTime: number
   hintsUsed: number
+  /**
+   * Coins spent on hints in this level. Sent when the level is banked, which
+   * is what carries an offline spend back to the server — there is no debit
+   * endpoint, because one would be unreachable exactly when it is needed.
+   */
+  coinsSpent: number
   isComplete: boolean
   feedback: "correct" | "wrong" | "already" | null
 }
@@ -162,6 +168,7 @@ export function createGameState(mode: GameMode, level: Level): GameState {
     attempts: 0,
     startTime: Date.now(),
     hintsUsed: 0,
+    coinsSpent: 0,
     isComplete: false,
     feedback: null,
   }

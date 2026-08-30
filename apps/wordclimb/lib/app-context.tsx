@@ -26,8 +26,15 @@ import {
 import { useDeviceUuid } from "@/hooks/use-device-uuid"
 import { getLaunchDeviceInfo } from "@marcel-games/lib"
 import { getLevel, getProgress, postLaunch, type ProgressResponse } from "@/lib/api"
-import { flushPendingResults } from "@/lib/pending-results"
+import {
+  flushPendingResults,
+  pendingResultCount,
+  shouldBlockOfflineStart,
+} from "@/lib/pending-results"
+import { getProgressCache, setProgressCache } from "@/lib/progress-cache"
+import { reconcileCoins } from "@/lib/coins"
 import { readStoredUserId, storeUserId } from "@/lib/user-id"
+import { t } from "@/lib/i18n"
 
 type Screen = "home" | "game" | "stats"
 
@@ -97,6 +104,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         })
         setUserId(data.userId)
         await storeUserId(data.userId)
+        // A reinstall gets its balance back here, before any screen asks.
+        if (typeof data.coins === "number") reconcileCoins(data.coins)
         // Results banked while offline are replayed in order, oldest first.
         await flushPendingResults(data.userId)
       } catch {
@@ -111,16 +120,62 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deviceUuid])
 
+  const refreshProgress = useCallback(
+    (id: string) => {
+      setLoadingProgress(true)
+      return getProgress(id)
+        .then((p) => {
+          setProgress(p)
+          setProgressCache(p)
+          // The server owns the balance; this is where the weekly refill and
+          // any offline spend it has since applied reach the local mirror.
+          if (typeof p.coins === "number") reconcileCoins(p.coins)
+        })
+        // Offline, the last confirmed progression is a far better answer than
+        // none: a null here rendered "Level 1" to a player forty levels in.
+        .catch(() => setProgress(getProgressCache()))
+        .finally(() => setLoadingProgress(false))
+    },
+    []
+  )
+
   useEffect(() => {
     if (screen !== "home" || !userId) return
-    setLoadingProgress(true)
-    getProgress(userId)
-      .then((p) => {
-        setProgress(p)
+    void refreshProgress(userId)
+  }, [screen, userId, refreshProgress])
+
+  /**
+   * Drains the offline queue whenever the app has a fresh chance of reaching
+   * the server.
+   *
+   * Replaying only at launch meant a player who finished levels on a train and
+   * kept the app open stayed unsynced until they killed and reopened it. Both
+   * events are best-effort hints, not proof of connectivity — navigator.onLine
+   * lies behind a captive portal — so the flush is simply attempted and allowed
+   * to fail. What actually gates offline play is the queue length, which is a
+   * fact rather than a guess.
+   */
+  useEffect(() => {
+    if (!userId) return
+
+    const drain = () => {
+      void flushPendingResults(userId).then((outcome) => {
+        // Only worth a round trip if the queue actually moved.
+        if (outcome.sent > 0) void refreshProgress(userId)
       })
-      .catch(() => setProgress(null))
-      .finally(() => setLoadingProgress(false))
-  }, [screen, userId])
+    }
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") drain()
+    }
+
+    window.addEventListener("online", drain)
+    document.addEventListener("visibilitychange", onVisible)
+    return () => {
+      window.removeEventListener("online", drain)
+      document.removeEventListener("visibilitychange", onVisible)
+    }
+  }, [userId, refreshProgress])
 
   const setLocale = useCallback((l: Locale) => {
     setLocaleState(l)
@@ -162,6 +217,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Offline, the local record of today's daily is the only thing standing
       // between the player and an unlimited daily challenge.
       if (!state && mode === "daily" && isDailyCompleted()) {
+        setStartingGame(false)
+        return
+      }
+
+      // The server did not answer and a stack of finished levels is already
+      // waiting to be sent. One last attempt to drain it — the connection may
+      // have come back since the queue was filled — and if it is still stuck,
+      // stop here rather than letting the unsynced pile grow.
+      if (!state && userId && shouldBlockOfflineStart(mode, pendingResultCount())) {
+        await flushPendingResults(userId)
+      }
+      if (!state && shouldBlockOfflineStart(mode, pendingResultCount())) {
+        setGameError(t(locale, "offlineLimit"))
         setStartingGame(false)
         return
       }

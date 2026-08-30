@@ -18,6 +18,11 @@ on:
         required: false
         default: '30'
         type: string
+      replace_future:
+        description: 'Rebuild the queued days from the current catalogue. Use after regenerating it; today is never touched.'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   populate-level:
@@ -84,9 +89,14 @@ jobs:
         # pasted straight into a shell line.
         TARGET_DATE: ${{ inputs.target_date }}
         DAYS: ${{ inputs.days || '30' }}
+        REPLACE_FUTURE: ${{ inputs.replace_future }}
       run: |
         if [ -n "$TARGET_DATE" ]; then
           go run ./cmd/populate-level-of-the-day "$TARGET_DATE"
+        elif [ "$REPLACE_FUTURE" = "true" ]; then
+          # After a catalogue regeneration: the queued days still hold puzzles
+          # from the old one, and the fill below skips any day already stored.
+          go run ./cmd/populate-level-of-the-day -days "$DAYS" -replace-future
         else
           # Fills today through today+DAYS, skipping days already stored.
           go run ./cmd/populate-level-of-the-day -days "$DAYS"

@@ -59,6 +59,32 @@ func HasUserCompletedTodaysLevel(ctx context.Context, userID string) bool {
 	return err == nil && levelHistory != nil
 }
 
+// DeleteLevelsOfTheDayAfter removes a locale's daily puzzles for every day
+// strictly after the given one, and reports how many it deleted.
+//
+// The counterpart to the guarantee below: copying the puzzle in means a
+// regenerated catalogue does not disturb days already played, but it also means
+// the days queued ahead keep serving puzzles from the catalogue that is gone.
+// An offline client computes its daily from the catalogue it ships, so for the
+// length of that queue the two would hand out different puzzles.
+//
+// Strictly after, never including the day passed in: today's puzzle may already
+// have been played and ranked, and replacing it under those players would
+// invalidate their result.
+func DeleteLevelsOfTheDayAfter(ctx context.Context, locale string, day time.Time) (int, error) {
+	after := StartOfDayUTC(day).Add(24 * time.Hour)
+
+	result, err := db.Client().LevelOfTheDay.FindMany(
+		db.LevelOfTheDay.Locale.Equals(db.Locale(locale)),
+		db.LevelOfTheDay.Date.Gte(after),
+	).Delete().Exec(ctx)
+
+	if err != nil {
+		return 0, err
+	}
+	return int(result.Count), nil
+}
+
 // CreateLevelOfTheDay stores the puzzle for a locale on a day. The whole puzzle
 // is copied in rather than referenced, so regenerating the catalogue can never
 // change a day that has already been played.

@@ -25,6 +25,8 @@ var localesToFill = []string{domain.LocaleEN, domain.LocaleFR}
 
 func main() {
 	horizon := flag.Int("days", defaultHorizonDays, "how many days ahead of today to fill")
+	replaceFuture := flag.Bool("replace-future", false,
+		"drop the queued puzzles after today and rebuild them from the current catalogue")
 	flag.Parse()
 
 	// Validate the inputs before opening a connection. A typo in a workflow
@@ -68,6 +70,20 @@ func main() {
 			}
 		}
 		return
+	}
+
+	// Run this after repopulating the catalogue: the days already queued still
+	// hold puzzles from the old one, and ensureLevel below skips any day that
+	// has a row. Clearing them first is what lets the window be rebuilt.
+	// Today is deliberately spared — it may already have been played.
+	if *replaceFuture {
+		for _, locale := range localesToFill {
+			deleted, err := repositories.DeleteLevelsOfTheDayAfter(ctx, locale, time.Now())
+			if err != nil {
+				log.Fatalf("Could not clear the queued %s levels: %v", locale, err)
+			}
+			fmt.Printf("Cleared %d queued %s levels after today\n", deleted, locale)
+		}
 	}
 
 	window := daysToFill(time.Now(), *horizon)
