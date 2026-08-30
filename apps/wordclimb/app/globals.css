@@ -178,3 +178,89 @@ html {
 button, a {
   -webkit-tap-highlight-color: transparent;
 }
+
+/* Word feedback animations.
+   ------------------------------------------------------------------
+   Written by hand rather than composed from tw-animate-css: neither a
+   left-to-right stagger nor a shake exists there, and both carry meaning here.
+   A solved word lights up letter by letter, which reads as the word being
+   accepted; a refused one flashes as a single block, which reads as the whole
+   guess being wrong rather than one letter of it.
+
+   The colours are the same tokens the boxes use in their resting states
+   (#2E8B57 found, #DC3545 refused), so the animation lands exactly on the
+   colour the row is about to hold — no flicker back to the old one. */
+@keyframes wc-letter-found {
+  0% {
+    background-color: #f0f0f0;
+    border-color: #1d70a2;
+    color: #1d70a2;
+    transform: scale(1);
+  }
+  45% {
+    background-color: #2e8b57;
+    border-color: #2e8b57;
+    color: #f8f8f8;
+    transform: scale(1.12);
+  }
+  100% {
+    background-color: #2e8b57;
+    border-color: #2e8b57;
+    color: #f8f8f8;
+    transform: scale(1);
+  }
+}
+
+@keyframes wc-letter-wrong {
+  0%,
+  100% {
+    background-color: #f0f0f0;
+    border-color: #1d70a2;
+    color: #1d70a2;
+  }
+  15%,
+  70% {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: #f8f8f8;
+  }
+}
+
+@keyframes wc-row-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-4px);
+  }
+  40%,
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+.wc-letter-found {
+  /* `both` so the box holds the end colour until React repaints it as found —
+     without it the letter snaps back to grey for a frame. */
+  animation: wc-letter-found 300ms ease-out both;
+}
+
+.wc-letter-wrong {
+  animation: wc-letter-wrong 500ms ease-in-out both;
+}
+
+.wc-row-shake {
+  animation: wc-row-shake 400ms ease-in-out both;
+}
+
+/* Respect the OS setting: the feedback still reads through colour alone. */
+@media (prefers-reduced-motion: reduce) {
+  .wc-letter-found,
+  .wc-letter-wrong,
+  .wc-row-shake {
+    animation-duration: 1ms;
+    animation-iteration-count: 1;
+  }
+}

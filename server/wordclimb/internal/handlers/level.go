@@ -91,17 +91,21 @@ func GetLevelHandler(c *gin.Context) {
 }
 
 type FinishLevelInfo struct {
-	UserID     string   `json:"userId"`
-	Attempts   int      `json:"attempts"`
-	TimeSpent  int      `json:"timeSpent"`
-	HintsUsed  int      `json:"hintsUsed"`
-	GameMode string `json:"gameMode"`
+	UserID    string `json:"userId"`
+	Attempts  int    `json:"attempts"`
+	TimeSpent int    `json:"timeSpent"`
+	HintsUsed int    `json:"hintsUsed"`
+	GameMode  string `json:"gameMode"`
 	// The puzzle that was solved. WordLadder is the intermediate words only.
 	BeginWord  string   `json:"beginWord"`
 	EndWord    string   `json:"endWord"`
 	WordLadder []string `json:"wordLadder"`
 	// Optional: an absent locale means English, the app's own default.
 	Locale string `json:"locale"`
+	// Coins spent on hints during this level. Absent on payloads written by
+	// older clients, and by the offline queue before this field existed, where
+	// it reads as zero — the level still banks, it just costs nothing.
+	CoinsSpent int `json:"coinsSpent"`
 }
 
 type FinishLevelResponse struct {
@@ -110,6 +114,9 @@ type FinishLevelResponse struct {
 	NextEndWord    string           `json:"nextEndWord"`
 	NextWordLadder []string         `json:"nextWordLadder"`
 	Stats          *DailyLevelStats `json:"stats,omitempty"`
+	// The balance after this level was charged. A pointer so a client that
+	// does not know about coins is not handed a misleading zero.
+	Coins *int `json:"coins,omitempty"`
 }
 
 func FinishLevelHandler(c *gin.Context) {
@@ -135,10 +142,16 @@ func FinishLevelHandler(c *gin.Context) {
 	// row — inflating the player's daily count and their rank with it.
 	if gameMode == domain.GameModeLevelOfTheDay &&
 		repositories.HasUserCompletedTodaysLevel(ctx, req.UserID) {
+		// Deliberately not charged: this is the same level arriving twice, and
+		// the queue replays a payload whose first response was lost. Charging
+		// here would bill a player again for hints they took once. The cost is
+		// a debit lost when the original response went missing — rare, and in
+		// the player's favour, which is the right way round.
 		c.JSON(http.StatusOK, FinishLevelResponse{
 			NextLevel:      1,
 			NextWordLadder: []string{},
 			Stats:          buildDailyLevelStats(ctx, req.UserID),
+			Coins:          coinBalance(ctx, req.UserID),
 		})
 		return
 	}
@@ -185,6 +198,16 @@ func FinishLevelHandler(c *gin.Context) {
 		NextEndWord:    payload.EndWord,
 		NextWordLadder: payload.WordLadder,
 		Stats:          stats,
+		// Charged only once the level is banked. Hints taken offline ride
+		// along on this field, which is why there is no debit endpoint of its
+		// own — one would be unreachable in the exact situation it exists for.
+		// Bounded by the ladder that was actually solved, not by a flat number.
+		Coins: chargeCoins(
+			ctx,
+			req.UserID,
+			req.CoinsSpent,
+			domain.MaxCoinsForLadder(len(req.WordLadder)),
+		),
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -255,6 +278,7 @@ type GetProgressResponse struct {
 	RandomLevel    int              `json:"randomLevel"`
 	DailyCompleted bool             `json:"dailyCompleted"`
 	Stats          *DailyLevelStats `json:"stats,omitempty"`
+	Coins          *int             `json:"coins,omitempty"`
 }
 
 func GetProgressHandler(c *gin.Context) {
@@ -272,6 +296,9 @@ func GetProgressHandler(c *gin.Context) {
 		RandomLevel:    nextLevelFor(ctx, req.UserID, domain.GameModeRandom),
 		DailyCompleted: repositories.HasUserCompletedTodaysLevel(ctx, req.UserID),
 		Stats:          buildDailyLevelStats(ctx, req.UserID),
+		// The home screen is where a returning player lands, so this is where
+		// the weekly refill usually happens.
+		Coins: coinBalance(ctx, req.UserID),
 	}
 
 	c.JSON(http.StatusOK, response)

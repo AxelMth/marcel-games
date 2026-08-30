@@ -13,6 +13,14 @@ model User {
   lastLogin  DateTime
   openCount  Int
 
+  // Hint currency. `coins` is the authoritative balance — the client keeps a
+  // local mirror so it can spend offline, and reports what it spent when a
+  // level is banked. `coinsWeek` is the ISO week that balance was last
+  // refilled for ("2026-W35"), which is what makes the weekly top-up happen
+  // once rather than on every read.
+  coins     Int    @default(10)
+  coinsWeek String @default("")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

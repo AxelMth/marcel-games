@@ -12,6 +12,8 @@
  * render — a row has one box per letter.
  */
 
+import { randomFrom, shuffled } from "./seeded-random.mjs"
+
 const ALPHABET = "abcdefghijklmnopqrstuvwxyz"
 
 /**
@@ -103,7 +105,7 @@ export function allLadders(graph, minRungs, maxRungs) {
  * tiers and rationing how often a word may reappear keeps the catalogue varied
  * without discarding most of it.
  */
-export function selectSpread(ladders, { limit, maxUsesPerWord }) {
+export function selectSpread(ladders, { limit, maxUsesPerWord, seed = 1 }) {
   // Derived from the corpus when not given. English has only ~500 four-letter
   // words, so a low cap would starve the catalogue; French has thousands and
   // barely notices. Roughly: how many slots each word must fill on average,
@@ -124,11 +126,26 @@ export function selectSpread(ladders, { limit, maxUsesPerWord }) {
     byRungs.set(ladder.wordLadder.length, list)
   }
 
-  // Deterministic but not alphabetical: interleave so neighbours in the source
-  // order do not end up adjacent in the catalogue.
-  for (const list of byRungs.values()) {
-    list.sort((a, b) =>
-      (a.beginWord + a.endWord).localeCompare(b.beginWord + b.endWord)
+  // Sort, then shuffle against a fixed seed. The sort is not the order that
+  // ships — it is there so the shuffle starts from the same list whatever order
+  // the enumeration happened to yield, which is what makes the result
+  // reproducible for both the client and the server build.
+  //
+  // The shuffle is the point. Rationing below stops at the first ladders that
+  // fit the quota, so walking an alphabetical list handed those quotas to the
+  // top of the dictionary: 73% of French levels opened on a word starting a–f,
+  // and not one on u, w, x, y or z. Shuffling first spends the same quota on a
+  // sample spread across the whole alphabet.
+  const random = randomFrom(seed)
+  for (const [rungs, list] of byRungs) {
+    byRungs.set(
+      rungs,
+      shuffled(
+        list.sort((a, b) =>
+          (a.beginWord + a.endWord).localeCompare(b.beginWord + b.endWord)
+        ),
+        random
+      )
     )
   }
 

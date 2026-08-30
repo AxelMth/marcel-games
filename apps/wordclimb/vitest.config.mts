@@ -12,5 +12,14 @@ export default defineConfig({
     // e2e/ belongs to Playwright and must not be collected here.
     include: ["{lib,components,hooks,app}/**/*.test.{ts,tsx}"],
     restoreMocks: true,
+    server: {
+      deps: {
+        // Workspace packages ship TypeScript, not a build. Left externalised
+        // they are handed to Node raw, which then reads our "@/…" aliases as
+        // npm package names and fails to resolve them — so any test rendering
+        // a component that pulls in @marcel-games/* cannot even load.
+        inline: [/@marcel-games\//],
+      },
+    },
   },
 })

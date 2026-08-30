@@ -95,19 +95,18 @@ describe("the shipped definitions", () => {
         expect(blank).toEqual([])
       })
 
-      it("covers all but a handful of the rungs the catalogue can ask for", () => {
+      it("covers every rung the catalogue can ask for", () => {
         // beginWord and endWord are on screen from the first frame, so they
         // are deliberately absent. A rung is a word the player has to type.
         const uncovered = rungsOf(locale)
           .filter((word) => !DEFINITIONS[locale][word])
           .sort()
-        // Named rather than given a percentage: the gaps are catalogue
-        // oddities Wiktionary has no French entry for — "mlle", and English
-        // words the French list let through. A ratio wide enough to hold
-        // these five would also sit quietly through twenty more.
-        expect(uncovered).toEqual(
-          locale === "fr" ? ["back", "juan", "line", "mlle", "sine"] : []
-        )
+        // Exact rather than a ratio, and empty rather than a named list: the
+        // generator now requires a Wiktionary entry before a word may enter
+        // the graph at all, so a rung with no definition means that filter
+        // broke — the same hole "mlle" came through. A percentage loose
+        // enough to hold one gap would sit quietly through twenty.
+        expect(uncovered).toEqual([])
       })
     })
   }

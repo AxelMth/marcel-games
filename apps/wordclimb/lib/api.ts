@@ -47,6 +47,8 @@ export type DailyLevelStats = {
 export type LaunchResponse = {
   userId: string
   level: number
+  /** Hint balance. Absent from a server that predates coins. */
+  coins?: number
 } & LevelPayload
 
 export type LevelResponse = {
@@ -60,6 +62,8 @@ export type FinishLevelResponse = {
   nextEndWord: string
   nextWordLadder: string[]
   stats?: DailyLevelStats
+  /** Hint balance after this level was charged. */
+  coins?: number
 }
 
 export type ProgressResponse = {
@@ -68,6 +72,8 @@ export type ProgressResponse = {
   randomLevel: number
   dailyCompleted: boolean
   stats?: DailyLevelStats
+  /** Hint balance, refilled weekly by the server. */
+  coins?: number
 }
 
 export type GameHistoryEntry = {
@@ -190,6 +196,8 @@ export async function postFinishLevel(body: {
   beginWord: string
   endWord: string
   wordLadder: string[]
+  /** Coins spent on hints. Absent on results queued before coins existed. */
+  coinsSpent?: number
 }): Promise<FinishLevelResponse> {
   return postJson<FinishLevelResponse>(apiUrl(API_PATHS.level), body, "Finish level")
 }

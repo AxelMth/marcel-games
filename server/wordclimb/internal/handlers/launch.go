@@ -72,5 +72,10 @@ func LaunchHandler(c *gin.Context) {
 		"endWord":    payload.EndWord,
 		"wordLadder": payload.WordLadder,
 	}
+	// A reinstall gets its balance back on the first call, before the player
+	// reaches a screen that could ask for it.
+	if coins := coinBalance(ctx, user.ID); coins != nil {
+		response["coins"] = *coins
+	}
 	c.JSON(http.StatusOK, response)
 }

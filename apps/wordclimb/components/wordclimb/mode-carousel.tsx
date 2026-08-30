@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { BookOpen, Calendar } from "lucide-react"
 import { useApp } from "@/lib/app-context"
 import { t } from "@/lib/i18n"
-import type { GameMode } from "@/lib/game-store"
+import { getClassicProgress, type GameMode } from "@/lib/game-store"
 
 const modes: { key: GameMode; icon: typeof BookOpen; color: string }[] = [
   { key: "classic", icon: BookOpen, color: "#1D70A2" },
@@ -81,7 +81,14 @@ export function ModeCarousel() {
     void startGame(mode)
   }
 
-  const classicLevel = progress?.worldLevel ?? 1
+  // The furthest of the two records the app holds. The server owns the
+  // progression, but offline it cannot be asked, and the levels finished on
+  // this device are still real — showing "Level 1" to a player forty levels in
+  // is worse than showing a count the server has not confirmed yet.
+  const classicLevel = Math.max(
+    progress?.worldLevel ?? 1,
+    getClassicProgress() + 1
+  )
   const dailyDone = progress?.dailyCompleted ?? false
 
   return (

@@ -1,6 +1,6 @@
 "use client"
 
-import type { LucideIcon } from "lucide-react"
+import { Coins, type LucideIcon } from "lucide-react"
 
 interface HintChoiceProps {
   icon: LucideIcon
@@ -10,6 +10,10 @@ interface HintChoiceProps {
   description: string
   onClick: () => void
   disabled?: boolean
+  /** Prix en pièces, affiché à droite. */
+  cost?: number
+  /** Le joueur n'a pas de quoi payer : le prix passe en rouge. */
+  unaffordable?: boolean
 }
 
 /**
@@ -27,6 +31,8 @@ export function HintChoice({
   description,
   onClick,
   disabled,
+  cost,
+  unaffordable,
 }: HintChoiceProps) {
   return (
     <button
@@ -41,10 +47,24 @@ export function HintChoice({
       >
         <Icon size={20} style={{ color }} />
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <span className="text-sm font-bold text-[#0A3D62]">{title}</span>
         <p className="mt-0.5 text-xs text-[#50555C]">{description}</p>
       </div>
+      {cost !== undefined && (
+        // Le prix se lit avant d'appuyer : un indice qui coûte trois fois les
+        // autres ne doit pas se découvrir une fois payé.
+        <span
+          className={`flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-xs font-bold ${
+            unaffordable
+              ? "bg-[#DC3545]/10 text-[#DC3545]"
+              : "bg-[#D4782F]/10 text-[#D4782F]"
+          }`}
+        >
+          <Coins size={12} />
+          {cost}
+        </span>
+      )}
     </button>
   )
 }
