@@ -3,7 +3,7 @@
 import type { ReactNode } from "react"
 import { ScreenHeader as SharedScreenHeader } from "@marcel-games/ui"
 import { useApp } from "@/lib/app-context"
-import { t, type translations } from "@/lib/i18n"
+import { t, type translations } from "@marcel-games/wordclimb-core"
 
 type TranslationKey = keyof typeof translations.en
 

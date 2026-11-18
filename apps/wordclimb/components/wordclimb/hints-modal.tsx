@@ -12,7 +12,7 @@ import {
   SheetTitle,
 } from "@marcel-games/ui"
 import { useApp } from "@/lib/app-context"
-import { t } from "@/lib/i18n"
+import { t } from "@marcel-games/wordclimb-core"
 import { getDefinition, hasDefinition } from "@/lib/data/definitions"
 import { HINT_COSTS } from "@/lib/coins"
 import { HintChoice } from "./hint-choice"

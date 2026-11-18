@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
-import { CATALOGUE, type Level } from "@/lib/data/catalogue"
+import { CATALOGUE, type Level } from "@marcel-games/wordclimb-core"
 
 /**
  * The offline fallback only works because both catalogues are the same

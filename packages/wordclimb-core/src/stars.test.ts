@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { getStars } from "@/lib/stars"
+import { getStars } from "./stars"
 
 describe("getStars", () => {
   it("gives three stars for a clean run with no hints", () => {

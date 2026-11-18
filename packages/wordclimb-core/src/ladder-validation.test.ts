@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { CATALOGUE } from "./data/catalogue"
+import { CATALOGUE } from "./catalogue"
 import {
   hammingDistance,
   isValidLevel,

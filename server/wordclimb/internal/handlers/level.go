@@ -22,7 +22,7 @@ type GetLevelInfo struct {
 //
 // WordLadder holds the intermediate words only — the ones the player has to
 // find — with the begin and end words in their own fields. Same convention as
-// the client's Level type (apps/wordclimb/lib/data/catalogue.ts), so the puzzle
+// the client's Level type (packages/wordclimb-core/src/catalogue.ts), so the puzzle
 // the API serves and the puzzle the client falls back to offline have the same
 // shape.
 type LevelPayload struct {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { CATALOGUE } from "@/lib/data/catalogue"
+import { CATALOGUE } from "@marcel-games/wordclimb-core"
 import { DEFINITIONS, getDefinition } from "@/lib/data/definitions"
 
 /**

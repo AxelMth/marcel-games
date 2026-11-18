@@ -23,7 +23,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = join(__dirname, "..", "lib", "data")
 const SOURCE_DIR = join(__dirname, "..", "data-sources")
 // The catalogue as build-catalogue.mjs mirrors it for the Go server: the same
-// levels in the same order as lib/data/catalogue.ts, minus the TypeScript that
+// levels in the same order as packages/wordclimb-core/src/catalogue.ts, minus the TypeScript that
 // a plain .mjs cannot import on the Node 20 the repo still allows.
 const CATALOGUE_JSON = join(
   __dirname,

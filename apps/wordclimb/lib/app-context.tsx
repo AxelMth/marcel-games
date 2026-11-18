@@ -11,7 +11,7 @@ import {
   type ReactNode,
   type SetStateAction,
 } from "react"
-import type { Locale } from "@/lib/i18n"
+import { t, type Locale } from "@marcel-games/wordclimb-core"
 import type { GameMode, GameState } from "@/lib/game-store"
 import {
   createGameState,
@@ -34,7 +34,6 @@ import {
 import { getProgressCache, setProgressCache } from "@/lib/progress-cache"
 import { reconcileCoins } from "@/lib/coins"
 import { readStoredUserId, storeUserId } from "@/lib/user-id"
-import { t } from "@/lib/i18n"
 
 type Screen = "home" | "game" | "stats"
 

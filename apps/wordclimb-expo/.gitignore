@@ -1,0 +1,11 @@
+node_modules/
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native projects are generated from app.json by `expo prebuild`.
+ios/
+android/
+
+.env*.local

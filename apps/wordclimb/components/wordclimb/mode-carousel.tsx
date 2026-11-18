@@ -4,7 +4,7 @@ import { useRef, useState, useCallback, type MouseEvent, type TouchEvent } from 
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { BookOpen, Calendar } from "lucide-react"
 import { useApp } from "@/lib/app-context"
-import { t } from "@/lib/i18n"
+import { t } from "@marcel-games/wordclimb-core"
 import { getClassicProgress, type GameMode } from "@/lib/game-store"
 
 const modes: { key: GameMode; icon: typeof BookOpen; color: string }[] = [
