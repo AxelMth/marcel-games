@@ -9,7 +9,7 @@ import {
 } from "react";
 import { Lightbulb, HelpCircle } from "lucide-react";
 import { useApp } from "@/lib/app-context";
-import { t } from "@/lib/i18n";
+import { t } from "@marcel-games/wordclimb-core";
 import { ScreenHeader } from "@marcel-games/ui";
 import { useKeyboardOffset, triggerNotificationHaptic } from "@marcel-games/lib";
 import {

@@ -3,7 +3,7 @@
 import Image from "next/image"
 import { Settings, Loader2 } from "lucide-react"
 import { useApp } from "@/lib/app-context"
-import { t } from "@/lib/i18n"
+import { t } from "@marcel-games/wordclimb-core"
 import { ModeCarousel } from "./mode-carousel"
 import { ScreenHeader } from "./screen-header"
 

@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "@marcel-games/ui"
 import { useApp } from "@/lib/app-context"
-import { t } from "@/lib/i18n"
+import { t } from "@marcel-games/wordclimb-core"
 
 // The same policy is published at legal/wordclimb-privacy-and-terms.md and
 // hosted via the legal-pages workflow; both store listings require that public

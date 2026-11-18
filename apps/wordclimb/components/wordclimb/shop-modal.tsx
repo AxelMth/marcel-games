@@ -11,7 +11,7 @@ import {
   SheetTitle,
 } from "@marcel-games/ui"
 import { useApp } from "@/lib/app-context"
-import { t } from "@/lib/i18n"
+import { t } from "@marcel-games/wordclimb-core"
 import { WEEKLY_COIN_ALLOWANCE } from "@/lib/coins"
 
 interface ShopModalProps {

@@ -6,6 +6,8 @@
  * WordClimb lives under /wordclimb/*: when that lands, only API_PATHS changes.
  */
 
+import type { BackendGameMode, BackendLocale } from "@marcel-games/wordclimb-core"
+
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "https://wordclimb-api.fly.dev"
 
@@ -25,11 +27,7 @@ function apiUrl(path: string, params?: Record<string, string>): string {
   return `${API_BASE_URL}${path}${query}`
 }
 
-/** Game modes as declared by the GameMode enum in the server's schema.prisma. */
-export type BackendGameMode = "NORMAL" | "RANDOM" | "LEVEL_OF_THE_DAY"
-
-/** Languages as declared by the Locale enum in the server's schema.prisma. */
-export type BackendLocale = "EN" | "FR"
+export type { BackendGameMode, BackendLocale }
 
 export type LevelPayload = {
   beginWord: string

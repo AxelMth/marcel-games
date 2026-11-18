@@ -9,8 +9,7 @@ import {
   StarRating,
 } from "@marcel-games/ui"
 import { useApp } from "@/lib/app-context"
-import { t } from "@/lib/i18n"
-import { getStars } from "@/lib/stars"
+import { getStars, t } from "@marcel-games/wordclimb-core"
 
 interface SuccessModalProps {
   attempts: number

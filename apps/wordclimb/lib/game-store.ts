@@ -1,42 +1,26 @@
 "use client"
 
-import { CATALOGUE, type Level } from "@/lib/data/catalogue"
-import type { BackendGameMode, BackendLocale } from "@/lib/api"
+import {
+  CATALOGUE,
+  classicLevelAt,
+  createGameState,
+  dailyLevelIndexFor,
+  utcDateString,
+  type GameMode,
+  type GameState,
+  type Level,
+} from "@marcel-games/wordclimb-core"
 
-export type GameMode = "classic" | "daily"
-
-export function toBackendGameMode(mode: GameMode): BackendGameMode {
-  switch (mode) {
-    case "daily":
-      return "LEVEL_OF_THE_DAY"
-    case "classic":
-    default:
-      return "NORMAL"
-  }
-}
-
-/** Maps the app's locale onto the Locale enum the server stores. */
-export function toBackendLocale(locale: "en" | "fr"): BackendLocale {
-  return locale === "fr" ? "FR" : "EN"
-}
-
-export interface GameState {
-  mode: GameMode
-  level: Level
-  currentWordIndex: number // index in wordLadder of the word the user needs to find
-  foundWords: boolean[] // which intermediate words have been found
-  attempts: number
-  startTime: number
-  hintsUsed: number
-  /**
-   * Coins spent on hints in this level. Sent when the level is banked, which
-   * is what carries an offline spend back to the server — there is no debit
-   * endpoint, because one would be unreachable exactly when it is needed.
-   */
-  coinsSpent: number
-  isComplete: boolean
-  feedback: "correct" | "wrong" | "already" | null
-}
+export {
+  createGameState,
+  dailyLevelIndexFor,
+  levelFromApi,
+  toBackendGameMode,
+  toBackendLocale,
+  utcDateString,
+  type GameMode,
+  type GameState,
+} from "@marcel-games/wordclimb-core"
 
 // Get the classic level progress from localStorage
 export function getClassicProgress(): number {
@@ -57,38 +41,6 @@ export function setClassicProgress(level: number): void {
  */
 export function levelsForLocale(locale: "en" | "fr" = getSavedLocale()): Level[] {
   return CATALOGUE[locale]
-}
-
-/**
- * The UTC day, as YYYY-MM-DD.
- *
- * The daily challenge turns over at midnight UTC on the server, so every notion
- * of "today" in the app is a UTC day. Using the device's local date instead
- * would hand players near a date boundary a different puzzle from the one the
- * server ranks them against.
- */
-export function utcDateString(date: Date = new Date()): string {
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0")
-  const day = String(date.getUTCDate()).padStart(2, "0")
-  return `${date.getUTCFullYear()}-${month}-${day}`
-}
-
-/**
- * Picks the daily puzzle out of a catalogue of `levelCount` levels.
- *
- * The server reproduces this exact hash in pkg/utils/level.go (DailyLevelIndex)
- * so both sides land on the same puzzle for a given day — which is what makes
- * the offline fallback play the same daily the server would have served.
- */
-export function dailyLevelIndexFor(dateStr: string, levelCount: number): number {
-  if (levelCount <= 0) return 0
-  let hash = 0
-  for (let i = 0; i < dateStr.length; i++) {
-    const char = dateStr.charCodeAt(i)
-    hash = (hash << 5) - hash + char
-    hash |= 0
-  }
-  return Math.abs(hash) % levelCount
 }
 
 // Get the daily level based on date
@@ -124,53 +76,11 @@ export function getLevelForMode(
   const levels = levelsForLocale(locale)
   switch (mode) {
     case "classic": {
-      const progress = getClassicProgress()
-      const index = progress % levels.length
-      return levels[index]
+      return classicLevelAt(levels, getClassicProgress())
     }
     case "daily": {
       return levels[getDailyLevelIndex(locale)]
     }
-  }
-}
-
-/**
- * Converts an API level payload into a playable level, or null when the server
- * has nothing to hand out — a daily already finished today, or a catalogue that
- * has not been populated for this language.
- *
- * Both sides use the same convention: wordLadder holds the intermediate words
- * only, with the begin and end words in their own fields.
- */
-export function levelFromApi(payload: {
-  level?: number
-  beginWord: string
-  endWord: string
-  wordLadder: string[]
-}): Level | null {
-  if (!payload.beginWord || !payload.endWord) return null
-  if (!payload.wordLadder || payload.wordLadder.length === 0) return null
-  return {
-    id: payload.level ?? 0,
-    beginWord: payload.beginWord,
-    endWord: payload.endWord,
-    wordLadder: payload.wordLadder,
-  }
-}
-
-/** Wraps a level — from the API or from the bundled catalogue — in a fresh game. */
-export function createGameState(mode: GameMode, level: Level): GameState {
-  return {
-    mode,
-    level,
-    currentWordIndex: 0,
-    foundWords: new Array(level.wordLadder.length).fill(false),
-    attempts: 0,
-    startTime: Date.now(),
-    hintsUsed: 0,
-    coinsSpent: 0,
-    isComplete: false,
-    feedback: null,
   }
 }
 

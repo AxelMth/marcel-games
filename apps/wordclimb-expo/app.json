@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "WordClimb",
+    "slug": "wordclimb",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "wordclimb",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#D9F2E3",
+    "ios": {
+      "bundleIdentifier": "com.marcelgames.wordclimb",
+      "supportsTablet": false,
+      "config": {
+        "usesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.marcelgames.wordclimb",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon-foreground.png",
+        "backgroundImage": "./assets/icon-background.png"
+      }
+    },
+    "web": {
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-localization",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#D9F2E3",
+          "image": "./assets/icon-foreground.png",
+          "imageWidth": 160
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}

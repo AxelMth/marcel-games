@@ -11,7 +11,7 @@ import {
   WifiOff,
 } from "lucide-react"
 import { useApp } from "@/lib/app-context"
-import { t } from "@/lib/i18n"
+import { t } from "@marcel-games/wordclimb-core"
 import {
   ApiHttpError,
   getProfile,

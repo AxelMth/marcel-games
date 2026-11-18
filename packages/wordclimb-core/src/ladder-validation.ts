@@ -1,4 +1,4 @@
-import type { Level } from "./data/catalogue"
+import type { Level } from "./catalogue"
 
 export interface LadderProblem {
   levelId: number

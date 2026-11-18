@@ -18,6 +18,17 @@ import { randomFrom, shuffled } from "./lib/seeded-random.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = join(__dirname, "..", "lib", "data")
+// The catalogue is shared by every WordClimb client, so it is emitted into the
+// package they all import rather than into one app.
+const CORE_SRC_DIR = join(
+  __dirname,
+  "..",
+  "..",
+  "..",
+  "packages",
+  "wordclimb-core",
+  "src"
+)
 // The Go server seeds its Level table from the very same catalogue this script
 // emits for the client. One generator, one order, one set of level numbers:
 // a level the server calls 12 is the level the client falls back to offline.
@@ -186,8 +197,10 @@ export const CATALOGUE: Record<"en" | "fr", Level[]> = {
 }
 `
 
-writeFileSync(join(DATA_DIR, "catalogue.ts"), body)
-console.log(`\nWrote lib/data/catalogue.ts — en: ${en.length}, fr: ${fr.length}`)
+writeFileSync(join(CORE_SRC_DIR, "catalogue.ts"), body)
+console.log(
+  `\nWrote packages/wordclimb-core/src/catalogue.ts — en: ${en.length}, fr: ${fr.length}`
+)
 
 // Same levels, same order, for cmd/populate-levels to load into Postgres.
 // JSON rather than generated Go: the server only ever reads it, and a 600 KB
