@@ -1,12 +1,14 @@
 import { t } from "@marcel-games/wordclimb-core"
 import { useRouter } from "expo-router"
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native"
+import { Pressable } from "react-native-gesture-handler"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Lipped, PressableLip } from "@/components/lipped"
 import { Mascot, MASCOT_HEIGHT } from "@/components/mascot"
 import { retryLoadProgress, useProgress } from "@/game/progress-store"
+import { openLegalPage } from "@/lib/legal"
 import { deviceLocale } from "@/lib/locale"
-import { colors, fonts, LIP } from "@/theme/tokens"
+import { colors, fonts, LIP, MIN_TOUCH } from "@/theme/tokens"
 
 const WORDMARK_TILE = 44
 const WORDMARK_GAP = 6
@@ -38,7 +40,7 @@ export default function HomeScreen() {
   const progress = useProgress()
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top, paddingBottom: insets.bottom + 16 }]}>
+    <View style={[styles.screen, { paddingTop: insets.top, paddingBottom: insets.bottom + 4 }]}>
       <View style={styles.halo} />
 
       <View style={styles.hero}>
@@ -94,6 +96,14 @@ export default function HomeScreen() {
             </View>
           </PressableLip>
         )}
+
+        <Pressable
+          accessibilityRole="link"
+          onPress={() => void openLegalPage()}
+          style={styles.legal}
+        >
+          <Text style={styles.legalLabel}>{t(locale, "legalOpen")}</Text>
+        </Pressable>
       </View>
     </View>
   )
@@ -136,6 +146,13 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingLeft: 24,
     paddingRight: 16,
+  },
+  legal: { minHeight: MIN_TOUCH, alignItems: "center", justifyContent: "center" },
+  legalLabel: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.muted,
+    textDecorationLine: "underline",
   },
   playLabel: { fontFamily: fonts.display, fontSize: 26, color: colors.surface },
   levelChip: {

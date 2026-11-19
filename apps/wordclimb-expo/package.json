@@ -8,6 +8,9 @@
     "ios": "expo run:ios",
     "android": "expo run:android",
     "web": "expo start --web",
+    "ios:prebuild": "LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 expo prebuild --platform ios --clean",
+    "ios:archive": "xcodebuild -workspace ios/WordClimb.xcworkspace -scheme WordClimb -configuration Release -destination 'generic/platform=iOS' -archivePath build/WordClimb.xcarchive -allowProvisioningUpdates archive",
+    "ios:export": "xcodebuild -exportArchive -archivePath build/WordClimb.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath build/ipa -allowProvisioningUpdates",
     "lint": "eslint . && tsc --noEmit"
   },
   "dependencies": {

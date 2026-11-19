@@ -5,7 +5,7 @@ description: "Politique de confidentialité et conditions d'utilisation de WordC
 
 # WordClimb — Privacy Policy & Terms of Use
 
-_Last updated: 2026-08-24_
+_Last updated: 2026-11-19_
 
 
 ## Privacy Policy
@@ -13,13 +13,9 @@ _Last updated: 2026-08-24_
 **Who we are.** WordClimb is a word-ladder game. We do not ask you to create an
 account and we do not collect your name, email address, or contacts.
 
-**Data we process.**
-- **Anonymous device identifier** — a random ID generated on first launch to save
-  your progress and ranking. It is not linked to your real identity.
-- **Gameplay data** — levels completed, attempts, time and hints used, sent to our
-  game server to compute rankings.
-- **Device info** — brand, model and OS version, for diagnostics and compatibility.
-- **Anonymous usage analytics** help us improve the app.
+**Data we process.** None leaves your device. Your progress (the number of
+levels completed) is stored locally on your device. The app has no game server,
+no analytics and does not connect to the internet to play.
 
 **Advertising.** WordClimb shows no ads. We do not use your device's
 advertising identifier and we do not track you across other apps or websites.
@@ -38,7 +34,7 @@ entertainment. Don't misuse the service, attempt to disrupt it, or reverse
 engineer it.
 
 **No warranty.** The app is provided "as is", without warranties of any kind.
-Rankings and game content may change or be reset.
+Game content may change.
 
 **Limitation of liability.** To the extent permitted by law, we are not liable for
 any indirect or incidental damages arising from your use of the app.
