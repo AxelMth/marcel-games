@@ -40,6 +40,7 @@ export {
   eraseLetter,
   settleCelebration,
   takeDefinitionHint,
+  takeFullWordHint,
   takeFirstLetterHint,
   typeLetter,
   type PlaySession,

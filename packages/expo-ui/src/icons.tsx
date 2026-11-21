@@ -37,6 +37,18 @@ export function CoinIcon({ size = 18, color }: IconProps) {
   )
 }
 
+/** A minted coin, for rewards and balances: a gold disc with a rim and a shine. */
+export function GoldCoin({ size = 22 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Circle cx={12} cy={12} r={11} fill="#B7790A" />
+      <Circle cx={12} cy={11.2} r={10} fill="#F5B921" />
+      <Circle cx={12} cy={11.2} r={6.6} fill="none" stroke="#D99A12" strokeWidth={1.6} />
+      <Path d="M7.4 7.6a6 6 0 0 1 4.2-2.2" stroke="#FFE38A" strokeWidth={1.8} {...STROKE} />
+    </Svg>
+  )
+}
+
 export function StarIcon({ size = 22, color }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24">

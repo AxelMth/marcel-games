@@ -22,9 +22,10 @@ export interface PlaySession {
 export interface RungHints {
   firstLetter: boolean
   definition: boolean
+  fullWord: boolean
 }
 
-const NO_HINTS: RungHints = { firstLetter: false, definition: false }
+const NO_HINTS: RungHints = { firstLetter: false, definition: false, fullWord: false }
 
 export function createSession(mode: GameMode, level: Level): PlaySession {
   return {
@@ -91,6 +92,15 @@ export function takeFirstLetterHint(session: PlaySession): PlaySession {
 export function takeDefinitionHint(session: PlaySession): PlaySession {
   if (session.game.isComplete) return session
   return countHint(session, "definition")
+}
+
+/**
+ * Pays for the whole word: the rung is cleared so the caller can type the word
+ * in, letter by letter, through the same path as a guess.
+ */
+export function takeFullWordHint(session: PlaySession): PlaySession {
+  if (session.refused || session.game.isComplete) return session
+  return { ...countHint(session, "fullWord"), typed: "" }
 }
 
 /**

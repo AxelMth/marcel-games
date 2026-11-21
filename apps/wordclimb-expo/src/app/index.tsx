@@ -2,9 +2,11 @@ import { t } from "@marcel-games/wordclimb-core"
 import { useRouter } from "expo-router"
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { colors, fonts, LegalLink, PressableSurface, Surface } from "@marcel-games/expo-ui"
+import { CoinCounter, colors, fonts, LegalLink, PressableSurface, Surface } from "@marcel-games/expo-ui"
 import { daily } from "@/game/daily-store"
 import { retryLoadProgress, useProgress } from "@/game/progress-store"
+import { useCoinBalance } from "@/game/wallet-store"
+import { brand } from "@/lib/brand"
 import { deviceLocale } from "@/lib/locale"
 
 // Published from legal/ by the legal-pages workflow; the same URL goes into App Store Connect.
@@ -38,6 +40,7 @@ export default function HomeScreen() {
   const locale = deviceLocale()
   const progress = useProgress()
   const today = daily.useToday()
+  const coins = useCoinBalance()
   const dailyDone = today?.done ?? false
   const globalRank = today?.stats?.globalRank ?? 0
   const dailyNote = !dailyDone
@@ -50,9 +53,12 @@ export default function HomeScreen() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top, paddingBottom: insets.bottom + 4 }]}>
+      <View style={styles.topBar}>
+        <CoinCounter value={coins} accessibilityLabel={`${coins ?? 0} ${t(locale, "coins")}`} />
+      </View>
       <View style={styles.hero}>
         <View accessible accessibilityRole="header" accessibilityLabel="WordClimb">
-          <WordmarkRow word="WORD" face={colors.found} />
+          <WordmarkRow word="WORD" face={brand.accent} />
           <View style={styles.wordmarkSecondRow}>
             <WordmarkRow word="CLIMB" face={colors.ink} />
           </View>
@@ -85,7 +91,7 @@ export default function HomeScreen() {
               router.push({ pathname: "/game", params: { index: String(progress.progress) } })
             }
             accessibilityLabel={`${t(locale, "play")}, ${t(locale, "level")} ${progress.progress + 1}`}
-            face={colors.ink}
+            face={brand.accent}
             radius={14}
             height={64}
             style={styles.play}
@@ -104,8 +110,8 @@ export default function HomeScreen() {
             onPress={() => router.push({ pathname: "/game", params: { daily: "1" } })}
             accessibilityLabel={`${t(locale, "dailyChallenge")}, ${dailyNote}`}
             disabled={dailyDone}
-            face={colors.surface}
-            border={colors.line}
+            face={dailyDone ? colors.surface : brand.dailySoft}
+            border={dailyDone ? colors.line : brand.daily}
             radius={14}
             height={64}
             style={styles.daily}
@@ -122,7 +128,8 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.ground },
+  screen: { flex: 1, backgroundColor: brand.accentSoft },
+  topBar: { height: 48, paddingHorizontal: 16, alignItems: "flex-end", justifyContent: "center" },
   hero: { flex: 1, alignItems: "center", justifyContent: "center", gap: 28 },
   wordmarkRow: { flexDirection: "row", gap: WORDMARK_GAP },
   wordmarkSecondRow: { marginTop: WORDMARK_GAP, marginLeft: WORDMARK_STEP },
@@ -153,7 +160,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 12,
     justifyContent: "center",
-    backgroundColor: colors.inkSoft,
+    backgroundColor: brand.accentDeep,
   },
   levelChipText: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.surface },
 })

@@ -16,10 +16,20 @@ import {
   type TranslationKey,
 } from "@marcel-games/wordclimb-core"
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState, type ComponentRef } from "react"
 import { ActivityIndicator, StyleSheet, Text, useWindowDimensions, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { ChevronLeftIcon, CoinIcon, colors, fonts, MIN_TOUCH, PressableSurface, StarIcon } from "@marcel-games/expo-ui"
+import {
+  ChevronLeftIcon,
+  CoinCounter,
+  colors,
+  fonts,
+  GoldCoin,
+  LevelComplete,
+  MIN_TOUCH,
+  PressableSurface,
+  type Point,
+} from "@marcel-games/expo-ui"
 import { Keyboard } from "@/components/keyboard"
 import { Ladder } from "@/components/ladder"
 import { daily } from "@/game/daily-store"
@@ -28,9 +38,11 @@ import { bankClassicLevel } from "@/game/progress-store"
 import { reportLevel, whenFirstSynced } from "@/game/sync"
 import { useGame } from "@/game/use-game"
 import { earnCoinsForStars, loadWallet, useCoinBalance } from "@/game/wallet-store"
+import { brand } from "@/lib/brand"
 import { deviceLocale } from "@/lib/locale"
 
-const MAX_STARS = 3
+/** Time for the last word's ripple to play before the level-complete screen covers it. */
+const COMPLETE_DELAY_MS = 900
 
 function parseLevelIndex(raw: string | string[] | undefined): number | null {
   if (typeof raw !== "string" || !/^\d+$/.test(raw)) return null
@@ -128,8 +140,16 @@ function Game({ level, levelIndex, dailyDay, locale }: GameProps) {
   const [hintsOpen, setHintsOpen] = useState(false)
   const [broke, setBroke] = useState(false)
   const coins = useCoinBalance()
+  // Coins won but still flying to the counter: the counter shows them only once they land.
+  const [inFlight, setInFlight] = useState(0)
+  const [reward, setReward] = useState<{ stars: number; coins: number } | null>(null)
+  const [showComplete, setShowComplete] = useState(false)
+  const [headerBottom, setHeaderBottom] = useState(0)
+  const [coinTarget, setCoinTarget] = useState<Point | null>(null)
+  const header = useRef<ComponentRef<typeof View>>(null)
+  const counter = useRef<ComponentRef<typeof View>>(null)
   const today = daily.useToday()
-  const { session, pressLetter, erase, hintFirstLetter, hintDefinition } = useGame(
+  const { session, pressLetter, erase, hintDefinition, hintFullWord } = useGame(
     levelIndex === null ? "daily" : "classic",
     level,
     (finished) => {
@@ -139,7 +159,9 @@ function Game({ level, levelIndex, dailyDay, locale }: GameProps) {
           ? daily.markDone(dailyDay ?? "")
           : whenFirstSynced().then(() => bankClassicLevel(levelIndex))
       void banked.then((firstTime) => {
+        setReward({ stars: earned, coins: firstTime ? earned : 0 })
         if (!firstTime) return
+        setInFlight(earned)
         // The wallet may still be loading right after launch; earning into a closed one would drop the coins.
         void loadWallet().then(() => earnCoinsForStars(earned))
         void reportLevel({
@@ -165,11 +187,25 @@ function Game({ level, levelIndex, dailyDay, locale }: GameProps) {
   })
   const target = level.wordLadder[state.currentWordIndex]
   const showHints = hintsOpen && !state.isComplete
-  const stars = getStars(state.attempts, level.wordLadder.length, state.hintsUsed)
+
+  useEffect(() => {
+    if (!state.isComplete) return
+    const timer = setTimeout(() => setShowComplete(true), COMPLETE_DELAY_MS)
+    return () => clearTimeout(timer)
+  }, [state.isComplete])
+
+  const measureHeader = () => {
+    header.current?.measureInWindow((_x, y, _w, h) => setHeaderBottom(y + h))
+    counter.current?.measureInWindow((x, y, w, h) => setCoinTarget({ x: x + w / 2, y: y + h / 2 }))
+  }
+  const leave = () =>
+    levelIndex === null
+      ? router.back()
+      : router.replace({ pathname: "/game", params: { index: String(levelIndex + 1) } })
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
+      <View ref={header} collapsable={false} onLayout={measureHeader} style={styles.header}>
         <PressableSurface
           onPress={() => router.back()}
           accessibilityLabel={t(locale, "backToMenu")}
@@ -186,14 +222,11 @@ function Game({ level, levelIndex, dailyDay, locale }: GameProps) {
             ? t(locale, "dailyChallenge")
             : `${t(locale, "level")} ${levelIndex + 1}`}
         </Text>
-        <View
-          accessible
+        <CoinCounter
+          ref={counter}
+          value={coins === null ? null : coins - inFlight}
           accessibilityLabel={`${coins ?? 0} ${t(locale, "coins")}`}
-          style={styles.coins}
-        >
-          <CoinIcon color={colors.star} />
-          <Text style={styles.coinsLabel}>{coins ?? "–"}</Text>
-        </View>
+        />
       </View>
 
       <View
@@ -213,38 +246,34 @@ function Game({ level, levelIndex, dailyDay, locale }: GameProps) {
       {showHints && (
         <View style={styles.hints}>
           <View style={styles.hintButtons}>
-            <PressableSurface
-              onPress={() => setBroke(!hintFirstLetter())}
-              accessibilityLabel={t(locale, "firstLetter")}
-              face={colors.surface}
-              border={colors.line}
-              radius={12}
-              height={MIN_TOUCH}
-              style={styles.hintFace}
-              outerStyle={styles.hintButton}
-            >
-              <Text style={styles.hintLabel}>{t(locale, "firstLetter")}</Text>
-              {!session.hinted.firstLetter && (
-                <Text style={styles.hintCost}>{HINT_COSTS.firstLetter}</Text>
-              )}
-            </PressableSurface>
             {hasDefinition(target, locale) && (
               <PressableSurface
                 onPress={() => setBroke(!hintDefinition())}
-                accessibilityLabel={t(locale, "definition")}
-                face={colors.surface}
-                border={colors.line}
+                accessibilityLabel={`${t(locale, "definition")}, ${HINT_COSTS.definition} ${t(locale, "coins")}`}
+                face={brand.goldSoft}
+                border={brand.gold}
                 radius={12}
                 height={MIN_TOUCH}
                 style={styles.hintFace}
                 outerStyle={styles.hintButton}
               >
                 <Text style={styles.hintLabel}>{t(locale, "definition")}</Text>
-                {!session.hinted.definition && (
-                  <Text style={styles.hintCost}>{HINT_COSTS.definition}</Text>
-                )}
+                {!session.hinted.definition && <HintCost cost={HINT_COSTS.definition} />}
               </PressableSurface>
             )}
+            <PressableSurface
+              onPress={() => setBroke(!hintFullWord())}
+              accessibilityLabel={`${t(locale, "fullWord")}, ${HINT_COSTS.fullWord} ${t(locale, "coins")}`}
+              face={brand.goldSoft}
+              border={brand.gold}
+              radius={12}
+              height={MIN_TOUCH}
+              style={styles.hintFace}
+              outerStyle={styles.hintButton}
+            >
+              <Text style={styles.hintLabel}>{t(locale, "fullWord")}</Text>
+              {!session.hinted.fullWord && <HintCost cost={HINT_COSTS.fullWord} />}
+            </PressableSurface>
           </View>
           {broke && (
             <Text accessibilityLiveRegion="polite" style={styles.broke}>
@@ -264,26 +293,7 @@ function Game({ level, levelIndex, dailyDay, locale }: GameProps) {
           <Text accessibilityLiveRegion="polite" style={styles.status}>
             {t(locale, statusKey(state))}
           </Text>
-          {state.isComplete ? (
-            <View
-              accessible
-              accessibilityLabel={`${stars} / ${MAX_STARS}`}
-              style={styles.stars}
-            >
-              {Array.from({ length: MAX_STARS }, (_, index) => (
-                <StarIcon
-                  key={index}
-                  size={20}
-                  color={index < stars ? colors.star : colors.starOff}
-                />
-              ))}
-              {levelIndex === null && today?.stats && today.stats.todayRank > 0 && (
-                <Text style={styles.rank}>
-                  {t(locale, "profileTodaysRank")} : {today.stats.todayRank}
-                </Text>
-              )}
-            </View>
-          ) : (
+          {!state.isComplete && (
             <Text style={styles.subStatus}>{wordsLeftLabel(state, locale)}</Text>
           )}
         </View>
@@ -291,31 +301,14 @@ function Game({ level, levelIndex, dailyDay, locale }: GameProps) {
           <PressableSurface
             onPress={() => setHintsOpen((open) => !open)}
             accessibilityLabel={t(locale, "hints")}
-            face={hintsOpen ? colors.tray : colors.surface}
-            border={colors.line}
+            face={hintsOpen ? brand.gold : brand.goldSoft}
+            border={brand.gold}
             radius={12}
             height={MIN_TOUCH}
-            style={styles.next}
+            style={[styles.next, styles.hintFace]}
           >
-            <Text style={styles.hintLabel}>{t(locale, "hints")}</Text>
-          </PressableSurface>
-        )}
-        {state.isComplete && (
-          <PressableSurface
-            onPress={() =>
-              levelIndex === null
-                ? router.back()
-                : router.replace({ pathname: "/game", params: { index: String(levelIndex + 1) } })
-            }
-            accessibilityLabel={t(locale, levelIndex === null ? "backToMenu" : "nextLevel")}
-            face={colors.ink}
-            radius={12}
-            height={MIN_TOUCH}
-            style={styles.next}
-          >
-            <Text style={styles.nextLabel}>
-              {t(locale, levelIndex === null ? "backToMenu" : "nextLevel")}
-            </Text>
+            <GoldCoin size={18} />
+            <Text style={styles.hintToggleLabel}>{t(locale, "hints")}</Text>
           </PressableSurface>
         )}
       </View>
@@ -327,6 +320,36 @@ function Game({ level, levelIndex, dailyDay, locale }: GameProps) {
         disabled={state.isComplete}
         bottomInset={insets.bottom}
       />
+
+      {showComplete && (
+        <LevelComplete
+          accent={brand.accent}
+          accentInk={brand.accentDeep}
+          title={t(locale, "wellDone")}
+          subtitle={levelIndex === null ? t(locale, "dailyChallenge") : `${t(locale, "level")} ${levelIndex + 1}`}
+          stars={reward?.stars ?? null}
+          coins={reward?.coins ?? null}
+          coinsLabel={(won) => `+${won} ${t(locale, "coins").toLowerCase()}`}
+          noCoinsLabel={t(locale, "alreadyWon")}
+          coinTarget={coinTarget}
+          onCoinLanded={() => setInFlight((left) => Math.max(0, left - 1))}
+          top={headerBottom}
+          bottom={insets.bottom}
+          primaryLabel={t(locale, levelIndex === null ? "backToMenu" : "nextLevel")}
+          onPrimary={leave}
+          secondaryLabel={levelIndex === null ? undefined : t(locale, "backToMenu")}
+          onSecondary={levelIndex === null ? undefined : () => router.back()}
+        />
+      )}
+    </View>
+  )
+}
+
+function HintCost({ cost }: { cost: number }) {
+  return (
+    <View style={styles.cost}>
+      <GoldCoin size={16} />
+      <Text style={styles.hintCost}>{cost}</Text>
     </View>
   )
 }
@@ -360,25 +383,15 @@ const styles = StyleSheet.create({
   statusText: { flexShrink: 1, gap: 2 },
   status: { fontFamily: fonts.display, fontSize: 17, color: colors.ink },
   subStatus: { fontFamily: fonts.body, fontSize: 13, color: colors.muted },
-  stars: { flexDirection: "row", alignItems: "center", gap: 2 },
-  rank: { marginLeft: 8, fontFamily: fonts.body, fontSize: 13, color: colors.muted },
   hints: { paddingHorizontal: 20, paddingTop: 8, gap: 10 },
   hintButtons: { flexDirection: "row", gap: 10 },
   hintButton: { flex: 1 },
   hintFace: { flexDirection: "row", gap: 8 },
-  hintCost: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.star },
+  cost: { flexDirection: "row", alignItems: "center", gap: 3 },
+  hintCost: { fontFamily: fonts.bodyBold, fontSize: 15, color: brand.goldInk },
+  hintToggleLabel: { fontFamily: fonts.bodyBold, fontSize: 15, color: brand.goldInk },
   broke: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.danger },
-  coins: {
-    minWidth: MIN_TOUCH,
-    height: MIN_TOUCH,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    gap: 6,
-  },
-  coinsLabel: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
   hintLabel: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   definition: { fontFamily: fonts.body, fontSize: 15, lineHeight: 21, color: colors.inkSoft },
   next: { paddingHorizontal: 18 },
-  nextLabel: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.surface },
 })

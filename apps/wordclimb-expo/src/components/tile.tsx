@@ -10,6 +10,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated"
 import { colors, fonts, Surface } from "@marcel-games/expo-ui"
+import { brand } from "@/lib/brand"
 
 export type TileKind = "given" | "found" | "empty" | "filled" | "caret" | "error" | "hidden"
 
@@ -24,10 +25,10 @@ interface Skin {
 
 const SKINS: Record<TileKind, Skin> = {
   given: { face: colors.ink, text: colors.surface },
-  found: { face: colors.found, text: colors.surface },
+  found: { face: brand.accent, text: colors.surface },
   empty: { face: colors.surface, text: colors.ink, border: colors.line },
   filled: { face: colors.surface, text: colors.ink, border: colors.lineStrong },
-  caret: { face: colors.surface, text: colors.ink, border: colors.ink },
+  caret: { face: colors.surface, text: colors.ink, border: brand.accent },
   error: { face: colors.surface, text: colors.danger, border: colors.danger },
   hidden: { face: colors.hidden, text: colors.hidden },
 }
@@ -50,9 +51,9 @@ export function Tile({ kind, char, size, index, celebrate }: TileProps) {
   useEffect(() => {
     if (celebrate) {
       const step = { duration: 160, easing: Easing.out(Easing.quad) }
-      lift.set(
-        withDelay(index * LETTER_STAGGER_MS, withSequence(withTiming(-6, step), withTiming(0, step)))
-      )
+      const delay = index * LETTER_STAGGER_MS
+      lift.set(withDelay(delay, withSequence(withTiming(-14, step), withTiming(0, step))))
+      scale.set(withDelay(delay, withSequence(withTiming(1.18, step), withTiming(1, step))))
       return
     }
     if (kind === "caret") {
