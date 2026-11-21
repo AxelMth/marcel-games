@@ -1,4 +1,4 @@
-# WordClimb — fiche App Store Connect (version 1.0.0, build 3)
+# WordClimb — fiche App Store Connect (version 1.0.0, build 14)
 
 À coller dans App Store Connect. Les limites de caractères sont celles d'Apple.
 
@@ -30,8 +30,10 @@ Tu pars d'un mot, tu dois en atteindre un autre. À chaque barreau, tu changes u
 • 1 500 niveaux en français, plus de 1 400 en anglais
 • Des mots de 4 à 6 lettres, de plus en plus longs
 • Jusqu'à trois étoiles par niveau, selon ta précision
+• Un défi du jour, le même pour tous, avec ton rang
+• Des indices payés en pièces, gagnées en jouant et offertes chaque semaine
 • Un clavier intégré, pensé pour jouer à une main
-• Ta progression reste sur ton appareil
+• Ta progression est sauvegardée, même après une réinstallation
 • Aucun compte, aucune publicité, aucun achat
 
 L'app choisit le français ou l'anglais selon la langue de ton iPhone.
@@ -51,6 +53,7 @@ Première version de WordClimb.
 1. `01-change-une-lettre.png` — la règle, sur une partie en cours
 2. `02-trois-etoiles.png` — la récompense, sur un niveau terminé
 3. `03-sans-pub.png` — le volume et l'absence de pub, sur l'accueil
+4. `04-defi-du-jour.png` — le défi du jour et le rang, sur un défi terminé
 
 Les captures sans habillage sont dans `store-assets/ios/6.9/fr/brut/`.
 
