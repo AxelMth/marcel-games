@@ -15,7 +15,7 @@ const WHOLE_WORLD = 100
 type Box = readonly [number, number, number, number]
 
 function boxAround(codes: readonly string[]): Box | null {
-  const boxes = SHAPES.filter((shape) => codes.includes(shape.code)).map((shape) => shape.box)
+  const boxes = SHAPES.filter((shape) => codes.includes(shape.code)).map((shape) => shape.frame)
   if (boxes.length === 0) return null
   return [
     Math.min(...boxes.map((box) => box[0])),
