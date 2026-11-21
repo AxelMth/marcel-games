@@ -15,16 +15,14 @@ import { Redirect, useLocalSearchParams, useRouter } from "expo-router"
 import { useState } from "react"
 import { StyleSheet, Text, useWindowDimensions, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { ChevronLeftIcon, CoinIcon, StarIcon } from "@marcel-games/expo-ui"
+import { ChevronLeftIcon, CoinIcon, colors, fonts, MIN_TOUCH, PressableSurface, StarIcon } from "@marcel-games/expo-ui"
 import { Keyboard } from "@/components/keyboard"
 import { Ladder } from "@/components/ladder"
-import { PressableSurface } from "@marcel-games/expo-ui"
 import { ladderLayout } from "@/game/layout"
 import { bankClassicLevel } from "@/game/progress-store"
 import { useGame } from "@/game/use-game"
 import { earnCoinsForStars, useCoinBalance } from "@/game/wallet-store"
 import { deviceLocale } from "@/lib/locale"
-import { colors, fonts, MIN_TOUCH } from "@marcel-games/expo-ui"
 
 const MAX_STARS = 3
 
