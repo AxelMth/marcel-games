@@ -27,7 +27,7 @@ import { ladderLayout } from "@/game/layout"
 import { bankClassicLevel } from "@/game/progress-store"
 import { reportLevel, whenFirstSynced } from "@/game/sync"
 import { useGame } from "@/game/use-game"
-import { earnCoinsForStars, useCoinBalance } from "@/game/wallet-store"
+import { earnCoinsForStars, loadWallet, useCoinBalance } from "@/game/wallet-store"
 import { deviceLocale } from "@/lib/locale"
 
 const MAX_STARS = 3
@@ -140,7 +140,8 @@ function Game({ level, levelIndex, dailyDay, locale }: GameProps) {
           : whenFirstSynced().then(() => bankClassicLevel(levelIndex))
       void banked.then((firstTime) => {
         if (!firstTime) return
-        earnCoinsForStars(earned)
+        // The wallet may still be loading right after launch; earning into a closed one would drop the coins.
+        void loadWallet().then(() => earnCoinsForStars(earned))
         void reportLevel({
           attempts: finished.attempts,
           timeSpent: Math.max(0, Math.floor((Date.now() - finished.startTime) / 1000)),

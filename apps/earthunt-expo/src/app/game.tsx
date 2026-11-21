@@ -30,7 +30,7 @@ import { WorldMap } from "@/components/world-map"
 import { daily } from "@/game/daily-store"
 import { bankLevel } from "@/game/progress-store"
 import { reportLevel, whenFirstSynced } from "@/game/sync"
-import { earnCoinsForStars, useCoinBalance } from "@/game/wallet-store"
+import { earnCoinsForStars, loadWallet, useCoinBalance } from "@/game/wallet-store"
 import { useLevel, type LevelPlay } from "@/game/use-level"
 import { deviceLocale } from "@/lib/locale"
 
@@ -142,7 +142,8 @@ function Game({ config, dailyDay }: { config: GameConfig; dailyDay?: string }) {
       : whenFirstSynced().then(() => bankLevel(config.level, config.continent))
     void banked.then((firstTime) => {
       if (!firstTime) return
-      earnCoinsForStars(stars)
+      // The wallet may still be loading right after launch; earning into a closed one would drop the coins.
+      void loadWallet().then(() => earnCoinsForStars(stars))
       void reportLevel({
         ...outcome,
         gameMode: isDaily ? "LEVEL_OF_THE_DAY" : config.continent ? "CONTINENTS" : "WORLD",

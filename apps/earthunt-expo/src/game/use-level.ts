@@ -9,7 +9,7 @@ import {
   type GuessVerdict,
 } from "@marcel-games/earthunt-core"
 import { hapticError, hapticSuccess } from "@marcel-games/expo-ui"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { payCoins } from "@/game/wallet-store"
 
 /**
@@ -51,6 +51,9 @@ export function useLevel(
   const [attempts, setAttempts] = useState(0)
   const [hintsUsed, setHintsUsed] = useState(0)
   const [hintStep, setHintStep] = useState<HintStep>(0)
+  // The step is read here, not from the rendered state: two taps within one
+  // frame would otherwise both pay for the same step.
+  const shownStep = useRef<HintStep>(0)
   const [lastVerdict, setLastVerdict] = useState<GuessVerdict | null>(null)
   const [startedAt] = useState(() => Date.now())
 
@@ -73,7 +76,10 @@ export function useLevel(
     const next = [...found, verdict.country.code]
     setFound(next)
     // The hint described this country; the next one starts untouched.
-    if (verdict.country.code === hintTarget?.code) setHintStep(0)
+    if (verdict.country.code === hintTarget?.code) {
+      shownStep.current = 0
+      setHintStep(0)
+    }
     if (next.length === total) {
       onComplete({
         attempts: attempts + 1,
@@ -85,11 +91,13 @@ export function useLevel(
   }
 
   const takeHint = () => {
-    if (isComplete || hintStep === 3) return true
-    const next = (hintStep + 1) as Exclude<HintStep, 0>
+    const current = shownStep.current
+    if (isComplete || current === 3) return true
+    const next = (current + 1) as Exclude<HintStep, 0>
     if (!payCoins(HINT_STEP_COSTS[next])) return false
+    shownStep.current = next
     setHintStep(next)
-    setHintsUsed(hintsUsed + 1)
+    setHintsUsed((used) => used + 1)
     return true
   }
 
