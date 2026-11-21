@@ -36,33 +36,73 @@ const project = ([longitude, latitude]) => [
   round((TOP - mercatorY(latitude)) * SCALE),
 ]
 
+// Land further than this from a country's main landmass, in map units, is left
+// out of the frame: French Guiana must not stretch France across the Atlantic.
+const FRAME_GAP = 20
+// Russia's mainland runs to the antimeridian; framing all of it would shrink
+// Europe to a corner. The frame stops at the Urals.
+const FRAME_EAST_LIMIT = { RUS: project([60, 0])[0] }
+
+const boxOf = (points) => [
+  Math.min(...points.map(([x]) => x)),
+  Math.min(...points.map(([, y]) => y)),
+  Math.max(...points.map(([x]) => x)),
+  Math.max(...points.map(([, y]) => y)),
+]
+const merge = (a, b) => [
+  Math.min(a[0], b[0]),
+  Math.min(a[1], b[1]),
+  Math.max(a[2], b[2]),
+  Math.max(a[3], b[3]),
+]
+const gapBetween = (a, b) =>
+  Math.max(a[0] - b[2], b[0] - a[2], a[1] - b[3], b[1] - a[3], 0)
+const area = (points) =>
+  Math.abs(
+    points.reduce((sum, [x, y], i) => {
+      const [nextX, nextY] = points[(i + 1) % points.length]
+      return sum + x * nextY - nextX * y
+    }, 0)
+  ) / 2
+
+/** The main landmass, grown by every polygon close enough to it. */
+function frameOf(code, outlines) {
+  const byArea = [...outlines].sort((a, b) => area(b) - area(a))
+  let frame = boxOf(byArea[0])
+  let rest = byArea.slice(1).map(boxOf)
+  let grown = true
+  while (grown) {
+    const near = rest.filter((box) => gapBetween(frame, box) <= FRAME_GAP)
+    rest = rest.filter((box) => !near.includes(box))
+    frame = near.reduce(merge, frame)
+    grown = near.length > 0
+  }
+  const eastLimit = FRAME_EAST_LIMIT[code]
+  if (eastLimit !== undefined) frame[2] = Math.min(frame[2], eastLimit)
+  return frame
+}
+
 const { features } = JSON.parse(readFileSync(SOURCE, "utf8"))
 
 const shapes = features
   .map((feature) => {
+    const code = feature.properties.ADM0_A3
     const polygons =
       feature.geometry.type === "Polygon"
         ? [feature.geometry.coordinates]
         : feature.geometry.coordinates
-    let minX = Infinity
-    let minY = Infinity
-    let maxX = -Infinity
-    let maxY = -Infinity
-    const d = polygons
-      .flatMap((rings) =>
-        rings.map((ring) => {
-          const points = ring.map(project)
-          for (const [x, y] of points) {
-            minX = Math.min(minX, x)
-            minY = Math.min(minY, y)
-            maxX = Math.max(maxX, x)
-            maxY = Math.max(maxY, y)
-          }
-          return `M${points.map(([x, y]) => `${x} ${y}`).join("L")}Z`
-        })
-      )
+    const projected = polygons.map((rings) => rings.map((ring) => ring.map(project)))
+    const d = projected
+      .flat()
+      .map((points) => `M${points.map(([x, y]) => `${x} ${y}`).join("L")}Z`)
       .join("")
-    return { code: feature.properties.ADM0_A3, d, box: [minX, minY, maxX, maxY] }
+    const outlines = projected.map((rings) => rings[0])
+    return {
+      code,
+      d,
+      box: outlines.map(boxOf).reduce(merge),
+      frame: frameOf(code, outlines),
+    }
   })
   .sort((a, b) => a.code.localeCompare(b.code))
 
@@ -75,6 +115,8 @@ export interface CountryShape {
   d: string
   /** Bounding box in map units: left, top, right, bottom. */
   box: readonly [number, number, number, number]
+  /** The part of the box the map frames: the main landmass and the land near it. */
+  frame: readonly [number, number, number, number]
 }
 
 export const MAP_WIDTH = ${WIDTH}
