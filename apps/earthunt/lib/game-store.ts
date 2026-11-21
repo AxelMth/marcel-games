@@ -1,7 +1,7 @@
 import { create } from "zustand"
-import type { Country, Continent, CountryLocale } from "./countries"
-import { getCountriesByCodes, getCountryName } from "./countries"
-import { createGameConfig, matchCountry, type GameConfig } from "./game-logic"
+import type { Country, Continent, CountryLocale } from "@marcel-games/earthunt-core"
+import { getCountriesByCodes, getCountryName } from "@marcel-games/earthunt-core"
+import { createGameConfig, matchCountry, type GameConfig } from "@marcel-games/earthunt-core"
 import { countPersistedHints, getPersistedHints } from "./hint-storage"
 
 export type Screen = "home" | "continent-select" | "game" | "success" | "stats"

@@ -4,8 +4,8 @@ import { useState, useRef, useEffect, useMemo } from "react"
 import { ArrowLeft, Search, X } from "lucide-react"
 
 import { useGameStore } from "@/lib/game-store"
-import { countries, getCountryName } from "@/lib/countries"
-import { normalizeCountryName } from "@/lib/game-logic"
+import { countries, getCountryName } from "@marcel-games/earthunt-core"
+import { normalizeCountryName } from "@marcel-games/earthunt-core"
 
 import { GuidedTour } from "@/components/guided-tour"
 import { HelpBubble } from "@/components/help-bubble"

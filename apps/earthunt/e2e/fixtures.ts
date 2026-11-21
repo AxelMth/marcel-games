@@ -1,7 +1,7 @@
 import { test as base, type Page } from "@playwright/test"
 
-import { countries, type Continent } from "../lib/countries"
-import { buildOfflineLevelParams } from "../lib/game-logic"
+import { countries, type Continent } from "@marcel-games/earthunt-core"
+import { buildOfflineLevelParams } from "@marcel-games/earthunt-core"
 
 export const USER_ID = "e2e-user"
 

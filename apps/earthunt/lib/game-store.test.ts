@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { getCountriesByContinent } from "./countries"
-import { buildOfflineLevelParams } from "./game-logic"
+import { getCountriesByContinent } from "@marcel-games/earthunt-core"
+import { buildOfflineLevelParams } from "@marcel-games/earthunt-core"
 import { setPersistedHint } from "./hint-storage"
 import { useGameStore } from "./game-store"
 
