@@ -50,11 +50,12 @@ export function retryLoadProgress(): Promise<void> {
 
 /**
  * Banks a finished classic level. The new count is shown at once and persisted
- * behind. Replaying a level already banked changes nothing.
+ * behind. Replaying a level already banked changes nothing and answers false,
+ * so a reward is only ever paid once per level.
  */
-export async function bankClassicLevel(levelIndex: number): Promise<void> {
+export async function bankClassicLevel(levelIndex: number): Promise<boolean> {
   await loadProgress()
-  if (state.status !== "ready" || levelIndex < state.progress) return
+  if (state.status !== "ready" || levelIndex < state.progress) return false
   const progress = levelIndex + 1
   publish({ status: "ready", progress })
   try {
@@ -62,6 +63,7 @@ export async function bankClassicLevel(levelIndex: number): Promise<void> {
   } catch (error) {
     console.error("Could not save classic progress", error)
   }
+  return true
 }
 
 function subscribe(listener: () => void): () => void {

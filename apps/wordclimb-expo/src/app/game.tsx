@@ -1,5 +1,6 @@
 import {
   CATALOGUE,
+  HINT_COSTS,
   classicLevelAt,
   getDefinition,
   getStars,
@@ -14,13 +15,14 @@ import { Redirect, useLocalSearchParams, useRouter } from "expo-router"
 import { useState } from "react"
 import { StyleSheet, Text, useWindowDimensions, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { ChevronLeftIcon, StarIcon } from "@/components/icons"
+import { ChevronLeftIcon, CoinIcon, StarIcon } from "@/components/icons"
 import { Keyboard } from "@/components/keyboard"
 import { Ladder } from "@/components/ladder"
 import { PressableSurface } from "@/components/surface"
 import { ladderLayout } from "@/game/layout"
 import { bankClassicLevel } from "@/game/progress-store"
 import { useGame } from "@/game/use-game"
+import { earnCoinsForStars, useCoinBalance } from "@/game/wallet-store"
 import { deviceLocale } from "@/lib/locale"
 import { colors, fonts, MIN_TOUCH } from "@/theme/tokens"
 
@@ -72,9 +74,17 @@ function Game({ level, levelIndex, locale }: { level: Level; levelIndex: number;
   const router = useRouter()
   const [ladderHeight, setLadderHeight] = useState(0)
   const [hintsOpen, setHintsOpen] = useState(false)
-  const { session, pressLetter, erase, hintFirstLetter, hintDefinition } = useGame(level, () => {
-    void bankClassicLevel(levelIndex)
-  })
+  const [broke, setBroke] = useState(false)
+  const coins = useCoinBalance()
+  const { session, pressLetter, erase, hintFirstLetter, hintDefinition } = useGame(
+    level,
+    (finished) => {
+      const earned = getStars(finished.attempts, level.wordLadder.length, finished.hintsUsed)
+      void bankClassicLevel(levelIndex).then((firstTime) => {
+        if (firstTime) earnCoinsForStars(earned)
+      })
+    }
+  )
   const state = session.game
 
   const layout = ladderLayout({
@@ -104,7 +114,14 @@ function Game({ level, levelIndex, locale }: { level: Level; levelIndex: number;
         <Text accessibilityRole="header" style={styles.title}>
           {t(locale, "level")} {levelIndex + 1}
         </Text>
-        <View style={styles.back} />
+        <View
+          accessible
+          accessibilityLabel={`${coins ?? 0} ${t(locale, "coins")}`}
+          style={styles.coins}
+        >
+          <CoinIcon color={colors.star} />
+          <Text style={styles.coinsLabel}>{coins ?? "–"}</Text>
+        </View>
       </View>
 
       <View
@@ -125,30 +142,43 @@ function Game({ level, levelIndex, locale }: { level: Level; levelIndex: number;
         <View style={styles.hints}>
           <View style={styles.hintButtons}>
             <PressableSurface
-              onPress={hintFirstLetter}
+              onPress={() => setBroke(!hintFirstLetter())}
               accessibilityLabel={t(locale, "firstLetter")}
               face={colors.surface}
               border={colors.line}
               radius={12}
               height={MIN_TOUCH}
+              style={styles.hintFace}
               outerStyle={styles.hintButton}
             >
               <Text style={styles.hintLabel}>{t(locale, "firstLetter")}</Text>
+              {!session.hinted.firstLetter && (
+                <Text style={styles.hintCost}>{HINT_COSTS.firstLetter}</Text>
+              )}
             </PressableSurface>
             {hasDefinition(target, locale) && (
               <PressableSurface
-                onPress={hintDefinition}
+                onPress={() => setBroke(!hintDefinition())}
                 accessibilityLabel={t(locale, "definition")}
                 face={colors.surface}
                 border={colors.line}
                 radius={12}
                 height={MIN_TOUCH}
+                style={styles.hintFace}
                 outerStyle={styles.hintButton}
               >
                 <Text style={styles.hintLabel}>{t(locale, "definition")}</Text>
+                {!session.hinted.definition && (
+                  <Text style={styles.hintCost}>{HINT_COSTS.definition}</Text>
+                )}
               </PressableSurface>
             )}
           </View>
+          {broke && (
+            <Text accessibilityLiveRegion="polite" style={styles.broke}>
+              {t(locale, "notEnoughCoins")}
+            </Text>
+          )}
           {session.hinted.definition && (
             <Text accessibilityLiveRegion="polite" style={styles.definition}>
               {getDefinition(target, locale)}
@@ -247,6 +277,18 @@ const styles = StyleSheet.create({
   hints: { paddingHorizontal: 20, paddingTop: 8, gap: 10 },
   hintButtons: { flexDirection: "row", gap: 10 },
   hintButton: { flex: 1 },
+  hintFace: { flexDirection: "row", gap: 8 },
+  hintCost: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.star },
+  broke: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.danger },
+  coins: {
+    minWidth: MIN_TOUCH,
+    height: MIN_TOUCH,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 6,
+  },
+  coinsLabel: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
   hintLabel: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   definition: { fontFamily: fonts.body, fontSize: 15, lineHeight: 21, color: colors.inkSoft },
   next: { paddingHorizontal: 18 },

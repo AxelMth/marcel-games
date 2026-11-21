@@ -38,3 +38,13 @@ export {
   type RungHints,
 } from "./session"
 export { getStars } from "./stars"
+export {
+  HINT_COSTS,
+  WEEKLY_COIN_ALLOWANCE,
+  isoWeekId,
+  openWallet,
+  rewardForStars,
+  spendCoins,
+  type HintType,
+  type Wallet,
+} from "./wallet"

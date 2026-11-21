@@ -1,4 +1,4 @@
-import Svg, { Path, Polygon } from "react-native-svg"
+import Svg, { Circle, Path, Polygon } from "react-native-svg"
 
 interface IconProps {
   size?: number
@@ -24,6 +24,15 @@ export function BackspaceIcon({ size = 22, color }: IconProps) {
         strokeWidth={2.2}
         {...STROKE}
       />
+    </Svg>
+  )
+}
+
+export function CoinIcon({ size = 18, color }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 20 20">
+      <Circle cx={10} cy={10} r={8} stroke={color} strokeWidth={2} fill="none" />
+      <Circle cx={10} cy={10} r={3} fill={color} />
     </Svg>
   )
 }
