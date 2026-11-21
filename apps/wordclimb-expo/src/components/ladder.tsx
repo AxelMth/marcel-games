@@ -5,29 +5,23 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSequence,
-  withSpring,
   withTiming,
 } from "react-native-reanimated"
-import { FlagIcon } from "@/components/icons"
-import { Mascot, MASCOT_HEIGHT } from "@/components/mascot"
 import { Tile, type TileKind } from "@/components/tile"
-import {
-  LADDER_PAD_LEFT,
-  LADDER_PAD_RIGHT,
-  TILE_GAP,
-  type LadderLayout,
-} from "@/game/layout"
-import { colors, fonts, LIP } from "@/theme/tokens"
+import { LADDER_PAD, TILE_GAP, type LadderLayout } from "@/game/layout"
+import { colors, fonts } from "@/theme/tokens"
 
-const RAIL_WIDTH = 10
-const RAIL_OFFSET = 22
-const RAIL_OVERHANG = 14
-const RUNG_OVERHANG = 14
+const MARK_SIZE = 12
+/** Distance from the tiles to the centre of the progress line on their left. */
+const TRACK_OFFSET = 20
+
+type Mark = "given" | "found" | "current" | "hidden"
 
 interface RowModel {
   key: string
   chars: string[]
   kinds: TileKind[]
+  mark: Mark
   celebrate: boolean
   shake: boolean
   label: string | undefined
@@ -41,6 +35,7 @@ function buildRows(session: PlaySession, activeLabel: string): RowModel[] {
     key,
     chars: [...word],
     kinds: [...word].map(() => "given"),
+    mark: "given",
     celebrate: false,
     shake: false,
     label: word,
@@ -53,6 +48,7 @@ function buildRows(session: PlaySession, activeLabel: string): RowModel[] {
         key,
         chars: [...word],
         kinds: [...word].map(() => "found"),
+        mark: "found",
         celebrate: celebrating === index,
         shake: false,
         label: word,
@@ -63,6 +59,7 @@ function buildRows(session: PlaySession, activeLabel: string): RowModel[] {
         key,
         chars: [...word].map(() => ""),
         kinds: [...word].map(() => "hidden"),
+        mark: "hidden",
         celebrate: false,
         shake: false,
         label: undefined,
@@ -76,6 +73,7 @@ function buildRows(session: PlaySession, activeLabel: string): RowModel[] {
         if (position < typed.length) return "filled"
         return position === typed.length ? "caret" : "empty"
       }),
+      mark: "current",
       celebrate: false,
       shake: refused,
       label: activeLabel,
@@ -90,13 +88,12 @@ function Row({ row, layout }: { row: RowModel; layout: LadderLayout }) {
 
   useEffect(() => {
     if (!row.shake) return
-    const step = { duration: 90 }
+    const step = { duration: 80 }
     offset.set(
       withSequence(
-        withTiming(-9, step),
-        withTiming(8, step),
         withTiming(-6, step),
-        withTiming(4, step),
+        withTiming(5, step),
+        withTiming(-3, step),
         withTiming(0, step)
       )
     )
@@ -105,8 +102,8 @@ function Row({ row, layout }: { row: RowModel; layout: LadderLayout }) {
   const shake = useAnimatedStyle(() => ({ transform: [{ translateX: offset.get() }] }))
 
   return (
-    <View style={{ height: layout.tile + LIP }}>
-      <View style={[styles.rung, { top: layout.tile / 2 - RAIL_WIDTH / 2 }]} />
+    <View style={{ height: layout.tile }}>
+      <View style={[styles.mark, MARKS[row.mark], { top: (layout.tile - MARK_SIZE) / 2 }]} />
       <Animated.View
         accessible={row.label !== undefined}
         accessibilityLabel={row.label}
@@ -139,23 +136,13 @@ export function Ladder({ session, layout, viewportHeight, locale }: LadderProps)
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null)
   const state = session.game
   const rows = buildRows(session, t(locale, "enterWord"))
-  const rungCount = state.level.wordLadder.length
-  // The mascot waits on the rung being solved, and on the goal once the level is done.
-  const mascotRow = state.isComplete ? 0 : rungCount - state.currentWordIndex
-  const mascotTarget = mascotRow * layout.rowPitch + (layout.tile - MASCOT_HEIGHT) / 2
-  const foundCount = state.foundWords.filter(Boolean).length
-
-  const climb = useSharedValue(mascotTarget)
-  useEffect(() => {
-    climb.set(withSpring(mascotTarget, { damping: 12, stiffness: 140 }))
-  }, [climb, mascotTarget])
-  const mascotPosition = useAnimatedStyle(() => ({ transform: [{ translateY: climb.get() }] }))
+  const activeRow = state.isComplete ? 0 : state.level.wordLadder.length - state.currentWordIndex
 
   useEffect(() => {
-    const rowTop = mascotRow * layout.rowPitch
+    const rowTop = activeRow * layout.rowPitch
     const centred = rowTop - viewportHeight / 2 + layout.tile
     scroll.current?.scrollTo({ y: Math.max(0, centred), animated: true })
-  }, [layout.rowPitch, layout.tile, mascotRow, viewportHeight])
+  }, [activeRow, layout.rowPitch, layout.tile, viewportHeight])
 
   const letters = state.level.beginWord.length
   const blockWidth = letters * layout.tile + (letters - 1) * TILE_GAP
@@ -166,62 +153,55 @@ export function Ladder({ session, layout, viewportHeight, locale }: LadderProps)
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.content}
     >
-      <View style={styles.caption}>
-        <FlagIcon color={colors.muted} />
-        <Text style={styles.captionText}>{t(locale, "ladderGoal")}</Text>
-      </View>
+      <Text style={styles.caption}>{t(locale, "ladderGoal")}</Text>
       <View style={[styles.block, { width: blockWidth, gap: layout.rowGap }]}>
-        <View style={[styles.rail, { left: -RAIL_OFFSET }]} />
-        <View style={[styles.rail, { right: -RAIL_OFFSET }]} />
+        <View style={[styles.track, { top: layout.tile / 2, bottom: layout.tile / 2 }]} />
         {rows.map((row) => (
           <Row key={row.key} row={row} layout={layout} />
         ))}
-        <Animated.View style={[styles.mascot, { left: blockWidth + 4 }, mascotPosition]}>
-          <Mascot hopKey={foundCount} />
-        </Animated.View>
       </View>
-      <View style={styles.caption}>
-        <Text style={styles.captionText}>{t(locale, "ladderStart")}</Text>
-      </View>
+      <Text style={styles.caption}>{t(locale, "ladderStart")}</Text>
     </ScrollView>
   )
 }
+
+const MARKS = StyleSheet.create({
+  given: { backgroundColor: colors.ink, borderColor: colors.ink },
+  found: { backgroundColor: colors.found, borderColor: colors.found },
+  current: { backgroundColor: colors.ground, borderColor: colors.ink },
+  hidden: { backgroundColor: colors.ground, borderColor: colors.line },
+})
 
 const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
     alignItems: "center",
     justifyContent: "center",
-    gap: 16,
+    gap: 14,
     paddingVertical: 8,
-    paddingLeft: LADDER_PAD_LEFT,
-    paddingRight: LADDER_PAD_RIGHT,
+    paddingHorizontal: LADDER_PAD,
   },
-  caption: { flexDirection: "row", alignItems: "center", gap: 6 },
-  captionText: {
+  caption: {
     fontFamily: fonts.bodyBold,
-    fontSize: 12,
-    letterSpacing: 1,
+    fontSize: 11,
+    letterSpacing: 1.4,
     textTransform: "uppercase",
     color: colors.muted,
   },
-  block: { marginVertical: 6 },
-  rail: {
+  block: { marginVertical: 4 },
+  track: {
     position: "absolute",
-    top: -RAIL_OVERHANG,
-    bottom: -RAIL_OVERHANG,
-    width: RAIL_WIDTH,
-    borderRadius: RAIL_WIDTH / 2,
-    backgroundColor: colors.rail,
+    left: -TRACK_OFFSET - 1,
+    width: 2,
+    backgroundColor: colors.line,
   },
-  rung: {
+  mark: {
     position: "absolute",
-    left: -RUNG_OVERHANG,
-    right: -RUNG_OVERHANG,
-    height: RAIL_WIDTH,
-    borderRadius: RAIL_WIDTH / 2,
-    backgroundColor: colors.rail,
+    left: -TRACK_OFFSET - MARK_SIZE / 2,
+    width: MARK_SIZE,
+    height: MARK_SIZE,
+    borderRadius: MARK_SIZE / 2,
+    borderWidth: 2,
   },
   tiles: { flexDirection: "row", gap: TILE_GAP },
-  mascot: { position: "absolute", top: 0 },
 })

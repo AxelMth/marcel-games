@@ -1,7 +1,9 @@
 import {
   CATALOGUE,
   classicLevelAt,
+  getDefinition,
   getStars,
+  hasDefinition,
   t,
   type GameState,
   type Level,
@@ -15,7 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { ChevronLeftIcon, StarIcon } from "@/components/icons"
 import { Keyboard } from "@/components/keyboard"
 import { Ladder } from "@/components/ladder"
-import { PressableLip } from "@/components/lipped"
+import { PressableSurface } from "@/components/surface"
 import { ladderLayout } from "@/game/layout"
 import { bankClassicLevel } from "@/game/progress-store"
 import { useGame } from "@/game/use-game"
@@ -69,7 +71,8 @@ function Game({ level, levelIndex, locale }: { level: Level; levelIndex: number;
   const { width } = useWindowDimensions()
   const router = useRouter()
   const [ladderHeight, setLadderHeight] = useState(0)
-  const { session, pressLetter, erase } = useGame(level, () => {
+  const [hintsOpen, setHintsOpen] = useState(false)
+  const { session, pressLetter, erase, hintFirstLetter, hintDefinition } = useGame(level, () => {
     void bankClassicLevel(levelIndex)
   })
   const state = session.game
@@ -80,25 +83,24 @@ function Game({ level, levelIndex, locale }: { level: Level; levelIndex: number;
     letters: level.beginWord.length,
     rows: level.wordLadder.length + 2,
   })
+  const target = level.wordLadder[state.currentWordIndex]
+  const showHints = hintsOpen && !state.isComplete
   const stars = getStars(state.attempts, level.wordLadder.length, state.hintsUsed)
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
-      <View style={styles.halo} />
-
       <View style={styles.header}>
-        <PressableLip
+        <PressableSurface
           onPress={() => router.back()}
           accessibilityLabel={t(locale, "backToMenu")}
           face={colors.surface}
-          lip={colors.surfaceLip}
-          radius={14}
+          border={colors.line}
+          radius={12}
           height={MIN_TOUCH}
-          depth={3}
-          style={styles.back}
+          outerStyle={styles.back}
         >
-          <ChevronLeftIcon color={colors.ink} />
-        </PressableLip>
+          <ChevronLeftIcon size={20} color={colors.ink} />
+        </PressableSurface>
         <Text accessibilityRole="header" style={styles.title}>
           {t(locale, "level")} {levelIndex + 1}
         </Text>
@@ -119,6 +121,42 @@ function Game({ level, levelIndex, locale }: { level: Level; levelIndex: number;
         )}
       </View>
 
+      {showHints && (
+        <View style={styles.hints}>
+          <View style={styles.hintButtons}>
+            <PressableSurface
+              onPress={hintFirstLetter}
+              accessibilityLabel={t(locale, "firstLetter")}
+              face={colors.surface}
+              border={colors.line}
+              radius={12}
+              height={MIN_TOUCH}
+              outerStyle={styles.hintButton}
+            >
+              <Text style={styles.hintLabel}>{t(locale, "firstLetter")}</Text>
+            </PressableSurface>
+            {hasDefinition(target, locale) && (
+              <PressableSurface
+                onPress={hintDefinition}
+                accessibilityLabel={t(locale, "definition")}
+                face={colors.surface}
+                border={colors.line}
+                radius={12}
+                height={MIN_TOUCH}
+                outerStyle={styles.hintButton}
+              >
+                <Text style={styles.hintLabel}>{t(locale, "definition")}</Text>
+              </PressableSurface>
+            )}
+          </View>
+          {session.hinted.definition && (
+            <Text accessibilityLiveRegion="polite" style={styles.definition}>
+              {getDefinition(target, locale)}
+            </Text>
+          )}
+        </View>
+      )}
+
       <View style={styles.statusRow}>
         <View style={styles.statusText}>
           <Text accessibilityLiveRegion="polite" style={styles.status}>
@@ -134,7 +172,7 @@ function Game({ level, levelIndex, locale }: { level: Level; levelIndex: number;
                 <StarIcon
                   key={index}
                   size={20}
-                  color={index < stars ? colors.star : colors.surfaceLip}
+                  color={index < stars ? colors.star : colors.starOff}
                 />
               ))}
             </View>
@@ -142,21 +180,32 @@ function Game({ level, levelIndex, locale }: { level: Level; levelIndex: number;
             <Text style={styles.subStatus}>{wordsLeftLabel(state, locale)}</Text>
           )}
         </View>
+        {!state.isComplete && (
+          <PressableSurface
+            onPress={() => setHintsOpen((open) => !open)}
+            accessibilityLabel={t(locale, "hints")}
+            face={hintsOpen ? colors.tray : colors.surface}
+            border={colors.line}
+            radius={12}
+            height={MIN_TOUCH}
+            style={styles.next}
+          >
+            <Text style={styles.hintLabel}>{t(locale, "hints")}</Text>
+          </PressableSurface>
+        )}
         {state.isComplete && (
-          <PressableLip
+          <PressableSurface
             onPress={() =>
               router.replace({ pathname: "/game", params: { index: String(levelIndex + 1) } })
             }
             accessibilityLabel={t(locale, "nextLevel")}
-            face={colors.primary}
-            lip={colors.primaryLip}
-            radius={14}
+            face={colors.ink}
+            radius={12}
             height={MIN_TOUCH}
-            depth={3}
-            faceStyle={styles.next}
+            style={styles.next}
           >
             <Text style={styles.nextLabel}>{t(locale, "nextLevel")}</Text>
-          </PressableLip>
+          </PressableSurface>
         )}
       </View>
 
@@ -173,15 +222,6 @@ function Game({ level, levelIndex, locale }: { level: Level; levelIndex: number;
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.ground },
-  halo: {
-    position: "absolute",
-    alignSelf: "center",
-    top: 140,
-    width: 340,
-    height: 340,
-    borderRadius: 170,
-    backgroundColor: colors.halo,
-  },
   header: {
     height: 48,
     paddingHorizontal: 16,
@@ -190,20 +230,25 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   back: { width: MIN_TOUCH },
-  title: { fontFamily: fonts.display, fontSize: 22, color: colors.ink },
+  title: { fontFamily: fonts.display, fontSize: 18, color: colors.ink },
   ladderArea: { flex: 1 },
   statusRow: {
     height: 56,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 12,
   },
   statusText: { flexShrink: 1, gap: 2 },
-  status: { fontFamily: fonts.display, fontSize: 18, color: colors.ink },
+  status: { fontFamily: fonts.display, fontSize: 17, color: colors.ink },
   subStatus: { fontFamily: fonts.body, fontSize: 13, color: colors.muted },
   stars: { flexDirection: "row", gap: 2 },
-  next: { paddingHorizontal: 16 },
+  hints: { paddingHorizontal: 20, paddingTop: 8, gap: 10 },
+  hintButtons: { flexDirection: "row", gap: 10 },
+  hintButton: { flex: 1 },
+  hintLabel: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
+  definition: { fontFamily: fonts.body, fontSize: 15, lineHeight: 21, color: colors.inkSoft },
+  next: { paddingHorizontal: 18 },
   nextLabel: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.surface },
 })

@@ -1,11 +1,8 @@
-import { LIP } from "@/theme/tokens"
-
 export const TILE_GAP = 8
 export const MAX_TILE = 56
 const MIN_TILE = 34
-/** Left rail and margin, plus the right rail and the mascot hanging off it. */
-export const LADDER_PAD_LEFT = 34
-export const LADDER_PAD_RIGHT = 64
+/** Room on each side of the tiles; the left side also holds the progress line. */
+export const LADDER_PAD = 36
 /** The "goal" and "start" captions above and below the ladder. */
 const CAPTIONS_HEIGHT = 64
 
@@ -28,11 +25,10 @@ export function ladderLayout(input: {
   rows: number
 }): LadderLayout {
   const { width, height, letters, rows } = input
-  const rowGap = rows > 6 ? 10 : 16
-  const usableWidth = width - LADDER_PAD_LEFT - LADDER_PAD_RIGHT
+  const rowGap = rows > 6 ? 10 : 14
+  const usableWidth = width - LADDER_PAD * 2
   const byWidth = Math.floor((usableWidth - (letters - 1) * TILE_GAP) / letters)
-  const byHeight =
-    Math.floor((height - CAPTIONS_HEIGHT - (rows - 1) * rowGap) / rows) - LIP
+  const byHeight = Math.floor((height - CAPTIONS_HEIGHT - (rows - 1) * rowGap) / rows)
   const tile = Math.max(MIN_TILE, Math.min(MAX_TILE, byWidth, byHeight))
-  return { tile, rowGap, rowPitch: tile + LIP + rowGap }
+  return { tile, rowGap, rowPitch: tile + rowGap }
 }

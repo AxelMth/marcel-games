@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { CATALOGUE } from "@marcel-games/wordclimb-core"
-import { DEFINITIONS, getDefinition } from "@/lib/data/definitions"
+import { CATALOGUE } from "./catalogue"
+import { DEFINITIONS, getDefinition } from "./definitions"
 
 /**
  * The definition is a paid hint, so the only thing it must never do is answer
@@ -25,7 +25,7 @@ function rungsOf(locale: "en" | "fr") {
 
 const FALLBACK = {
   en: "Find the next word in the ladder!",
-  fr: "Trouve le prochain mot de l'echelle !",
+  fr: "Trouve le prochain mot de l'échelle !",
 } as const
 
 describe("getDefinition", () => {

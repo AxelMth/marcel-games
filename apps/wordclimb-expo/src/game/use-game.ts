@@ -4,6 +4,8 @@ import {
   createSession,
   eraseLetter,
   settleCelebration,
+  takeDefinitionHint,
+  takeFirstLetterHint,
   typeLetter,
   type GameState,
   type Level,
@@ -23,6 +25,8 @@ export interface Game {
   session: PlaySession
   pressLetter: (letter: string) => void
   erase: () => void
+  hintFirstLetter: () => void
+  hintDefinition: () => void
 }
 
 /** One level being played, with the haptics and timed feedback around it. */
@@ -81,5 +85,19 @@ export function useGame(level: Level, onComplete: (finished: GameState) => void)
     commit(after)
   }
 
-  return { session, pressLetter, erase }
+  const takeHint = (take: (current: PlaySession) => PlaySession) => {
+    const before = latest.current
+    const after = take(before)
+    if (after === before) return
+    hapticKey()
+    commit(after)
+  }
+
+  return {
+    session,
+    pressLetter,
+    erase,
+    hintFirstLetter: () => takeHint(takeFirstLetterHint),
+    hintDefinition: () => takeHint(takeDefinitionHint),
+  }
 }

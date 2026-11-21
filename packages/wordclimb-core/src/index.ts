@@ -1,4 +1,5 @@
 export { CATALOGUE, type Level } from "./catalogue"
+export { DEFINITIONS, getDefinition, hasDefinition } from "./definitions"
 export {
   applyGuess,
   classicLevelAt,
@@ -30,7 +31,10 @@ export {
   createSession,
   eraseLetter,
   settleCelebration,
+  takeDefinitionHint,
+  takeFirstLetterHint,
   typeLetter,
   type PlaySession,
+  type RungHints,
 } from "./session"
 export { getStars } from "./stars"

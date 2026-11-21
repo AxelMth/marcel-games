@@ -1,5 +1,5 @@
-import { Fredoka_600SemiBold, Fredoka_700Bold } from "@expo-google-fonts/fredoka"
-import { Nunito_700Bold, Nunito_800ExtraBold } from "@expo-google-fonts/nunito"
+import { Inter_500Medium, Inter_600SemiBold } from "@expo-google-fonts/inter"
+import { Outfit_600SemiBold } from "@expo-google-fonts/outfit"
 import { useFonts } from "expo-font"
 import { Stack } from "expo-router"
 import * as SplashScreen from "expo-splash-screen"
@@ -15,10 +15,9 @@ void loadProgress()
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    Fredoka_600SemiBold,
-    Fredoka_700Bold,
-    Nunito_700Bold,
-    Nunito_800ExtraBold,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Outfit_600SemiBold,
   })
   const settled = fontsLoaded || fontError !== null
 

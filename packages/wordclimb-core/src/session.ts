@@ -15,10 +15,25 @@ export interface PlaySession {
   refused: boolean
   /** Index in wordLadder of the word just solved, for the client to celebrate; null once settled. */
   celebrating: number | null
+  /** Hints already taken on the rung being played. Taking one again is free: it tells the player nothing new. */
+  hinted: RungHints
 }
 
+export interface RungHints {
+  firstLetter: boolean
+  definition: boolean
+}
+
+const NO_HINTS: RungHints = { firstLetter: false, definition: false }
+
 export function createSession(mode: GameMode, level: Level): PlaySession {
-  return { game: createGameState(mode, level), typed: "", refused: false, celebrating: null }
+  return {
+    game: createGameState(mode, level),
+    typed: "",
+    refused: false,
+    celebrating: null,
+    hinted: NO_HINTS,
+  }
 }
 
 /**
@@ -39,12 +54,43 @@ export function typeLetter(session: PlaySession, letter: string): PlaySession {
   if (result.solvedIndex === null) {
     return { ...session, game: result.state, typed, refused: true }
   }
-  return { game: result.state, typed: "", refused: false, celebrating: result.solvedIndex }
+  return {
+    game: result.state,
+    typed: "",
+    refused: false,
+    celebrating: result.solvedIndex,
+    hinted: NO_HINTS,
+  }
 }
 
 export function eraseLetter(session: PlaySession): PlaySession {
   if (session.refused || session.game.isComplete || session.typed === "") return session
   return { ...session, typed: session.typed.slice(0, -1) }
+}
+
+function countHint(session: PlaySession, hint: keyof RungHints): PlaySession {
+  if (session.hinted[hint]) return session
+  return {
+    ...session,
+    game: { ...session.game, hintsUsed: session.game.hintsUsed + 1 },
+    hinted: { ...session.hinted, [hint]: true },
+  }
+}
+
+/**
+ * Puts the first letter of the word on the rung, replacing whatever was typed:
+ * letters that do not start with it could never have been the word.
+ */
+export function takeFirstLetterHint(session: PlaySession): PlaySession {
+  if (session.refused || session.game.isComplete) return session
+  const target = session.game.level.wordLadder[session.game.currentWordIndex]
+  return { ...countHint(session, "firstLetter"), typed: target[0].toLowerCase() }
+}
+
+/** Marks the definition of the word on the rung as shown. The client reads `hinted.definition`. */
+export function takeDefinitionHint(session: PlaySession): PlaySession {
+  if (session.game.isComplete) return session
+  return countHint(session, "definition")
 }
 
 /**
