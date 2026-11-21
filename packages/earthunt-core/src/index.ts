@@ -1,6 +1,7 @@
 export {
   EARTHUNT_API_URL,
   createEartHuntApi,
+  isCountryCodes,
   isLevelResult,
   type EartHuntApi,
   type LevelResult,

@@ -1,11 +1,14 @@
 import {
   isCount,
   isRecord,
+  parseDailyStats,
   parseLaunchedUserId,
   requestJson,
+  type DailyAnswer,
   type LaunchDevice,
 } from "@marcel-games/game-sync"
-import type { BackendGameMode, BackendLocale } from "./game"
+import type { Level } from "./catalogue"
+import { levelFromApi, type BackendGameMode, type BackendLocale } from "./game"
 
 export const WORDCLIMB_API_URL = "https://wordclimb-api.fly.dev"
 
@@ -40,12 +43,42 @@ export function isLevelResult(value: unknown): value is LevelResult {
   )
 }
 
+export function isLevel(value: unknown): value is Level {
+  return (
+    isRecord(value) &&
+    isCount(value.id) &&
+    typeof value.beginWord === "string" &&
+    typeof value.endWord === "string" &&
+    Array.isArray(value.wordLadder) &&
+    value.wordLadder.every((word) => typeof word === "string")
+  )
+}
+
+function parseDaily(data: unknown): DailyAnswer<Level> {
+  if (
+    !isRecord(data) ||
+    typeof data.beginWord !== "string" ||
+    typeof data.endWord !== "string" ||
+    !Array.isArray(data.wordLadder) ||
+    !data.wordLadder.every((word) => typeof word === "string")
+  ) {
+    throw new Error("The daily answer carries no ladder")
+  }
+  const { beginWord, endWord, wordLadder } = data
+  return {
+    puzzle: levelFromApi({ beginWord, endWord, wordLadder }),
+    stats: parseDailyStats(data.stats),
+  }
+}
+
 export interface WordClimbApi {
   /** Registers the device and answers the server's id for its player. */
   launch: (deviceUUID: string, device: LaunchDevice, locale: BackendLocale) => Promise<string>
   finishLevel: (userId: string, result: LevelResult) => Promise<void>
   /** How many classic levels the server has banked for this player. */
   classicLevelsFinished: (userId: string) => Promise<number>
+  /** Today's challenge, without a puzzle once the player has finished it. */
+  daily: (userId: string, locale: BackendLocale) => Promise<DailyAnswer<Level>>
 }
 
 export function createWordClimbApi(baseUrl: string): WordClimbApi {
@@ -69,6 +102,12 @@ export function createWordClimbApi(baseUrl: string): WordClimbApi {
           }
           return data.worldLevel - 1
         }
+      ),
+    daily: (userId, locale) =>
+      requestJson(
+        `${baseUrl}/level?userId=${encodeURIComponent(userId)}&gameMode=LEVEL_OF_THE_DAY&locale=${locale}`,
+        { method: "GET" },
+        parseDaily
       ),
   }
 }

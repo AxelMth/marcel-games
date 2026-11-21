@@ -8,6 +8,7 @@ import {
   takeDefinitionHint,
   takeFirstLetterHint,
   typeLetter,
+  type GameMode,
   type GameState,
   type Level,
   type PlaySession,
@@ -34,8 +35,12 @@ export interface Game {
 }
 
 /** One level being played, with the haptics and timed feedback around it. */
-export function useGame(level: Level, onComplete: (finished: GameState) => void): Game {
-  const [session, setSession] = useState(() => createSession("classic", level))
+export function useGame(
+  mode: GameMode,
+  level: Level,
+  onComplete: (finished: GameState) => void
+): Game {
+  const [session, setSession] = useState(() => createSession(mode, level))
   // Keystrokes are applied to this, not to the rendered state: two keys pressed
   // within one frame would otherwise both start from the same letters, and the
   // second would overwrite the first.

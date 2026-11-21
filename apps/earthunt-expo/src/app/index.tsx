@@ -3,6 +3,7 @@ import { LegalLink, PressableSurface, colors, fonts } from "@marcel-games/expo-u
 import { useRouter } from "expo-router"
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { daily } from "@/game/daily-store"
 import { retryLoadProgress, useProgress } from "@/game/progress-store"
 import { deviceLocale } from "@/lib/locale"
 
@@ -16,6 +17,13 @@ export default function HomeScreen() {
   const router = useRouter()
   const locale = deviceLocale()
   const state = useProgress()
+  const today = daily.useToday()
+  const dailyDone = today?.done ?? false
+  const dailyNote = !dailyDone
+    ? t(locale, "home.dailySubtitle")
+    : today?.stats && today.stats.todayRank > 0
+      ? `${t(locale, "profile.todaysRank")} : ${today.stats.todayRank}`
+      : t(locale, "home.doneForToday")
   const levelLabel = (level: number) => `${t(locale, "continentSelect.level")} ${level}`
 
   return (
@@ -61,6 +69,20 @@ export default function HomeScreen() {
             <View style={styles.chip}>
               <Text style={styles.chipText}>{levelLabel(state.progress.world)}</Text>
             </View>
+          </PressableSurface>
+
+          <PressableSurface
+            onPress={() => router.push({ pathname: "/game", params: { daily: "1" } })}
+            accessibilityLabel={`${t(locale, "home.daily")}, ${dailyNote}`}
+            disabled={dailyDone}
+            face={colors.surface}
+            border={colors.line}
+            radius={14}
+            height={56}
+            style={styles.row}
+          >
+            <Text style={styles.rowTitle}>{t(locale, "home.daily")}</Text>
+            <Text style={styles.rowLevel}>{dailyNote}</Text>
           </PressableSurface>
 
           <Text style={styles.section}>{t(locale, "home.continent")}</Text>

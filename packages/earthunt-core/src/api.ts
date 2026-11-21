@@ -1,8 +1,10 @@
 import {
   isCount,
   isRecord,
+  parseDailyStats,
   parseLaunchedUserId,
   requestJson,
+  type DailyAnswer,
   type LaunchDevice,
 } from "@marcel-games/game-sync"
 import type { Continent } from "./countries"
@@ -15,7 +17,7 @@ export interface LevelResult {
   /** Seconds. */
   timeSpent: number
   hintsUsed: number
-  gameMode: "WORLD" | "CONTINENTS"
+  gameMode: "WORLD" | "CONTINENTS" | "LEVEL_OF_THE_DAY"
   continent: Continent | ""
   countryCodes: string[]
 }
@@ -29,16 +31,21 @@ const CONTINENTS: readonly Continent[] = [
   "ANTARCTICA",
 ]
 
+const GAME_MODES: readonly unknown[] = ["WORLD", "CONTINENTS", "LEVEL_OF_THE_DAY"]
+
+export function isCountryCodes(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((code) => typeof code === "string")
+}
+
 export function isLevelResult(value: unknown): value is LevelResult {
   return (
     isRecord(value) &&
     isCount(value.attempts) &&
     isCount(value.timeSpent) &&
     isCount(value.hintsUsed) &&
-    (value.gameMode === "WORLD" || value.gameMode === "CONTINENTS") &&
+    GAME_MODES.includes(value.gameMode) &&
     (value.continent === "" || CONTINENTS.some((continent) => continent === value.continent)) &&
-    Array.isArray(value.countryCodes) &&
-    value.countryCodes.every((code) => typeof code === "string")
+    isCountryCodes(value.countryCodes)
   )
 }
 
@@ -64,11 +71,23 @@ function parseProgress(data: unknown): ServerProgress {
   return { world: data.worldLevel, continents }
 }
 
+function parseDaily(data: unknown): DailyAnswer<string[]> {
+  if (!isRecord(data) || !isCountryCodes(data.countryCodes)) {
+    throw new Error("The daily answer carries no countries")
+  }
+  return {
+    puzzle: data.countryCodes.length > 0 ? data.countryCodes : null,
+    stats: parseDailyStats(data.stats),
+  }
+}
+
 export interface EartHuntApi {
   /** Registers the device and answers the server's id for its player. */
   launch: (deviceUUID: string, device: LaunchDevice) => Promise<string>
   finishLevel: (userId: string, result: LevelResult) => Promise<void>
   progress: (userId: string) => Promise<ServerProgress>
+  /** Today's challenge, without countries once the player has finished it. */
+  daily: (userId: string) => Promise<DailyAnswer<string[]>>
 }
 
 export function createEartHuntApi(baseUrl: string): EartHuntApi {
@@ -86,6 +105,12 @@ export function createEartHuntApi(baseUrl: string): EartHuntApi {
         `${baseUrl}/progress?userId=${encodeURIComponent(userId)}`,
         { method: "GET" },
         parseProgress
+      ),
+    daily: (userId) =>
+      requestJson(
+        `${baseUrl}/level?userId=${encodeURIComponent(userId)}&gameMode=LEVEL_OF_THE_DAY`,
+        { method: "GET" },
+        parseDaily
       ),
   }
 }

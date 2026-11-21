@@ -7,6 +7,7 @@ import { StatusBar } from "expo-status-bar"
 import { useEffect } from "react"
 import { StyleSheet } from "react-native"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
+import { daily } from "@/game/daily-store"
 import { loadProgress } from "@/game/progress-store"
 import { whenFirstSynced } from "@/game/sync"
 import { loadWallet } from "@/game/wallet-store"
@@ -14,6 +15,7 @@ import { colors } from "@marcel-games/expo-ui"
 
 void SplashScreen.preventAutoHideAsync()
 void loadProgress()
+void daily.load()
 void loadWallet()
 void whenFirstSynced()
 
