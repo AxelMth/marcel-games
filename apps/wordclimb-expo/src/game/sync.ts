@@ -7,6 +7,7 @@ import {
   toBackendLocale,
   type LevelResult,
 } from "@marcel-games/wordclimb-core"
+import { daily } from "@/game/daily-store"
 import { adoptServerProgress } from "@/game/progress-store"
 import { deviceLocale } from "@/lib/locale"
 
@@ -24,13 +25,15 @@ const sync = createGameSync<LevelResult>({
 
 /**
  * Sends what was played offline, then takes the server's progress if it is
- * ahead, which is how a reinstall gets its levels back. The game plays without
+ * ahead, which is how a reinstall gets its levels back, and today's challenge
+ * with the player's rank. The game plays without
  * the server, so a failure here is only reported: the next call tries again.
  */
 export async function syncWithServer(): Promise<void> {
   try {
     const userId = await sync.flush()
     await adoptServerProgress(await api.classicLevelsFinished(userId))
+    await daily.takeServerAnswer(await api.daily(userId, toBackendLocale(deviceLocale())))
   } catch (error) {
     console.warn("Sync with the WordClimb server is postponed", error)
   }

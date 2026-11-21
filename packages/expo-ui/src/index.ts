@@ -1,3 +1,4 @@
+export { createDailyStore, type DailyStore } from "./daily-store"
 export { deviceStore, identityStore, launchDevice, newDeviceId } from "./device"
 export { hapticError, hapticKey, hapticSuccess } from "./haptics"
 export { BackspaceIcon, ChevronLeftIcon, CoinIcon, StarIcon } from "./icons"

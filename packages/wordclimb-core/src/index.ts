@@ -1,6 +1,7 @@
 export {
   WORDCLIMB_API_URL,
   createWordClimbApi,
+  isLevel,
   isLevelResult,
   type LevelResult,
   type WordClimbApi,

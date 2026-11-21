@@ -37,6 +37,22 @@ describe("createEartHuntApi", () => {
     await expect(api.progress("u")).resolves.toEqual({ world: 4, continents: { EUROPE: 3 } })
   })
 
+  it("reads today's countries, and no countries as a day already finished", async () => {
+    const stats = { dailyLevelsCompleted: 1, lastLevelRank: 3, globalRank: 3 }
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(new Response(JSON.stringify({ level: 1, countryCodes: ["FR"] })))
+        .mockResolvedValueOnce(new Response(JSON.stringify({ level: 1, countryCodes: [], stats })))
+    )
+    await expect(api.daily("u")).resolves.toEqual({ puzzle: ["FR"], stats: null })
+    await expect(api.daily("u")).resolves.toEqual({
+      puzzle: null,
+      stats: { completed: 1, todayRank: 3, globalRank: 3 },
+    })
+  })
+
   it("refuses a launch answer without a user id", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({}))))
     const device = {

@@ -3,6 +3,7 @@ import { useRouter } from "expo-router"
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { colors, fonts, LegalLink, PressableSurface, Surface } from "@marcel-games/expo-ui"
+import { daily } from "@/game/daily-store"
 import { retryLoadProgress, useProgress } from "@/game/progress-store"
 import { deviceLocale } from "@/lib/locale"
 
@@ -36,6 +37,13 @@ export default function HomeScreen() {
   const router = useRouter()
   const locale = deviceLocale()
   const progress = useProgress()
+  const today = daily.useToday()
+  const dailyDone = today?.done ?? false
+  const dailyNote = !dailyDone
+    ? t(locale, "dailyChallengeDesc")
+    : today?.stats && today.stats.todayRank > 0
+      ? `${t(locale, "doneForToday")} ${t(locale, "profileTodaysRank")} : ${today.stats.todayRank}`
+      : t(locale, "doneForToday")
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top, paddingBottom: insets.bottom + 4 }]}>
@@ -88,6 +96,22 @@ export default function HomeScreen() {
           </PressableSurface>
         )}
 
+        {progress.status === "ready" && (
+          <PressableSurface
+            onPress={() => router.push({ pathname: "/game", params: { daily: "1" } })}
+            accessibilityLabel={`${t(locale, "dailyChallenge")}, ${dailyNote}`}
+            disabled={dailyDone}
+            face={colors.surface}
+            border={colors.line}
+            radius={14}
+            height={64}
+            style={styles.daily}
+          >
+            <Text style={styles.dailyTitle}>{t(locale, "dailyChallenge")}</Text>
+            <Text style={styles.dailyNote}>{dailyNote}</Text>
+          </PressableSurface>
+        )}
+
         <LegalLink url={LEGAL_URL} label={t(locale, "legalOpen")} />
       </View>
     </View>
@@ -117,6 +141,9 @@ const styles = StyleSheet.create({
     paddingLeft: 22,
     paddingRight: 14,
   },
+  daily: { alignItems: "flex-start", paddingHorizontal: 22, gap: 2 },
+  dailyTitle: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
+  dailyNote: { fontFamily: fonts.body, fontSize: 13, color: colors.muted },
   playLabel: { fontFamily: fonts.display, fontSize: 22, color: colors.surface },
   levelChip: {
     height: 36,

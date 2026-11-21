@@ -69,6 +69,7 @@ export function WorldMap({ playable, missing, found, highlighted }: WorldMapProp
   const minZoom = viewport && unit > 0 ? Math.min(1, viewport.width / (MAP_WIDTH * unit)) : 1
 
   const playableKey = playable.join(",")
+  const firstMissing = missing[0] ?? null
   const viewportWidth = viewport?.width ?? 0
   // Framed once per level. The viewport is measured again whenever the panel
   // under the map changes height, and re-centring then would fight the player's
@@ -78,15 +79,20 @@ export function WorldMap({ playable, missing, found, highlighted }: WorldMapProp
     if (unit === 0 || framedLevel.current === playableKey) return
     framedLevel.current = playableKey
     const codes = playableKey.split(",")
-    // A whole-world level opens filling the screen and centred on the map: framing
-    // every country at once would shrink the world to a strip across a tall screen.
+    // A whole-world level opens filling the screen: framing every country at
+    // once would shrink the world to a strip across a tall screen. It opens on
+    // the first country to find, which may sit far from the middle of the map.
     if (codes.length > WHOLE_WORLD) {
-      scroll.current?.scrollTo({ x: (MAP_WIDTH * unit - viewportWidth) / 2, animated: false })
+      const target = firstMissing ? boxAround([firstMissing]) : null
+      const centre = target ? (target[0] + target[2]) / 2 : MAP_WIDTH / 2
+      const furthest = Math.max(0, MAP_WIDTH * unit - viewportWidth)
+      const x = Math.min(furthest, Math.max(0, centre * unit - viewportWidth / 2))
+      scroll.current?.scrollTo({ x, animated: false })
       return
     }
     const box = boxAround(codes)
     if (box) zoomTo(scroll.current, box, unit, false)
-  }, [playableKey, unit, viewportWidth])
+  }, [playableKey, firstMissing, unit, viewportWidth])
 
   // The map follows the action: the country a hint points at, else the one just
   // found. It is framed again when the viewport changes height, so opening the

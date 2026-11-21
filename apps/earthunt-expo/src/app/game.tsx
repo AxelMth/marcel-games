@@ -1,5 +1,7 @@
 import {
+  countries,
   createGameConfig,
+  getCountriesByCodes,
   getCountryName,
   t,
   tReplace,
@@ -17,10 +19,12 @@ import {
   fonts,
 } from "@marcel-games/expo-ui"
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router"
-import { useState } from "react"
-import { KeyboardAvoidingView, StyleSheet, Text, TextInput, View } from "react-native"
+import { utcDay } from "@marcel-games/game-sync"
+import { useEffect, useState } from "react"
+import { ActivityIndicator, KeyboardAvoidingView, StyleSheet, Text, TextInput, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { WorldMap } from "@/components/world-map"
+import { daily } from "@/game/daily-store"
 import { bankLevel } from "@/game/progress-store"
 import { reportLevel, whenFirstSynced } from "@/game/sync"
 import { useLevel, type LevelPlay } from "@/game/use-level"
@@ -61,8 +65,55 @@ function hintMessage(play: LevelPlay, locale: CountryLocale): string | null {
   return play.hintStep === 2 ? `${letter} · ${t(locale, "hintsHelp.mapHintResult")}` : letter
 }
 
+/** A level built from the countries the server picked for today. */
+function dailyConfig(codes: readonly string[]): GameConfig {
+  return {
+    mode: "daily",
+    level: 1,
+    missingCountries: getCountriesByCodes([...codes]),
+    allCountries: countries,
+  }
+}
+
+/**
+ * Today's challenge. The puzzle is settled once, after the server has been
+ * asked: a day already finished elsewhere must not be offered again, and the
+ * store marks the day done the moment the last country is found, so reading it
+ * again then would pull the level away from under the result.
+ */
+function DailyRoute() {
+  const [settled, setSettled] = useState<{ config: GameConfig | null; day: string } | null>(null)
+
+  useEffect(() => {
+    let left = false
+    void whenFirstSynced().then(() => {
+      if (left) return
+      const today = daily.today()
+      // Without an answer from the server the game builds a puzzle from the date.
+      const config = today?.puzzle ? dailyConfig(today.puzzle) : createGameConfig("daily")
+      const playable = !today?.done && config.missingCountries.length > 0
+      setSettled({ config: playable ? config : null, day: utcDay(new Date()) })
+    })
+    return () => {
+      left = true
+    }
+  }, [])
+
+  if (!settled) {
+    return (
+      <View style={styles.waiting}>
+        <ActivityIndicator color={colors.ink} />
+      </View>
+    )
+  }
+  if (!settled.config) return <Redirect href="/" />
+  return <Game config={settled.config} dailyDay={settled.day} />
+}
+
 export default function GameRoute() {
-  const params = useLocalSearchParams<{ level?: string; continent?: string }>()
+  const params = useLocalSearchParams<{ level?: string; continent?: string; daily?: string }>()
+  if (params.daily === "1") return <DailyRoute />
+
   const level = parseLevel(params.level)
   const continent = parseContinent(params.continent)
   if (level === null || continent === null) return <Redirect href="/" />
@@ -71,19 +122,22 @@ export default function GameRoute() {
   return <Game key={`${continent ?? "world"}-${level}`} config={config} />
 }
 
-function Game({ config }: { config: GameConfig }) {
+function Game({ config, dailyDay }: { config: GameConfig; dailyDay?: string }) {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const locale = deviceLocale()
   const [input, setInput] = useState("")
+  const isDaily = config.mode === "daily"
+  const today = daily.useToday()
   const play = useLevel(config, (outcome) => {
-    void whenFirstSynced()
-      .then(() => bankLevel(config.level, config.continent))
-      .then((firstTime) => {
+    const banked = isDaily
+      ? daily.markDone(dailyDay ?? "")
+      : whenFirstSynced().then(() => bankLevel(config.level, config.continent))
+    void banked.then((firstTime) => {
       if (!firstTime) return
       void reportLevel({
         ...outcome,
-        gameMode: config.continent ? "CONTINENTS" : "WORLD",
+        gameMode: isDaily ? "LEVEL_OF_THE_DAY" : config.continent ? "CONTINENTS" : "WORLD",
         continent: config.continent ?? "",
         countryCodes: config.missingCountries.map((country) => country.code),
       })
@@ -91,7 +145,9 @@ function Game({ config }: { config: GameConfig }) {
   })
 
   const left = config.missingCountries.length - play.found.length
-  const title = config.continent
+  const title = isDaily
+    ? t(locale, "home.daily")
+    : config.continent
     ? tReplace(locale, "game.continentLevel", {
         continent: t(locale, `continentSelect.${config.continent}`),
         level: config.level,
@@ -155,6 +211,11 @@ function Game({ config }: { config: GameConfig }) {
                     color={index < play.stars ? colors.star : colors.starOff}
                   />
                 ))}
+                {isDaily && today?.stats && today.stats.todayRank > 0 && (
+                  <Text style={styles.rank}>
+                    {t(locale, "profile.todaysRank")} : {today.stats.todayRank}
+                  </Text>
+                )}
               </View>
             ) : (
               hint && <Text style={styles.hint}>{hint}</Text>
@@ -163,18 +224,22 @@ function Game({ config }: { config: GameConfig }) {
           {play.isComplete ? (
             <PressableSurface
               onPress={() =>
-                router.replace({
-                  pathname: "/game",
-                  params: { level: String(config.level + 1), continent: config.continent },
-                })
+                isDaily
+                  ? router.back()
+                  : router.replace({
+                      pathname: "/game",
+                      params: { level: String(config.level + 1), continent: config.continent },
+                    })
               }
-              accessibilityLabel={t(locale, "success.nextLevel")}
+              accessibilityLabel={t(locale, isDaily ? "success.backToHome" : "success.nextLevel")}
               face={colors.ink}
               radius={12}
               height={MIN_TOUCH}
               style={styles.action}
             >
-              <Text style={styles.actionLabelOnInk}>{t(locale, "success.nextLevel")}</Text>
+              <Text style={styles.actionLabelOnInk}>
+                {t(locale, isDaily ? "success.backToHome" : "success.nextLevel")}
+              </Text>
             </PressableSurface>
           ) : (
             <PressableSurface
@@ -215,6 +280,12 @@ function Game({ config }: { config: GameConfig }) {
 }
 
 const styles = StyleSheet.create({
+  waiting: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.ground,
+  },
   screen: { flex: 1, backgroundColor: colors.ground },
   header: {
     height: 52,
@@ -231,7 +302,8 @@ const styles = StyleSheet.create({
   statusText: { flexShrink: 1, gap: 2, minHeight: 64, justifyContent: "center" },
   status: { fontFamily: fonts.display, fontSize: 17, color: colors.ink },
   hint: { fontFamily: fonts.body, fontSize: 14, color: colors.muted },
-  stars: { flexDirection: "row", gap: 2 },
+  stars: { flexDirection: "row", alignItems: "center", gap: 2 },
+  rank: { marginLeft: 8, fontFamily: fonts.body, fontSize: 13, color: colors.muted },
   action: { paddingHorizontal: 18 },
   actionLabel: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   actionLabelOnInk: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.surface },

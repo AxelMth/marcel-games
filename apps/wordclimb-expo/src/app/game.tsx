@@ -2,24 +2,27 @@ import {
   CATALOGUE,
   HINT_COSTS,
   classicLevelAt,
+  dailyLevelIndexFor,
   getDefinition,
   getStars,
   hasDefinition,
   t,
   toBackendGameMode,
   toBackendLocale,
+  utcDateString,
   type GameState,
   type Level,
   type Locale,
   type TranslationKey,
 } from "@marcel-games/wordclimb-core"
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router"
-import { useState } from "react"
-import { StyleSheet, Text, useWindowDimensions, View } from "react-native"
+import { useEffect, useState } from "react"
+import { ActivityIndicator, StyleSheet, Text, useWindowDimensions, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { ChevronLeftIcon, CoinIcon, colors, fonts, MIN_TOUCH, PressableSurface, StarIcon } from "@marcel-games/expo-ui"
 import { Keyboard } from "@/components/keyboard"
 import { Ladder } from "@/components/ladder"
+import { daily } from "@/game/daily-store"
 import { ladderLayout } from "@/game/layout"
 import { bankClassicLevel } from "@/game/progress-store"
 import { reportLevel, whenFirstSynced } from "@/game/sync"
@@ -53,12 +56,51 @@ function wordsLeftLabel(state: GameState, locale: Locale): string {
   return `${left} ${t(locale, left === 1 ? "wordLeft" : "wordsLeft")}`
 }
 
+/**
+ * Today's challenge. The puzzle is settled once, after the server has been
+ * asked: a day already finished elsewhere must not be offered again, and the
+ * store marks the day done the moment the last word is found, so reading it
+ * again then would pull the ladder away from under the celebration.
+ */
+function DailyRoute({ locale }: { locale: Locale }) {
+  const [settled, setSettled] = useState<{ level: Level | null; day: string } | null>(null)
+
+  useEffect(() => {
+    let left = false
+    void whenFirstSynced().then(() => {
+      if (left) return
+      const today = daily.today()
+      const day = utcDateString()
+      // Without an answer from the server the game builds the puzzle itself; the
+      // server derives the same one from the date.
+      const levels = CATALOGUE[locale]
+      const fallback = classicLevelAt(levels, dailyLevelIndexFor(day, levels.length))
+      setSettled({ level: today?.done ? null : (today?.puzzle ?? fallback), day })
+    })
+    return () => {
+      left = true
+    }
+  }, [locale])
+
+  if (!settled) {
+    return (
+      <View style={styles.waiting}>
+        <ActivityIndicator color={colors.ink} />
+      </View>
+    )
+  }
+  if (!settled.level) return <Redirect href="/" />
+  return <Game level={settled.level} levelIndex={null} dailyDay={settled.day} locale={locale} />
+}
+
 export default function GameRoute() {
-  const params = useLocalSearchParams<{ index?: string }>()
+  const params = useLocalSearchParams<{ index?: string; daily?: string }>()
+  const locale = deviceLocale()
+  if (params.daily === "1") return <DailyRoute locale={locale} />
+
   const levelIndex = parseLevelIndex(params.index)
   if (levelIndex === null) return <Redirect href="/" />
 
-  const locale = deviceLocale()
   return (
     <Game
       key={`${locale}-${levelIndex}`}
@@ -69,7 +111,16 @@ export default function GameRoute() {
   )
 }
 
-function Game({ level, levelIndex, locale }: { level: Level; levelIndex: number; locale: Locale }) {
+interface GameProps {
+  level: Level
+  /** The level's place in the classic catalogue, or null for the daily challenge. */
+  levelIndex: number | null
+  /** The UTC day the daily challenge was opened on. */
+  dailyDay?: string
+  locale: Locale
+}
+
+function Game({ level, levelIndex, dailyDay, locale }: GameProps) {
   const insets = useSafeAreaInsets()
   const { width } = useWindowDimensions()
   const router = useRouter()
@@ -77,13 +128,17 @@ function Game({ level, levelIndex, locale }: { level: Level; levelIndex: number;
   const [hintsOpen, setHintsOpen] = useState(false)
   const [broke, setBroke] = useState(false)
   const coins = useCoinBalance()
+  const today = daily.useToday()
   const { session, pressLetter, erase, hintFirstLetter, hintDefinition } = useGame(
+    levelIndex === null ? "daily" : "classic",
     level,
     (finished) => {
       const earned = getStars(finished.attempts, level.wordLadder.length, finished.hintsUsed)
-      void whenFirstSynced()
-        .then(() => bankClassicLevel(levelIndex))
-        .then((firstTime) => {
+      const banked =
+        levelIndex === null
+          ? daily.markDone(dailyDay ?? "")
+          : whenFirstSynced().then(() => bankClassicLevel(levelIndex))
+      void banked.then((firstTime) => {
         if (!firstTime) return
         earnCoinsForStars(earned)
         void reportLevel({
@@ -126,7 +181,9 @@ function Game({ level, levelIndex, locale }: { level: Level; levelIndex: number;
           <ChevronLeftIcon size={20} color={colors.ink} />
         </PressableSurface>
         <Text accessibilityRole="header" style={styles.title}>
-          {t(locale, "level")} {levelIndex + 1}
+          {levelIndex === null
+            ? t(locale, "dailyChallenge")
+            : `${t(locale, "level")} ${levelIndex + 1}`}
         </Text>
         <View
           accessible
@@ -219,6 +276,11 @@ function Game({ level, levelIndex, locale }: { level: Level; levelIndex: number;
                   color={index < stars ? colors.star : colors.starOff}
                 />
               ))}
+              {levelIndex === null && today?.stats && today.stats.todayRank > 0 && (
+                <Text style={styles.rank}>
+                  {t(locale, "profileTodaysRank")} : {today.stats.todayRank}
+                </Text>
+              )}
             </View>
           ) : (
             <Text style={styles.subStatus}>{wordsLeftLabel(state, locale)}</Text>
@@ -240,15 +302,19 @@ function Game({ level, levelIndex, locale }: { level: Level; levelIndex: number;
         {state.isComplete && (
           <PressableSurface
             onPress={() =>
-              router.replace({ pathname: "/game", params: { index: String(levelIndex + 1) } })
+              levelIndex === null
+                ? router.back()
+                : router.replace({ pathname: "/game", params: { index: String(levelIndex + 1) } })
             }
-            accessibilityLabel={t(locale, "nextLevel")}
+            accessibilityLabel={t(locale, levelIndex === null ? "backToMenu" : "nextLevel")}
             face={colors.ink}
             radius={12}
             height={MIN_TOUCH}
             style={styles.next}
           >
-            <Text style={styles.nextLabel}>{t(locale, "nextLevel")}</Text>
+            <Text style={styles.nextLabel}>
+              {t(locale, levelIndex === null ? "backToMenu" : "nextLevel")}
+            </Text>
           </PressableSurface>
         )}
       </View>
@@ -265,6 +331,12 @@ function Game({ level, levelIndex, locale }: { level: Level; levelIndex: number;
 }
 
 const styles = StyleSheet.create({
+  waiting: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.ground,
+  },
   screen: { flex: 1, backgroundColor: colors.ground },
   header: {
     height: 48,
@@ -287,7 +359,8 @@ const styles = StyleSheet.create({
   statusText: { flexShrink: 1, gap: 2 },
   status: { fontFamily: fonts.display, fontSize: 17, color: colors.ink },
   subStatus: { fontFamily: fonts.body, fontSize: 13, color: colors.muted },
-  stars: { flexDirection: "row", gap: 2 },
+  stars: { flexDirection: "row", alignItems: "center", gap: 2 },
+  rank: { marginLeft: 8, fontFamily: fonts.body, fontSize: 13, color: colors.muted },
   hints: { paddingHorizontal: 20, paddingTop: 8, gap: 10 },
   hintButtons: { flexDirection: "row", gap: 10 },
   hintButton: { flex: 1 },
