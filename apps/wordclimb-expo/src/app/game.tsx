@@ -6,6 +6,8 @@ import {
   getStars,
   hasDefinition,
   t,
+  toBackendGameMode,
+  toBackendLocale,
   type GameState,
   type Level,
   type Locale,
@@ -20,6 +22,7 @@ import { Keyboard } from "@/components/keyboard"
 import { Ladder } from "@/components/ladder"
 import { ladderLayout } from "@/game/layout"
 import { bankClassicLevel } from "@/game/progress-store"
+import { reportLevel } from "@/game/sync"
 import { useGame } from "@/game/use-game"
 import { earnCoinsForStars, useCoinBalance } from "@/game/wallet-store"
 import { deviceLocale } from "@/lib/locale"
@@ -79,7 +82,18 @@ function Game({ level, levelIndex, locale }: { level: Level; levelIndex: number;
     (finished) => {
       const earned = getStars(finished.attempts, level.wordLadder.length, finished.hintsUsed)
       void bankClassicLevel(levelIndex).then((firstTime) => {
-        if (firstTime) earnCoinsForStars(earned)
+        if (!firstTime) return
+        earnCoinsForStars(earned)
+        void reportLevel({
+          attempts: finished.attempts,
+          timeSpent: Math.max(0, Math.floor((Date.now() - finished.startTime) / 1000)),
+          hintsUsed: finished.hintsUsed,
+          gameMode: toBackendGameMode(finished.mode),
+          locale: toBackendLocale(locale),
+          beginWord: level.beginWord,
+          endWord: level.endWord,
+          wordLadder: level.wordLadder,
+        })
       })
     }
   )

@@ -1,4 +1,12 @@
 export {
+  EARTHUNT_API_URL,
+  createEartHuntApi,
+  isLevelResult,
+  type EartHuntApi,
+  type LevelResult,
+  type ServerProgress,
+} from "./api"
+export {
   countries,
   getCountriesByCodes,
   getCountriesByContinent,

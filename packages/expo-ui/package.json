@@ -11,6 +11,9 @@
     "lint": "tsc --noEmit"
   },
   "peerDependencies": {
+    "@react-native-async-storage/async-storage": "*",
+    "expo-crypto": "*",
+    "expo-device": "*",
     "expo-haptics": "*",
     "react": "*",
     "react-native": "*",
@@ -19,8 +22,11 @@
     "react-native-svg": "*"
   },
   "devDependencies": {
+    "@react-native-async-storage/async-storage": "2.2.0",
     "@types/react": "~19.3.0",
     "expo": "~58.0.26",
+    "expo-crypto": "~58.0.8",
+    "expo-device": "~58.0.5",
     "expo-haptics": "~58.0.8",
     "react": "19.3.0",
     "react-native": "0.88.1",
@@ -29,5 +35,8 @@
     "react-native-svg": "15.16.0",
     "react-native-worklets": "0.13.0",
     "typescript": "~6.0.3"
+  },
+  "dependencies": {
+    "@marcel-games/game-sync": "workspace:*"
   }
 }

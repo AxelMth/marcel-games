@@ -1,3 +1,10 @@
+export {
+  WORDCLIMB_API_URL,
+  createWordClimbApi,
+  isLevelResult,
+  type LevelResult,
+  type WordClimbApi,
+} from "./api"
 export { CATALOGUE, type Level } from "./catalogue"
 export { DEFINITIONS, getDefinition, hasDefinition } from "./definitions"
 export {

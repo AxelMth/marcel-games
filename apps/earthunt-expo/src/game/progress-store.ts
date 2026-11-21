@@ -68,13 +68,16 @@ export function retryLoadProgress(): Promise<void> {
   return loadProgress()
 }
 
-/** Banks a finished level. Replaying one already passed changes nothing. */
-export async function bankLevel(level: number, continent?: Continent): Promise<void> {
+/**
+ * Banks a finished level. Replaying one already passed changes nothing and
+ * answers false, so a level is only ever reported once.
+ */
+export async function bankLevel(level: number, continent?: Continent): Promise<boolean> {
   await loadProgress()
-  if (state.status !== "ready") return
+  if (state.status !== "ready") return false
   const { progress } = state
   const reached = continent ? (progress.continents[continent] ?? 1) : progress.world
-  if (level < reached) return
+  if (level < reached) return false
 
   const next: Progress = continent
     ? { ...progress, continents: { ...progress.continents, [continent]: level + 1 } }
@@ -84,6 +87,26 @@ export async function bankLevel(level: number, continent?: Continent): Promise<v
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next))
   } catch (error) {
     console.error("Could not save progress", error)
+  }
+  return true
+}
+
+/** Takes the server's levels where they are ahead of this device, as after a reinstall. */
+export async function adoptServerProgress(server: Progress): Promise<void> {
+  await loadProgress()
+  if (state.status !== "ready") return
+  const { progress } = state
+  const continents = { ...progress.continents }
+  for (const [continent, level] of Object.entries(server.continents) as [Continent, number][]) {
+    continents[continent] = Math.max(level, continents[continent] ?? 1)
+  }
+  const next: Progress = { world: Math.max(server.world, progress.world), continents }
+  if (JSON.stringify(next) === JSON.stringify(progress)) return
+  publish({ status: "ready", progress: next })
+  try {
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+  } catch (error) {
+    console.error("Could not save the progress the server answered", error)
   }
 }
 

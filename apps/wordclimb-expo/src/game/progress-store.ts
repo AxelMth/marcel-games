@@ -66,6 +66,18 @@ export async function bankClassicLevel(levelIndex: number): Promise<boolean> {
   return true
 }
 
+/** Takes the server's count when it is ahead of this device, as after a reinstall. */
+export async function adoptServerProgress(finished: number): Promise<void> {
+  await loadProgress()
+  if (state.status !== "ready" || finished <= state.progress) return
+  publish({ status: "ready", progress: finished })
+  try {
+    await AsyncStorage.setItem(STORAGE_KEY, String(finished))
+  } catch (error) {
+    console.error("Could not save the progress the server answered", error)
+  }
+}
+
 function subscribe(listener: () => void): () => void {
   listeners.add(listener)
   return () => listeners.delete(listener)

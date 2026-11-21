@@ -32,12 +32,24 @@ export interface LevelPlay {
   firstLetter: (locale: CountryLocale) => string
 }
 
-export function useLevel(config: GameConfig, onComplete: () => void): LevelPlay {
+/** What a finished level is reported with. */
+export interface LevelOutcome {
+  attempts: number
+  hintsUsed: number
+  /** Seconds. */
+  timeSpent: number
+}
+
+export function useLevel(
+  config: GameConfig,
+  onComplete: (outcome: LevelOutcome) => void
+): LevelPlay {
   const [found, setFound] = useState<string[]>([])
   const [attempts, setAttempts] = useState(0)
   const [hintsUsed, setHintsUsed] = useState(0)
   const [hintStep, setHintStep] = useState<HintStep>(0)
   const [lastVerdict, setLastVerdict] = useState<GuessVerdict | null>(null)
+  const [startedAt] = useState(() => Date.now())
 
   const total = config.missingCountries.length
   const hintTarget =
@@ -59,7 +71,13 @@ export function useLevel(config: GameConfig, onComplete: () => void): LevelPlay 
     setFound(next)
     // The hint described this country; the next one starts untouched.
     if (verdict.country.code === hintTarget?.code) setHintStep(0)
-    if (next.length === total) onComplete()
+    if (next.length === total) {
+      onComplete({
+        attempts: attempts + 1,
+        hintsUsed,
+        timeSpent: Math.max(0, Math.floor((Date.now() - startedAt) / 1000)),
+      })
+    }
     return verdict
   }
 
