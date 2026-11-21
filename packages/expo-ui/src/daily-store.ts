@@ -15,7 +15,14 @@ export interface DailyStore<Puzzle> {
   today: () => Daily<Puzzle> | null
   useToday: () => Daily<Puzzle> | null
   takeServerAnswer: (answer: DailyAnswer<Puzzle>) => Promise<void>
-  markDone: () => Promise<void>
+  /**
+   * Finishes the challenge of `day`, the UTC day it was opened on. False when
+   * that day is over or already finished: the result must then not be sent, as
+   * the server would count it for a day the player has not played.
+   */
+  markDone: (day: string) => Promise<boolean>
+  /** Makes the screens read the clock again, as the day may have turned while the app was away. */
+  refresh: () => void
 }
 
 /** Today's daily challenge, kept across launches so a finished day stays finished offline. */
@@ -75,9 +82,14 @@ export function createDailyStore<Puzzle>(
       await load()
       await publish(dailyFromServer(known, utcDay(new Date()), answer))
     },
-    async markDone() {
+    async markDone(day) {
       await load()
-      await publish(dailyDone(known, utcDay(new Date())))
+      if (day !== utcDay(new Date()) || today()?.done) return false
+      await publish(dailyDone(known, day))
+      return true
+    },
+    refresh() {
+      for (const listener of listeners) listener()
     },
   }
 }

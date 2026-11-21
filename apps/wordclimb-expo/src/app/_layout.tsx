@@ -5,11 +5,11 @@ import { Stack } from "expo-router"
 import * as SplashScreen from "expo-splash-screen"
 import { StatusBar } from "expo-status-bar"
 import { useEffect } from "react"
-import { StyleSheet } from "react-native"
+import { AppState, StyleSheet } from "react-native"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
 import { daily } from "@/game/daily-store"
 import { loadProgress } from "@/game/progress-store"
-import { whenFirstSynced } from "@/game/sync"
+import { syncWithServer, whenFirstSynced } from "@/game/sync"
 import { loadWallet } from "@/game/wallet-store"
 import { colors } from "@marcel-games/expo-ui"
 
@@ -31,6 +31,16 @@ export default function RootLayout() {
     if (fontError) console.error("Game fonts failed to load", fontError)
     if (settled) void SplashScreen.hideAsync()
   }, [fontError, settled])
+
+  // The day may have turned, or the daily been played elsewhere, while the app was away.
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state !== "active") return
+      daily.refresh()
+      void syncWithServer()
+    })
+    return () => subscription.remove()
+  }, [])
 
   // Rendering before the fonts settle would flash the system font and reflow every tile.
   if (!settled) return null

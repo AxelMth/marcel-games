@@ -19,8 +19,9 @@ import {
   fonts,
 } from "@marcel-games/expo-ui"
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router"
-import { useState } from "react"
-import { KeyboardAvoidingView, StyleSheet, Text, TextInput, View } from "react-native"
+import { utcDay } from "@marcel-games/game-sync"
+import { useEffect, useState } from "react"
+import { ActivityIndicator, KeyboardAvoidingView, StyleSheet, Text, TextInput, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { WorldMap } from "@/components/world-map"
 import { daily } from "@/game/daily-store"
@@ -75,19 +76,38 @@ function dailyConfig(codes: readonly string[]): GameConfig {
 }
 
 /**
- * Today's challenge. The puzzle is settled once, when the screen opens: the
- * store marks the day done the moment the last country is found, and reading
- * it again then would pull the level away from under the result.
+ * Today's challenge. The puzzle is settled once, after the server has been
+ * asked: a day already finished elsewhere must not be offered again, and the
+ * store marks the day done the moment the last country is found, so reading it
+ * again then would pull the level away from under the result.
  */
 function DailyRoute() {
-  const [config] = useState(() => {
-    const today = daily.today()
-    if (today?.done) return null
-    // Without an answer from the server the game builds a puzzle from the date.
-    return today?.puzzle ? dailyConfig(today.puzzle) : createGameConfig("daily")
-  })
-  if (!config || config.missingCountries.length === 0) return <Redirect href="/" />
-  return <Game config={config} />
+  const [settled, setSettled] = useState<{ config: GameConfig | null; day: string } | null>(null)
+
+  useEffect(() => {
+    let left = false
+    void whenFirstSynced().then(() => {
+      if (left) return
+      const today = daily.today()
+      // Without an answer from the server the game builds a puzzle from the date.
+      const config = today?.puzzle ? dailyConfig(today.puzzle) : createGameConfig("daily")
+      const playable = !today?.done && config.missingCountries.length > 0
+      setSettled({ config: playable ? config : null, day: utcDay(new Date()) })
+    })
+    return () => {
+      left = true
+    }
+  }, [])
+
+  if (!settled) {
+    return (
+      <View style={styles.waiting}>
+        <ActivityIndicator color={colors.ink} />
+      </View>
+    )
+  }
+  if (!settled.config) return <Redirect href="/" />
+  return <Game config={settled.config} dailyDay={settled.day} />
 }
 
 export default function GameRoute() {
@@ -102,7 +122,7 @@ export default function GameRoute() {
   return <Game key={`${continent ?? "world"}-${level}`} config={config} />
 }
 
-function Game({ config }: { config: GameConfig }) {
+function Game({ config, dailyDay }: { config: GameConfig; dailyDay?: string }) {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const locale = deviceLocale()
@@ -111,7 +131,7 @@ function Game({ config }: { config: GameConfig }) {
   const today = daily.useToday()
   const play = useLevel(config, (outcome) => {
     const banked = isDaily
-      ? daily.markDone().then(() => true)
+      ? daily.markDone(dailyDay ?? "")
       : whenFirstSynced().then(() => bankLevel(config.level, config.continent))
     void banked.then((firstTime) => {
       if (!firstTime) return
@@ -260,6 +280,12 @@ function Game({ config }: { config: GameConfig }) {
 }
 
 const styles = StyleSheet.create({
+  waiting: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.ground,
+  },
   screen: { flex: 1, backgroundColor: colors.ground },
   header: {
     height: 52,

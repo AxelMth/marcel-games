@@ -16,8 +16,8 @@ import {
   type TranslationKey,
 } from "@marcel-games/wordclimb-core"
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router"
-import { useState } from "react"
-import { StyleSheet, Text, useWindowDimensions, View } from "react-native"
+import { useEffect, useState } from "react"
+import { ActivityIndicator, StyleSheet, Text, useWindowDimensions, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { ChevronLeftIcon, CoinIcon, colors, fonts, MIN_TOUCH, PressableSurface, StarIcon } from "@marcel-games/expo-ui"
 import { Keyboard } from "@/components/keyboard"
@@ -57,21 +57,40 @@ function wordsLeftLabel(state: GameState, locale: Locale): string {
 }
 
 /**
- * Today's challenge. The puzzle is settled once, when the screen opens: the
- * store marks the day done the moment the last word is found, and reading it
+ * Today's challenge. The puzzle is settled once, after the server has been
+ * asked: a day already finished elsewhere must not be offered again, and the
+ * store marks the day done the moment the last word is found, so reading it
  * again then would pull the ladder away from under the celebration.
  */
 function DailyRoute({ locale }: { locale: Locale }) {
-  const [level] = useState(() => {
-    const today = daily.today()
-    if (today?.done) return null
-    // Without an answer from the server the game builds the puzzle itself; the
-    // server derives the same one from the date.
-    const levels = CATALOGUE[locale]
-    return today?.puzzle ?? classicLevelAt(levels, dailyLevelIndexFor(utcDateString(), levels.length))
-  })
-  if (!level) return <Redirect href="/" />
-  return <Game level={level} levelIndex={null} locale={locale} />
+  const [settled, setSettled] = useState<{ level: Level | null; day: string } | null>(null)
+
+  useEffect(() => {
+    let left = false
+    void whenFirstSynced().then(() => {
+      if (left) return
+      const today = daily.today()
+      const day = utcDateString()
+      // Without an answer from the server the game builds the puzzle itself; the
+      // server derives the same one from the date.
+      const levels = CATALOGUE[locale]
+      const fallback = classicLevelAt(levels, dailyLevelIndexFor(day, levels.length))
+      setSettled({ level: today?.done ? null : (today?.puzzle ?? fallback), day })
+    })
+    return () => {
+      left = true
+    }
+  }, [locale])
+
+  if (!settled) {
+    return (
+      <View style={styles.waiting}>
+        <ActivityIndicator color={colors.ink} />
+      </View>
+    )
+  }
+  if (!settled.level) return <Redirect href="/" />
+  return <Game level={settled.level} levelIndex={null} dailyDay={settled.day} locale={locale} />
 }
 
 export default function GameRoute() {
@@ -96,10 +115,12 @@ interface GameProps {
   level: Level
   /** The level's place in the classic catalogue, or null for the daily challenge. */
   levelIndex: number | null
+  /** The UTC day the daily challenge was opened on. */
+  dailyDay?: string
   locale: Locale
 }
 
-function Game({ level, levelIndex, locale }: GameProps) {
+function Game({ level, levelIndex, dailyDay, locale }: GameProps) {
   const insets = useSafeAreaInsets()
   const { width } = useWindowDimensions()
   const router = useRouter()
@@ -115,7 +136,7 @@ function Game({ level, levelIndex, locale }: GameProps) {
       const earned = getStars(finished.attempts, level.wordLadder.length, finished.hintsUsed)
       const banked =
         levelIndex === null
-          ? daily.markDone().then(() => true)
+          ? daily.markDone(dailyDay ?? "")
           : whenFirstSynced().then(() => bankClassicLevel(levelIndex))
       void banked.then((firstTime) => {
         if (!firstTime) return
@@ -310,6 +331,12 @@ function Game({ level, levelIndex, locale }: GameProps) {
 }
 
 const styles = StyleSheet.create({
+  waiting: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.ground,
+  },
   screen: { flex: 1, backgroundColor: colors.ground },
   header: {
     height: 48,
