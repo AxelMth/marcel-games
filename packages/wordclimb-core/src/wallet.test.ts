@@ -44,7 +44,7 @@ describe("openWallet", () => {
 
 describe("spendCoins", () => {
   it("takes the cost off the balance", () => {
-    const wallet = { balance: 4, week: "2026-W35" }
+    const wallet = { balance: 6, week: "2026-W35" }
 
     expect(spendCoins(wallet, HINT_COSTS.fullWord)?.balance).toBe(1)
   })

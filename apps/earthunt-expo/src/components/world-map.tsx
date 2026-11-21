@@ -4,8 +4,12 @@ import { ScrollView, StyleSheet, View } from "react-native"
 import Svg, { Path, Rect } from "react-native-svg"
 import { MAP_HEIGHT, MAP_WIDTH, SHAPES } from "@/map/shapes"
 
-const LAND = "#BCC9C1"
-const LAND_OUTSIDE = "#DCE4DF"
+const SEA = "#CFE6F3"
+const LAND = "#8CC084"
+const LAND_OUTSIDE = "#DCE7D6"
+const LAND_STROKE = "#F4F8F1"
+const FOUND = "#2E9D6A"
+const MISSING_FILL = "#F6F8F2"
 const MAX_ZOOM = 10
 /** Room left around a country or a continent when the map frames it, in map units. */
 const FRAME_MARGIN = 12
@@ -132,20 +136,20 @@ export function WorldMap({ playable, missing, found, highlighted }: WorldMapProp
             height={MAP_HEIGHT * unit}
             viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
           >
-            <Rect width={MAP_WIDTH} height={MAP_HEIGHT} fill={colors.tray} />
+            <Rect width={MAP_WIDTH} height={MAP_HEIGHT} fill={SEA} />
             {SHAPES.map((shape) => {
               if (shape.code === highlighted) {
                 return <Path key={shape.code} d={shape.d} fill={colors.star} />
               }
               if (found.includes(shape.code)) {
-                return <Path key={shape.code} d={shape.d} fill={colors.found} />
+                return <Path key={shape.code} d={shape.d} fill={FOUND} stroke={LAND_STROKE} strokeWidth={0.4} />
               }
               if (missing.includes(shape.code)) {
                 return (
                   <Path
                     key={shape.code}
                     d={shape.d}
-                    fill={colors.ground}
+                    fill={MISSING_FILL}
                     stroke={colors.lineStrong}
                     strokeWidth={0.6}
                     strokeDasharray="2 1.5"
@@ -157,7 +161,7 @@ export function WorldMap({ playable, missing, found, highlighted }: WorldMapProp
                   key={shape.code}
                   d={shape.d}
                   fill={playable.includes(shape.code) ? LAND : LAND_OUTSIDE}
-                  stroke={colors.tray}
+                  stroke={LAND_STROKE}
                   strokeWidth={0.4}
                 />
               )
@@ -170,5 +174,5 @@ export function WorldMap({ playable, missing, found, highlighted }: WorldMapProp
 }
 
 const styles = StyleSheet.create({
-  viewport: { flex: 1, backgroundColor: colors.tray, overflow: "hidden" },
+  viewport: { flex: 1, backgroundColor: SEA, overflow: "hidden" },
 })

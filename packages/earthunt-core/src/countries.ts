@@ -209,3 +209,10 @@ export function getCountriesByCodes(codes: string[]): Country[] {
     .map((code) => countriesByCode.get(code))
     .filter((c): c is Country => c != null)
 }
+
+/** The flag emoji of a country, built from its alpha-2 code as regional indicator letters. */
+export function getFlagEmoji(country: Country): string {
+  return String.fromCodePoint(
+    ...[...country.codeAlpha2].map((letter) => 0x1f1e6 + letter.charCodeAt(0) - 65)
+  )
+}

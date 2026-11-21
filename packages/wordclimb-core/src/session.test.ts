@@ -8,6 +8,7 @@ import {
   settleCelebration,
   takeDefinitionHint,
   takeFirstLetterHint,
+  takeFullWordHint,
   typeLetter,
   type PlaySession,
 } from "./session"
@@ -89,6 +90,14 @@ describe("hints", () => {
     expect(hinted.game.hintsUsed).toBe(1)
   })
 
+  it("clears the rung for the whole word and counts one hint", () => {
+    const hinted = takeFullWordHint(type(createSession("classic", LEVEL), "xy"))
+
+    expect(hinted.typed).toBe("")
+    expect(hinted.hinted.fullWord).toBe(true)
+    expect(hinted.game.hintsUsed).toBe(1)
+  })
+
   it("does not count the same hint twice on one rung", () => {
     const once = takeDefinitionHint(createSession("classic", LEVEL))
     const twice = takeDefinitionHint(once)
@@ -103,7 +112,7 @@ describe("hints", () => {
 
     expect(both.game.hintsUsed).toBe(2)
     expect(next.celebrating).toBe(0)
-    expect(next.hinted).toEqual({ firstLetter: false, definition: false })
+    expect(next.hinted).toEqual({ firstLetter: false, definition: false, fullWord: false })
     expect(takeFirstLetterHint(next).typed).toBe("m")
     expect(takeFirstLetterHint(next).game.hintsUsed).toBe(3)
   })

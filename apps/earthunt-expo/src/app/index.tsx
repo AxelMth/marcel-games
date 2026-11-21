@@ -1,5 +1,6 @@
 import { t, type Continent } from "@marcel-games/earthunt-core"
-import { LegalLink, PressableSurface, colors, fonts } from "@marcel-games/expo-ui"
+import { CoinCounter, LegalLink, PressableSurface, colors, fonts } from "@marcel-games/expo-ui"
+import { useCoinBalance } from "@/game/wallet-store"
 import { useRouter } from "expo-router"
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -11,6 +12,15 @@ import { deviceLocale } from "@/lib/locale"
 const LEGAL_URL = "https://axelmth.github.io/marcel-games/earthunt-privacy-and-terms"
 
 const CONTINENTS: readonly Continent[] = ["EUROPE", "ASIA", "AMERICAS", "AFRICA", "OCEANIA"]
+const OCHRE = "#E3A33B"
+const NAVY = "#16202B"
+const CONTINENT_ACCENTS: Partial<Record<Continent, string>> = {
+  EUROPE: "#5B8DEF",
+  ASIA: "#E8645A",
+  AMERICAS: "#F2A541",
+  AFRICA: "#9C6ADE",
+  OCEANIA: "#2BB3A3",
+}
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets()
@@ -27,10 +37,14 @@ export default function HomeScreen() {
     : today?.stats && today.stats.todayRank > 0
       ? `${t(locale, "profile.todaysRank")} : ${today.stats.todayRank}`
       : t(locale, "home.doneForToday")
+  const coins = useCoinBalance()
   const levelLabel = (level: number) => `${t(locale, "continentSelect.level")} ${level}`
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top + 32, paddingBottom: insets.bottom + 4 }]}>
+    <View style={[styles.screen, { paddingTop: insets.top, paddingBottom: insets.bottom + 4 }]}>
+      <View style={styles.topBar}>
+        <CoinCounter value={coins} accessibilityLabel={`${coins ?? 0} ${t(locale, "game.coins")}`} />
+      </View>
       <View style={styles.hero}>
         <Text accessibilityRole="header" style={styles.wordmark}>
           {t(locale, "app.title")}
@@ -60,7 +74,7 @@ export default function HomeScreen() {
               router.push({ pathname: "/game", params: { level: String(state.progress.world) } })
             }
             accessibilityLabel={`${t(locale, "home.world")}, ${levelLabel(state.progress.world)}`}
-            face={colors.ink}
+            face={NAVY}
             radius={14}
             height={72}
             style={styles.row}
@@ -105,7 +119,10 @@ export default function HomeScreen() {
                 height={56}
                 style={styles.row}
               >
-                <Text style={styles.rowTitle}>{name}</Text>
+                <View style={styles.continentName}>
+                  <View style={[styles.dot, { backgroundColor: CONTINENT_ACCENTS[continent] }]} />
+                  <Text style={styles.rowTitle}>{name}</Text>
+                </View>
                 <Text style={styles.rowLevel}>{levelLabel(level)}</Text>
               </PressableSurface>
             )
@@ -119,7 +136,8 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.ground, paddingHorizontal: 16 },
+  screen: { flex: 1, backgroundColor: "#E4F1FA", paddingHorizontal: 16 },
+  topBar: { height: 48, alignItems: "flex-end", justifyContent: "center" },
   hero: { flex: 1, alignItems: "center", justifyContent: "center", gap: 8 },
   wordmark: { fontFamily: fonts.display, fontSize: 40, color: colors.ink },
   tagline: { fontFamily: fonts.body, fontSize: 16, color: colors.muted },
@@ -133,9 +151,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 12,
     justifyContent: "center",
-    backgroundColor: colors.inkSoft,
+    backgroundColor: OCHRE,
   },
-  chipText: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.surface },
+  chipText: { fontFamily: fonts.bodyBold, fontSize: 14, color: NAVY },
+  continentName: { flexDirection: "row", alignItems: "center", gap: 10 },
+  dot: { width: 12, height: 12, borderRadius: 6 },
   section: {
     marginTop: 10,
     fontFamily: fonts.bodyBold,

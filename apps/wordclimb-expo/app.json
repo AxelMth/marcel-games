@@ -11,7 +11,7 @@
     "ios": {
       "bundleIdentifier": "com.marcelgames.wordclimb",
       "appleTeamId": "7H6S64378V",
-      "buildNumber": "15",
+      "buildNumber": "16",
       "supportsTablet": false,
       "config": {
         "usesNonExemptEncryption": false
@@ -34,9 +34,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#F3F6F4",
-          "image": "./assets/icon-foreground.png",
-          "imageWidth": 160
+          "backgroundColor": "#E1F3EB",
+          "image": "./assets/splash-wordmark.png",
+          "imageWidth": 294
         }
       ],
       "expo-secure-store"

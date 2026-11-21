@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { countries } from "./countries"
 import type { GameConfig } from "./game-logic"
-import { judgeGuess } from "./guess"
+import { HINT_STEP_COSTS, judgeGuess } from "./guess"
 
 const byCode = (code: string) => countries.find((country) => country.code === code)!
 
@@ -30,5 +30,11 @@ describe("judgeGuess", () => {
 
   it("refuses an empty answer", () => {
     expect(judgeGuess("   ", CONFIG, []).outcome).toBe("invalid")
+  })
+})
+
+describe("hint costs", () => {
+  it("charges more for each step", () => {
+    expect(HINT_STEP_COSTS).toEqual({ 1: 2, 2: 3, 3: 5 })
   })
 })

@@ -127,12 +127,13 @@ describe("reconciling with the server", () => {
   it("does not refund hints the server has not been told about", () => {
     getCoinBalance(at("2026-08-30"))
     spendCoins(HINT_COSTS.fullWord, at("2026-08-30"))
-    expect(getCoinBalance(at("2026-08-30"))).toBe(7)
+    const afterHint = WEEKLY_COIN_ALLOWANCE - HINT_COSTS.fullWord
+    expect(getCoinBalance(at("2026-08-30"))).toBe(afterHint)
 
     // Going home refetches progress; the server still reports the old balance.
     reconcileCoins(WEEKLY_COIN_ALLOWANCE, at("2026-08-30"))
 
-    expect(getCoinBalance(at("2026-08-30"))).toBe(7)
+    expect(getCoinBalance(at("2026-08-30"))).toBe(afterHint)
     expect(getUnreportedSpend()).toBe(HINT_COSTS.fullWord)
   })
 

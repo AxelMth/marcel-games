@@ -3,6 +3,7 @@ import {
   createGameConfig,
   getCountriesByCodes,
   getCountryName,
+  getFlagEmoji,
   getStars,
   HINT_STEP_COSTS,
   t,
@@ -11,20 +12,22 @@ import {
   type CountryLocale,
   type GameConfig,
   type GuessVerdict,
+  suggestCountries,
 } from "@marcel-games/earthunt-core"
 import {
   ChevronLeftIcon,
-  CoinIcon,
+  CoinCounter,
+  GoldCoin,
+  LevelComplete,
   MIN_TOUCH,
   PressableSurface,
-  StarIcon,
   colors,
   fonts,
 } from "@marcel-games/expo-ui"
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router"
 import { utcDay } from "@marcel-games/game-sync"
-import { useEffect, useState } from "react"
-import { ActivityIndicator, KeyboardAvoidingView, StyleSheet, Text, TextInput, View } from "react-native"
+import { useEffect, useMemo, useRef, useState, type ComponentRef } from "react"
+import { ActivityIndicator, KeyboardAvoidingView, StyleSheet, Text, TextInput, View, type LayoutChangeEvent } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { WorldMap } from "@/components/world-map"
 import { daily } from "@/game/daily-store"
@@ -34,7 +37,8 @@ import { earnCoinsForStars, loadWallet, useCoinBalance } from "@/game/wallet-sto
 import { useLevel, type LevelPlay } from "@/game/use-level"
 import { deviceLocale } from "@/lib/locale"
 
-const MAX_STARS = 3
+const NAVY = "#16202B"
+const OCHRE = "#E3A33B"
 const CONTINENTS: readonly Continent[] = ["EUROPE", "ASIA", "AMERICAS", "AFRICA", "OCEANIA"]
 
 function parseLevel(raw: string | string[] | undefined): number | null {
@@ -134,14 +138,26 @@ function Game({ config, dailyDay }: { config: GameConfig; dailyDay?: string }) {
   const isDaily = config.mode === "daily"
   const today = daily.useToday()
   const [broke, setBroke] = useState(false)
-  const coins = useCoinBalance()
+  const balance = useCoinBalance()
+  const counterRef = useRef<ComponentRef<typeof View>>(null)
+  const [coinTarget, setCoinTarget] = useState<{ x: number; y: number } | null>(null)
+  const [headerBottom, setHeaderBottom] = useState(insets.top + 52)
+  // Coins won but not yet landed: the counter keeps showing the balance without them.
+  const [reward, setReward] = useState<number | null>(null)
+  const [inFlight, setInFlight] = useState(0)
+  const coins = balance === null ? null : Math.max(0, balance - inFlight)
   const play = useLevel(config, (outcome) => {
     const stars = getStars(outcome.attempts, config.missingCountries.length, outcome.hintsUsed)
     const banked = isDaily
       ? daily.markDone(dailyDay ?? "")
       : whenFirstSynced().then(() => bankLevel(config.level, config.continent))
     void banked.then((firstTime) => {
-      if (!firstTime) return
+      if (!firstTime) {
+        setReward(0)
+        return
+      }
+      setReward(stars)
+      setInFlight(stars)
       // The wallet may still be loading right after launch; earning into a closed one would drop the coins.
       void loadWallet().then(() => earnCoinsForStars(stars))
       void reportLevel({
@@ -164,15 +180,32 @@ function Game({ config, dailyDay }: { config: GameConfig; dailyDay?: string }) {
     : tReplace(locale, "game.worldLevel", { level: config.level })
   const hint = hintMessage(play, locale)
 
-  const submit = () => {
-    if (!input.trim()) return
-    const verdict = play.guess(input)
+  const suggestions = useMemo(
+    () => suggestCountries(input, config.allCountries, play.found, locale),
+    [config.allCountries, input, locale, play.found]
+  )
+
+  const submit = (value: string) => {
+    if (!value.trim()) return
+    const verdict = play.guess(value)
     if (verdict.outcome === "correct") setInput("")
+  }
+
+  useEffect(() => {
+    if (!play.isComplete) return
+    counterRef.current?.measureInWindow((x, y, width, height) =>
+      setCoinTarget({ x: x + width / 2, y: y + height / 2 })
+    )
+  }, [play.isComplete])
+
+  const onHeaderLayout = (event: LayoutChangeEvent) => {
+    const { y, height } = event.nativeEvent.layout
+    setHeaderBottom(y + height)
   }
 
   return (
     <KeyboardAvoidingView behavior="padding" style={[styles.screen, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
+      <View style={styles.header} onLayout={onHeaderLayout}>
         <PressableSurface
           onPress={() => router.back()}
           accessibilityLabel={t(locale, "success.backToHome")}
@@ -187,14 +220,11 @@ function Game({ config, dailyDay }: { config: GameConfig; dailyDay?: string }) {
         <Text accessibilityRole="header" style={styles.title}>
           {title}
         </Text>
-        <View
-          accessible
+        <CoinCounter
+          ref={counterRef}
+          value={coins}
           accessibilityLabel={`${coins ?? 0} ${t(locale, "game.coins")}`}
-          style={styles.coins}
-        >
-          <CoinIcon color={colors.star} />
-          <Text style={styles.coinsLabel}>{coins ?? "–"}</Text>
-        </View>
+        />
       </View>
 
       <WorldMap
@@ -214,26 +244,7 @@ function Game({ config, dailyDay }: { config: GameConfig; dailyDay?: string }) {
                   ? verdictMessage(play.lastVerdict, locale)
                   : `${left} ${t(locale, left === 1 ? "game.missingOne" : "game.missing")}`}
             </Text>
-            {play.isComplete ? (
-              <View
-                accessible
-                accessibilityLabel={`${play.stars} / ${MAX_STARS}`}
-                style={styles.stars}
-              >
-                {Array.from({ length: MAX_STARS }, (_, index) => (
-                  <StarIcon
-                    key={index}
-                    size={20}
-                    color={index < play.stars ? colors.star : colors.starOff}
-                  />
-                ))}
-                {isDaily && today?.stats && today.stats.todayRank > 0 && (
-                  <Text style={styles.rank}>
-                    {t(locale, "profile.todaysRank")} : {today.stats.todayRank}
-                  </Text>
-                )}
-              </View>
-            ) : (
+            {!play.isComplete && (
               <>
                 {hint && <Text style={styles.hint}>{hint}</Text>}
                 {broke && (
@@ -244,27 +255,7 @@ function Game({ config, dailyDay }: { config: GameConfig; dailyDay?: string }) {
               </>
             )}
           </View>
-          {play.isComplete ? (
-            <PressableSurface
-              onPress={() =>
-                isDaily
-                  ? router.back()
-                  : router.replace({
-                      pathname: "/game",
-                      params: { level: String(config.level + 1), continent: config.continent },
-                    })
-              }
-              accessibilityLabel={t(locale, isDaily ? "success.backToHome" : "success.nextLevel")}
-              face={colors.ink}
-              radius={12}
-              height={MIN_TOUCH}
-              style={styles.action}
-            >
-              <Text style={styles.actionLabelOnInk}>
-                {t(locale, isDaily ? "success.backToHome" : "success.nextLevel")}
-              </Text>
-            </PressableSurface>
-          ) : (
+          {!play.isComplete && (
             <PressableSurface
               onPress={() => setBroke(!play.takeHint())}
               accessibilityLabel={
@@ -273,16 +264,15 @@ function Game({ config, dailyDay }: { config: GameConfig; dailyDay?: string }) {
                   : t(locale, "game.hint")
               }
               disabled={play.hintStep === 3}
-              face={colors.surface}
-              border={colors.line}
+              face={NAVY}
               radius={12}
               height={MIN_TOUCH}
               style={styles.action}
             >
-              <Text style={styles.actionLabel}>{t(locale, "game.hint")}</Text>
+              <Text style={styles.actionLabelOnInk}>{t(locale, "game.hint")}</Text>
               {play.hintStep < 3 && (
                 <View style={styles.cost}>
-                  <CoinIcon size={14} color={colors.star} />
+                  <GoldCoin size={16} />
                   <Text style={styles.costLabel}>
                     {HINT_STEP_COSTS[(play.hintStep + 1) as 1 | 2 | 3]}
                   </Text>
@@ -292,11 +282,34 @@ function Game({ config, dailyDay }: { config: GameConfig; dailyDay?: string }) {
           )}
         </View>
 
+        {!play.isComplete && suggestions.length > 0 && (
+          <View style={styles.suggestions}>
+            {suggestions.map((country) => {
+              const name = getCountryName(country, locale)
+              return (
+                <PressableSurface
+                  key={country.code}
+                  onPress={() => submit(name)}
+                  accessibilityLabel={name}
+                  face={colors.surface}
+                  border={colors.line}
+                  radius={18}
+                  height={36}
+                  style={styles.chip}
+                >
+                  <Text style={styles.chipFlag}>{getFlagEmoji(country)}</Text>
+                  <Text style={styles.chipLabel}>{name}</Text>
+                </PressableSurface>
+              )
+            })}
+          </View>
+        )}
+
         {!play.isComplete && (
           <TextInput
             value={input}
             onChangeText={setInput}
-            onSubmitEditing={submit}
+            onSubmitEditing={() => submit(input)}
             submitBehavior="submit"
             returnKeyType="done"
             autoCorrect={false}
@@ -310,6 +323,38 @@ function Game({ config, dailyDay }: { config: GameConfig; dailyDay?: string }) {
           />
         )}
       </View>
+
+      {play.isComplete && (
+        <LevelComplete
+          accent={NAVY}
+          accentInk={NAVY}
+          title={t(locale, "success.wellDone")}
+          subtitle={
+            isDaily && today?.stats && today.stats.todayRank > 0
+              ? `${t(locale, "profile.todaysRank")} : ${today.stats.todayRank}`
+              : t(locale, "game.levelComplete")
+          }
+          stars={play.stars}
+          coins={reward}
+          coinsLabel={(n) => tReplace(locale, "game.coinsWon", { n })}
+          noCoinsLabel={t(locale, "game.noNewCoins")}
+          coinTarget={coinTarget}
+          onCoinLanded={() => setInFlight((n) => Math.max(0, n - 1))}
+          top={headerBottom}
+          bottom={insets.bottom}
+          primaryLabel={t(locale, isDaily ? "success.backToHome" : "success.nextLevel")}
+          onPrimary={() =>
+            isDaily
+              ? router.back()
+              : router.replace({
+                  pathname: "/game",
+                  params: { level: String(config.level + 1), continent: config.continent },
+                })
+          }
+          secondaryLabel={isDaily ? undefined : t(locale, "success.backToHome")}
+          onSecondary={isDaily ? undefined : () => router.back()}
+        />
+      )}
     </KeyboardAvoidingView>
   )
 }
@@ -330,15 +375,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   side: { width: MIN_TOUCH },
-  coins: {
-    minWidth: MIN_TOUCH,
-    height: MIN_TOUCH,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    gap: 6,
-  },
-  coinsLabel: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
   broke: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.danger },
   title: { fontFamily: fonts.display, fontSize: 18, color: colors.ink },
   panel: { paddingHorizontal: 16, paddingTop: 12, gap: 12, backgroundColor: colors.ground },
@@ -347,22 +383,24 @@ const styles = StyleSheet.create({
   statusText: { flexShrink: 1, gap: 2, minHeight: 64, justifyContent: "center" },
   status: { fontFamily: fonts.display, fontSize: 17, color: colors.ink },
   hint: { fontFamily: fonts.body, fontSize: 14, color: colors.muted },
-  stars: { flexDirection: "row", alignItems: "center", gap: 2 },
-  rank: { marginLeft: 8, fontFamily: fonts.body, fontSize: 13, color: colors.muted },
   action: { flexDirection: "row", gap: 8, paddingHorizontal: 18 },
   cost: { flexDirection: "row", alignItems: "center", gap: 3 },
-  costLabel: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.star },
+  costLabel: { fontFamily: fonts.bodyBold, fontSize: 15, color: OCHRE },
   actionLabel: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   actionLabelOnInk: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.surface },
+  suggestions: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  chip: { flexDirection: "row", gap: 6, paddingHorizontal: 12 },
+  chipFlag: { fontSize: 18 },
+  chipLabel: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
   input: {
-    height: 52,
+    height: MIN_TOUCH,
     borderRadius: 12,
     borderWidth: 1.5,
     borderColor: colors.line,
     backgroundColor: colors.surface,
     paddingHorizontal: 16,
     fontFamily: fonts.body,
-    fontSize: 17,
+    fontSize: 16,
     color: colors.ink,
   },
 })

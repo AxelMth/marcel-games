@@ -6,7 +6,7 @@ import {
   eraseLetter,
   settleCelebration,
   takeDefinitionHint,
-  takeFirstLetterHint,
+  takeFullWordHint,
   typeLetter,
   type GameMode,
   type GameState,
@@ -24,14 +24,16 @@ const FOUND_ANIM_MS = 400
 /** How long a refused guess stays on screen before the rung is cleared. */
 const WRONG_HOLD_MS = 600
 const FEEDBACK_MS = 1500
+/** Pace at which a bought word types itself in. */
+const REVEAL_STEP_MS = 90
 
 export interface Game {
   session: PlaySession
   pressLetter: (letter: string) => void
   erase: () => void
   /** Both answer false when the hint could not be paid for. */
-  hintFirstLetter: () => boolean
   hintDefinition: () => boolean
+  hintFullWord: () => boolean
 }
 
 /** One level being played, with the haptics and timed feedback around it. */
@@ -108,7 +110,17 @@ export function useGame(
     session,
     pressLetter,
     erase,
-    hintFirstLetter: () => takeHint("firstLetter", takeFirstLetterHint),
     hintDefinition: () => takeHint("definition", takeDefinitionHint),
+    hintFullWord: () => {
+      const target = level.wordLadder[latest.current.game.currentWordIndex]
+      // A word already on its way in, or a refused guess still on screen: nothing to buy.
+      if (latest.current.refused || latest.current.hinted.fullWord) return true
+      if (!takeHint("fullWord", takeFullWordHint)) return false
+      // Typed in through the guess path, so the word is solved, celebrated and counted like any other.
+      ;[...target].forEach((letter, index) => {
+        timers.current.push(setTimeout(() => pressLetter(letter), (index + 1) * REVEAL_STEP_MS))
+      })
+      return true
+    },
   }
 }

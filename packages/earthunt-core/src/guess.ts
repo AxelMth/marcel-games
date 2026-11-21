@@ -30,7 +30,7 @@ export function judgeGuess(
 
 /**
  * What each hint step costs in coins: the first letter, where the country is,
- * then its name. The name costs three times the others: it does not help find
- * the country, it hands it over.
+ * then its name. The name costs the most: it does not help find the country,
+ * it hands it over.
  */
-export const HINT_STEP_COSTS = { 1: 1, 2: 1, 3: 3 } as const
+export const HINT_STEP_COSTS = { 1: 2, 2: 3, 3: 5 } as const
