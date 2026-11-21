@@ -58,9 +58,15 @@ Apple en demande au moins une et en accepte dix. Les autres tailles d'iPhone son
 
 ## Confidentialité de l'app
 
-Réponse au questionnaire : **Données non collectées**.
+Réponse au questionnaire : **Données collectées, non liées à l'utilisateur, sans suivi**.
 
-L'app ne fait aucun appel réseau. La progression est stockée sur l'appareil. Le seul lien sortant ouvre la page de confidentialité dans le navigateur.
+| Type de données | Finalité | Lié à l'identité | Suivi |
+| --- | --- | --- | --- |
+| Identifiants → Identifiant de l'appareil (ID aléatoire créé par l'app) | Fonctionnalité de l'app | Non | Non |
+| Données d'utilisation → Interactions avec le produit (niveaux finis, essais, temps, indices) | Fonctionnalité de l'app | Non | Non |
+| Diagnostics → Autres données de diagnostic (marque, modèle, version d'iOS) | Fonctionnalité de l'app | Non | Non |
+
+Depuis le build 12, l'app envoie ces données à `wordclimb-api.fly.dev` pour conserver la progression. Le build 11 ne fait aucun appel réseau : si c'est lui qui est soumis, la réponse reste « Données non collectées ».
 
 ## Classification par âge
 

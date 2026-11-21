@@ -1,10 +1,13 @@
 import { t, type Continent } from "@marcel-games/earthunt-core"
-import { PressableSurface, colors, fonts } from "@marcel-games/expo-ui"
+import { LegalLink, PressableSurface, colors, fonts } from "@marcel-games/expo-ui"
 import { useRouter } from "expo-router"
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { retryLoadProgress, useProgress } from "@/game/progress-store"
 import { deviceLocale } from "@/lib/locale"
+
+// Published from legal/ by the legal-pages workflow; the same URL goes into App Store Connect.
+const LEGAL_URL = "https://axelmth.github.io/marcel-games/earthunt-privacy-and-terms"
 
 const CONTINENTS: readonly Continent[] = ["EUROPE", "ASIA", "AMERICAS", "AFRICA", "OCEANIA"]
 
@@ -16,7 +19,7 @@ export default function HomeScreen() {
   const levelLabel = (level: number) => `${t(locale, "continentSelect.level")} ${level}`
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top + 32, paddingBottom: insets.bottom + 16 }]}>
+    <View style={[styles.screen, { paddingTop: insets.top + 32, paddingBottom: insets.bottom + 4 }]}>
       <View style={styles.hero}>
         <Text accessibilityRole="header" style={styles.wordmark}>
           {t(locale, "app.title")}
@@ -84,6 +87,8 @@ export default function HomeScreen() {
           })}
         </View>
       )}
+
+      <LegalLink url={LEGAL_URL} label={t(locale, "legal.open")} />
     </View>
   )
 }

@@ -6,6 +6,8 @@ import {
   getStars,
   hasDefinition,
   t,
+  toBackendGameMode,
+  toBackendLocale,
   type GameState,
   type Level,
   type Locale,
@@ -15,16 +17,15 @@ import { Redirect, useLocalSearchParams, useRouter } from "expo-router"
 import { useState } from "react"
 import { StyleSheet, Text, useWindowDimensions, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { ChevronLeftIcon, CoinIcon, StarIcon } from "@marcel-games/expo-ui"
+import { ChevronLeftIcon, CoinIcon, colors, fonts, MIN_TOUCH, PressableSurface, StarIcon } from "@marcel-games/expo-ui"
 import { Keyboard } from "@/components/keyboard"
 import { Ladder } from "@/components/ladder"
-import { PressableSurface } from "@marcel-games/expo-ui"
 import { ladderLayout } from "@/game/layout"
 import { bankClassicLevel } from "@/game/progress-store"
+import { reportLevel, whenFirstSynced } from "@/game/sync"
 import { useGame } from "@/game/use-game"
 import { earnCoinsForStars, useCoinBalance } from "@/game/wallet-store"
 import { deviceLocale } from "@/lib/locale"
-import { colors, fonts, MIN_TOUCH } from "@marcel-games/expo-ui"
 
 const MAX_STARS = 3
 
@@ -80,8 +81,21 @@ function Game({ level, levelIndex, locale }: { level: Level; levelIndex: number;
     level,
     (finished) => {
       const earned = getStars(finished.attempts, level.wordLadder.length, finished.hintsUsed)
-      void bankClassicLevel(levelIndex).then((firstTime) => {
-        if (firstTime) earnCoinsForStars(earned)
+      void whenFirstSynced()
+        .then(() => bankClassicLevel(levelIndex))
+        .then((firstTime) => {
+        if (!firstTime) return
+        earnCoinsForStars(earned)
+        void reportLevel({
+          attempts: finished.attempts,
+          timeSpent: Math.max(0, Math.floor((Date.now() - finished.startTime) / 1000)),
+          hintsUsed: finished.hintsUsed,
+          gameMode: toBackendGameMode(finished.mode),
+          locale: toBackendLocale(locale),
+          beginWord: level.beginWord,
+          endWord: level.endWord,
+          wordLadder: level.wordLadder,
+        })
       })
     }
   )

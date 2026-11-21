@@ -8,10 +8,12 @@ import { useEffect } from "react"
 import { StyleSheet } from "react-native"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
 import { loadProgress } from "@/game/progress-store"
+import { whenFirstSynced } from "@/game/sync"
 import { colors } from "@marcel-games/expo-ui"
 
 void SplashScreen.preventAutoHideAsync()
 void loadProgress()
+void whenFirstSynced()
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({

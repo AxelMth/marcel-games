@@ -11,7 +11,7 @@
     "ios": {
       "bundleIdentifier": "com.marcelgames.earthunt",
       "appleTeamId": "7H6S64378V",
-      "buildNumber": "31",
+      "buildNumber": "32",
       "supportsTablet": false,
       "config": {
         "usesNonExemptEncryption": false
@@ -38,7 +38,8 @@
           "image": "./assets/icon-foreground.png",
           "imageWidth": 160
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,

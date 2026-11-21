@@ -1,4 +1,6 @@
+export { deviceStore, identityStore, launchDevice, newDeviceId } from "./device"
 export { hapticError, hapticKey, hapticSuccess } from "./haptics"
 export { BackspaceIcon, ChevronLeftIcon, CoinIcon, StarIcon } from "./icons"
+export { LegalLink } from "./legal-link"
 export { PressableSurface, Surface } from "./surface"
 export { MIN_TOUCH, colors, fonts } from "./tokens"
