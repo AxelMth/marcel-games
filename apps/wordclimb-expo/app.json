@@ -11,7 +11,7 @@
     "ios": {
       "bundleIdentifier": "com.marcelgames.wordclimb",
       "appleTeamId": "7H6S64378V",
-      "buildNumber": "11",
+      "buildNumber": "12",
       "supportsTablet": false,
       "config": {
         "usesNonExemptEncryption": false
