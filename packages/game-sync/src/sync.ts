@@ -8,6 +8,9 @@ export interface KeyValueStore {
 // A long offline streak must not grow the queue without bound.
 const MAX_QUEUED_RESULTS = 50
 
+// A result the server keeps failing on would otherwise block every later one.
+const MAX_SERVER_FAILURES = 5
+
 export interface SyncOptions<Result> {
   /** Holds the queue of results. */
   store: KeyValueStore
@@ -30,7 +33,8 @@ export interface GameSync<Result> {
   record: (result: Result) => Promise<void>
   /**
    * Sends the stored results, oldest first, and answers the player's id. A
-   * result that could not be sent stays stored and ends the pass. Rejects only
+   * result that could not be sent stays stored and ends the pass, unless the
+   * server has failed on it too many times. Rejects only
    * when the player could not be identified.
    */
   flush: () => Promise<string>
@@ -48,6 +52,10 @@ function isRefused(error: unknown): boolean {
   )
 }
 
+function isServerFailure(error: unknown): boolean {
+  return error instanceof ApiHttpError && error.status >= 500
+}
+
 /**
  * Keeps finished levels on the device until the server has them.
  *
@@ -59,6 +67,7 @@ export function createGameSync<Result>(options: SyncOptions<Result>): GameSync<R
   const { store, identityStore, namespace, isResult, newDeviceId, launch, send } = options
   const queueKey = `${namespace}-pending-results`
   const deviceKey = `${namespace}-device-id`
+  const failuresKey = `${namespace}-head-failures`
 
   let queue: Promise<Result[]> | null = null
   let userId: Promise<string> | null = null
@@ -111,6 +120,14 @@ export function createGameSync<Result>(options: SyncOptions<Result>): GameSync<R
     return userId
   }
 
+  /** Counts server failures on the oldest result, across sessions; answers the new count. */
+  const countServerFailure = async (): Promise<number> => {
+    const stored = Number(await store.getItem(failuresKey))
+    const count = (Number.isInteger(stored) && stored > 0 ? stored : 0) + 1
+    await store.setItem(failuresKey, String(count))
+    return count
+  }
+
   const sendAll = async (): Promise<string> => {
     const id = await signIn()
     const results = await loadQueue()
@@ -119,12 +136,16 @@ export function createGameSync<Result>(options: SyncOptions<Result>): GameSync<R
       try {
         await send(id, next)
       } catch (error) {
-        if (!isRefused(error)) {
+        const givenUp =
+          isRefused(error) ||
+          (isServerFailure(error) && (await countServerFailure()) >= MAX_SERVER_FAILURES)
+        if (!givenUp) {
           console.warn("A finished level could not be sent, it stays stored", error)
           return id
         }
-        console.error("The server refused a finished level, dropping it", error)
+        console.error("The server cannot take a finished level, dropping it", error)
       }
+      await store.setItem(failuresKey, "0")
       // By identity, not by position: a level finished during the request may
       // have pushed this one out of a full queue already.
       const position = results.indexOf(next)

@@ -90,6 +90,37 @@ describe("createGameSync", () => {
     await expect(sync.pendingCount()).resolves.toBe(1)
   })
 
+  it("drops a result the server keeps failing on so later ones get through", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {})
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+    const send = vi.fn(async (_userId: string, result: Result) => {
+      if (result.level === 1) throw new ApiHttpError("crash", 500)
+    })
+    const { sync, data } = setup({ send })
+    await sync.record({ level: 1 })
+    await sync.record({ level: 2 })
+
+    for (let pass = 0; pass < 4; pass++) await sync.flush()
+    await expect(sync.pendingCount()).resolves.toBe(2)
+
+    await sync.flush()
+    expect(send).toHaveBeenLastCalledWith("user-of-device-1", { level: 2 })
+    await expect(sync.pendingCount()).resolves.toBe(0)
+    expect(data.get("game-head-failures")).toBe("0")
+  })
+
+  it("does not count unreachable server attempts against a result", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+    const send = vi.fn(async () => {
+      throw new TypeError("Network request failed")
+    })
+    const { sync } = setup({ send })
+    await sync.record({ level: 1 })
+
+    for (let pass = 0; pass < 10; pass++) await sync.flush()
+    await expect(sync.pendingCount()).resolves.toBe(1)
+  })
+
   it("launches again after a failed launch", async () => {
     const launch = vi
       .fn<(deviceId: string) => Promise<string>>()
