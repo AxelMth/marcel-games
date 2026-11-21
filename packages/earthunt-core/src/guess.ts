@@ -27,3 +27,10 @@ export function judgeGuess(
   const missing = config.missingCountries.some((candidate) => candidate.code === country.code)
   return { outcome: missing ? "correct" : "not-missing", country }
 }
+
+/**
+ * What each hint step costs in coins: the first letter, where the country is,
+ * then its name. The name costs three times the others: it does not help find
+ * the country, it hands it over.
+ */
+export const HINT_STEP_COSTS = { 1: 1, 2: 1, 3: 3 } as const

@@ -1,6 +1,7 @@
 import {
   getCountryName,
   getStars,
+  HINT_STEP_COSTS,
   judgeGuess,
   type Country,
   type CountryLocale,
@@ -8,12 +9,13 @@ import {
   type GuessVerdict,
 } from "@marcel-games/earthunt-core"
 import { hapticError, hapticSuccess } from "@marcel-games/expo-ui"
-import { useState } from "react"
+import { useRef, useState } from "react"
+import { payCoins } from "@/game/wallet-store"
 
 /**
  * How much the hint has given away about the country it points at: nothing,
- * its first letter, where it is on the map, then its name. Each step costs a
- * hint, and the steps come in that order.
+ * its first letter, where it is on the map, then its name. Each step is paid
+ * in coins, and the steps come in that order.
  */
 export type HintStep = 0 | 1 | 2 | 3
 
@@ -28,7 +30,8 @@ export interface LevelPlay {
   isComplete: boolean
   stars: number
   guess: (input: string) => GuessVerdict
-  takeHint: () => void
+  /** False when the next step could not be paid for. */
+  takeHint: () => boolean
   firstLetter: (locale: CountryLocale) => string
 }
 
@@ -48,6 +51,9 @@ export function useLevel(
   const [attempts, setAttempts] = useState(0)
   const [hintsUsed, setHintsUsed] = useState(0)
   const [hintStep, setHintStep] = useState<HintStep>(0)
+  // The step is read here, not from the rendered state: two taps within one
+  // frame would otherwise both pay for the same step.
+  const shownStep = useRef<HintStep>(0)
   const [lastVerdict, setLastVerdict] = useState<GuessVerdict | null>(null)
   const [startedAt] = useState(() => Date.now())
 
@@ -70,7 +76,10 @@ export function useLevel(
     const next = [...found, verdict.country.code]
     setFound(next)
     // The hint described this country; the next one starts untouched.
-    if (verdict.country.code === hintTarget?.code) setHintStep(0)
+    if (verdict.country.code === hintTarget?.code) {
+      shownStep.current = 0
+      setHintStep(0)
+    }
     if (next.length === total) {
       onComplete({
         attempts: attempts + 1,
@@ -82,9 +91,14 @@ export function useLevel(
   }
 
   const takeHint = () => {
-    if (isComplete || hintStep === 3) return
-    setHintStep((hintStep + 1) as HintStep)
-    setHintsUsed(hintsUsed + 1)
+    const current = shownStep.current
+    if (isComplete || current === 3) return true
+    const next = (current + 1) as Exclude<HintStep, 0>
+    if (!payCoins(HINT_STEP_COSTS[next])) return false
+    shownStep.current = next
+    setHintStep(next)
+    setHintsUsed((used) => used + 1)
+    return true
   }
 
   return {
