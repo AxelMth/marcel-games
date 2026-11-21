@@ -9,7 +9,7 @@ import Animated, {
 } from "react-native-reanimated"
 import { Tile, type TileKind } from "@/components/tile"
 import { LADDER_PAD, TILE_GAP, type LadderLayout } from "@/game/layout"
-import { colors, fonts } from "@/theme/tokens"
+import { colors, fonts } from "@marcel-games/expo-ui"
 
 const MARK_SIZE = 12
 /** Distance from the tiles to the centre of the progress line on their left. */

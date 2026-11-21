@@ -9,7 +9,7 @@ import { StyleSheet } from "react-native"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
 import { loadProgress } from "@/game/progress-store"
 import { loadWallet } from "@/game/wallet-store"
-import { colors } from "@/theme/tokens"
+import { colors } from "@marcel-games/expo-ui"
 
 void SplashScreen.preventAutoHideAsync()
 void loadProgress()

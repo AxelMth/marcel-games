@@ -1,8 +1,8 @@
 import { t, type Locale } from "@marcel-games/wordclimb-core"
 import { StyleSheet, Text, View } from "react-native"
-import { BackspaceIcon } from "@/components/icons"
-import { PressableSurface } from "@/components/surface"
-import { colors, fonts } from "@/theme/tokens"
+import { BackspaceIcon } from "@marcel-games/expo-ui"
+import { PressableSurface } from "@marcel-games/expo-ui"
+import { colors, fonts } from "@marcel-games/expo-ui"
 
 /** The layout a player of each language already has under their thumbs. */
 const LAYOUTS: Record<Locale, readonly [string, string, string]> = {

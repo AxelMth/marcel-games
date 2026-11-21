@@ -3,11 +3,11 @@ import { useRouter } from "expo-router"
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native"
 import { Pressable } from "react-native-gesture-handler"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { PressableSurface, Surface } from "@/components/surface"
+import { PressableSurface, Surface } from "@marcel-games/expo-ui"
 import { retryLoadProgress, useProgress } from "@/game/progress-store"
 import { openLegalPage } from "@/lib/legal"
 import { deviceLocale } from "@/lib/locale"
-import { colors, fonts, MIN_TOUCH } from "@/theme/tokens"
+import { colors, fonts, MIN_TOUCH } from "@marcel-games/expo-ui"
 
 const WORDMARK_TILE = 44
 const WORDMARK_GAP = 6

@@ -1,4 +1,4 @@
-import type { Language } from "./language"
+import type { CountryLocale as Language } from "./countries"
 
 export const translations = {
   en: {
@@ -39,6 +39,13 @@ export const translations = {
       missing: "missing", // Used as "X missing" (plural)
       missingOne: "missing", // Used as "1 missing"
       allCountriesFound: "All countries have been found",
+      found: "{{country}} found!",
+      alreadyFound: "{{country}} already found",
+      notMissing: "{{country}} is not missing",
+      unknownCountry: "No country by that name",
+      levelComplete: "Level complete!",
+      hint: "Hint",
+      revealed: "It is {{country}}",
     },
     tour: {
       skip: "Skip",
@@ -178,6 +185,13 @@ export const translations = {
       missing: "manquants", // Used as "X manquants" (plural)
       missingOne: "manquant", // Used as "1 manquant"
       allCountriesFound: "Tous les pays ont été trouvés",
+      found: "{{country}} trouvé !",
+      alreadyFound: "{{country}} déjà trouvé",
+      notMissing: "{{country}} n'est pas manquant",
+      unknownCountry: "Aucun pays de ce nom",
+      levelComplete: "Niveau terminé !",
+      hint: "Indice",
+      revealed: "C'est {{country}}",
     },
     tour: {
       skip: "Passer",

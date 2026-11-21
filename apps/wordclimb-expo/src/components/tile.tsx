@@ -9,8 +9,8 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated"
-import { Surface } from "@/components/surface"
-import { colors, fonts } from "@/theme/tokens"
+import { Surface } from "@marcel-games/expo-ui"
+import { colors, fonts } from "@marcel-games/expo-ui"
 
 export type TileKind = "given" | "found" | "empty" | "filled" | "caret" | "error" | "hidden"
 

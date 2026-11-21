@@ -16,7 +16,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react"
 import { LETTER_STAGGER_MS } from "@/components/tile"
 import { payCoins } from "@/game/wallet-store"
-import { hapticError, hapticKey, hapticSuccess } from "@/lib/haptics"
+import { hapticError, hapticKey, hapticSuccess } from "@marcel-games/expo-ui"
 
 /** Time for the last letter of a solved word to land after its turn in the ripple. */
 const FOUND_ANIM_MS = 400

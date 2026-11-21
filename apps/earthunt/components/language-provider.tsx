@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react"
 import { getLanguage, type Language } from "@/lib/language"
-import { t, tReplace } from "@/lib/i18n"
+import { t, tReplace } from "@marcel-games/earthunt-core"
 
 interface LanguageContextValue {
   lang: Language

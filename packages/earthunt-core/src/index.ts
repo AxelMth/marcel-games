@@ -20,3 +20,5 @@ export {
   type GameConfig,
 } from "./game-logic"
 export { getStars } from "./stars"
+export { judgeGuess, type GuessOutcome, type GuessVerdict } from "./guess"
+export { t, tReplace, translations } from "./i18n"
