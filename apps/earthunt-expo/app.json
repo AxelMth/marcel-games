@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "EartHunt",
+    "slug": "earthunt",
+    "version": "2.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "earthunt",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#F3F6F4",
+    "ios": {
+      "bundleIdentifier": "com.marcelgames.earthunt",
+      "appleTeamId": "7H6S64378V",
+      "buildNumber": "31",
+      "supportsTablet": false,
+      "config": {
+        "usesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.marcelgames.earthunt",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon-foreground.png",
+        "backgroundImage": "./assets/icon-background.png"
+      }
+    },
+    "web": {
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-localization",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#F3F6F4",
+          "image": "./assets/icon-foreground.png",
+          "imageWidth": 160
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}

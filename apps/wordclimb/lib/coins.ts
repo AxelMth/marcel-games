@@ -14,18 +14,9 @@
  * by the server's number whenever one arrives.
  */
 
-export const HINT_COSTS = {
-  firstLetter: 1,
-  definition: 1,
-  // Three times the others: it does not help the player find the word, it
-  // hands it over and moves the ladder on.
-  fullWord: 3,
-} as const
+import { WEEKLY_COIN_ALLOWANCE, isoWeekId } from "@marcel-games/wordclimb-core"
 
-export type HintType = keyof typeof HINT_COSTS
-
-/** Free coins granted at the start of each ISO week. */
-export const WEEKLY_COIN_ALLOWANCE = 10
+export { HINT_COSTS, WEEKLY_COIN_ALLOWANCE, isoWeekId, type HintType } from "@marcel-games/wordclimb-core"
 
 const STORAGE_KEY = "wordclimb-coins"
 
@@ -45,32 +36,6 @@ const STORAGE_KEY = "wordclimb-coins"
  * without undoing spends it does not yet know about.
  */
 type CoinStore = { balance: number; week: string; unreported: number }
-
-/**
- * The ISO-8601 week a date falls in, as "2026-W35".
- *
- * Mirrored by ISOWeekID in server/wordclimb/internal/domain/coins.go, and the
- * two are pinned to the same vectors in their tests. If they disagree, a player
- * gets their weekly refill twice or not at all, at the year boundary where
- * "week 1" and "the first week of January" are not the same thing.
- *
- * The rule is the Thursday one: a week belongs to the year containing its
- * Thursday. Counting from January 1st instead is the classic way to get the
- * last days of December wrong.
- */
-export function isoWeekId(date: Date): string {
-  // Work in UTC so a device's timezone cannot shift the week boundary.
-  const d = new Date(
-    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
-  )
-  // getUTCDay() is 0 for Sunday; ISO counts Monday as 1 and Sunday as 7.
-  const dayNumber = d.getUTCDay() || 7
-  // Step to the Thursday of this week: that is what names the year.
-  d.setUTCDate(d.getUTCDate() + 4 - dayNumber)
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
-  const week = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
-  return `${d.getUTCFullYear()}-W${String(week).padStart(2, "0")}`
-}
 
 function read(): CoinStore | null {
   if (typeof window === "undefined") return null

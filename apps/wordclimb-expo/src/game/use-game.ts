@@ -1,17 +1,22 @@
 import {
   clearFeedback,
   clearRefusedGuess,
+  HINT_COSTS,
   createSession,
   eraseLetter,
   settleCelebration,
+  takeDefinitionHint,
+  takeFirstLetterHint,
   typeLetter,
   type GameState,
   type Level,
   type PlaySession,
+  type RungHints,
 } from "@marcel-games/wordclimb-core"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { LETTER_STAGGER_MS } from "@/components/tile"
-import { hapticError, hapticKey, hapticSuccess } from "@/lib/haptics"
+import { payCoins } from "@/game/wallet-store"
+import { hapticError, hapticKey, hapticSuccess } from "@marcel-games/expo-ui"
 
 /** Time for the last letter of a solved word to land after its turn in the ripple. */
 const FOUND_ANIM_MS = 400
@@ -23,6 +28,9 @@ export interface Game {
   session: PlaySession
   pressLetter: (letter: string) => void
   erase: () => void
+  /** Both answer false when the hint could not be paid for. */
+  hintFirstLetter: () => boolean
+  hintDefinition: () => boolean
 }
 
 /** One level being played, with the haptics and timed feedback around it. */
@@ -81,5 +89,21 @@ export function useGame(level: Level, onComplete: (finished: GameState) => void)
     commit(after)
   }
 
-  return { session, pressLetter, erase }
+  // A hint already taken on this rung is free: paying again would buy nothing.
+  const takeHint = (hint: keyof RungHints, take: (current: PlaySession) => PlaySession) => {
+    const before = latest.current
+    if (before.game.isComplete) return true
+    if (!before.hinted[hint] && !payCoins(HINT_COSTS[hint])) return false
+    hapticKey()
+    commit(take(before))
+    return true
+  }
+
+  return {
+    session,
+    pressLetter,
+    erase,
+    hintFirstLetter: () => takeHint("firstLetter", takeFirstLetterHint),
+    hintDefinition: () => takeHint("definition", takeDefinitionHint),
+  }
 }

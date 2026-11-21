@@ -6,6 +6,8 @@ import {
   createSession,
   eraseLetter,
   settleCelebration,
+  takeDefinitionHint,
+  takeFirstLetterHint,
   typeLetter,
   type PlaySession,
 } from "./session"
@@ -76,6 +78,41 @@ describe("eraseLetter", () => {
 
     expect(eraseLetter(empty)).toBe(empty)
     expect(eraseLetter(refused)).toBe(refused)
+  })
+})
+
+describe("hints", () => {
+  it("puts the first letter on the rung and counts one hint", () => {
+    const hinted = takeFirstLetterHint(type(createSession("classic", LEVEL), "xy"))
+
+    expect(hinted.typed).toBe("m")
+    expect(hinted.game.hintsUsed).toBe(1)
+  })
+
+  it("does not count the same hint twice on one rung", () => {
+    const once = takeDefinitionHint(createSession("classic", LEVEL))
+    const twice = takeDefinitionHint(once)
+
+    expect(once.game.hintsUsed).toBe(1)
+    expect(twice).toBe(once)
+  })
+
+  it("counts each kind of hint, and starts afresh on the next rung", () => {
+    const both = takeFirstLetterHint(takeDefinitionHint(createSession("classic", LEVEL)))
+    const next = type(both, "ain")
+
+    expect(both.game.hintsUsed).toBe(2)
+    expect(next.celebrating).toBe(0)
+    expect(next.hinted).toEqual({ firstLetter: false, definition: false })
+    expect(takeFirstLetterHint(next).typed).toBe("m")
+    expect(takeFirstLetterHint(next).game.hintsUsed).toBe(3)
+  })
+
+  it("gives nothing once the level is finished", () => {
+    const finished = type(createSession("classic", LEVEL), "mainmaismois")
+
+    expect(takeFirstLetterHint(finished)).toBe(finished)
+    expect(takeDefinitionHint(finished)).toBe(finished)
   })
 })
 

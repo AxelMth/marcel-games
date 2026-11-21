@@ -1543,6 +1543,6 @@ export function hasDefinition(word: string | undefined, lang: "en" | "fr"): bool
 
 export function getDefinition(word: string, lang: "en" | "fr"): string {
   const def = DEFINITIONS[lang][word.toLowerCase()]
-  if (!def) return lang === "en" ? "Find the next word in the ladder!" : "Trouve le prochain mot de l'echelle !"
+  if (!def) return lang === "en" ? "Find the next word in the ladder!" : "Trouve le prochain mot de l'échelle !"
   return def
 }

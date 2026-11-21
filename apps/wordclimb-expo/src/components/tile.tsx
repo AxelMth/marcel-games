@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { StyleSheet, Text, View } from "react-native"
+import { StyleSheet, Text } from "react-native"
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -7,37 +7,30 @@ import Animated, {
   withDelay,
   withRepeat,
   withSequence,
-  withSpring,
   withTiming,
 } from "react-native-reanimated"
-import { Lipped } from "@/components/lipped"
-import { colors, fonts, LIP } from "@/theme/tokens"
+import { Surface } from "@marcel-games/expo-ui"
+import { colors, fonts } from "@marcel-games/expo-ui"
 
 export type TileKind = "given" | "found" | "empty" | "filled" | "caret" | "error" | "hidden"
 
-/** Delay between two letters of a solved word jumping, so the word ripples left to right. */
-export const LETTER_STAGGER_MS = 70
-
-const POP_SPRING = { damping: 9, stiffness: 240 }
-const TAP_SPRING = { damping: 11, stiffness: 320 }
-const RING_WIDTH = 3
+/** Delay between two letters of a solved word lifting, so the word ripples left to right. */
+export const LETTER_STAGGER_MS = 60
 
 interface Skin {
   face: string
-  lip: string
   text: string
-  ring?: string
+  border?: string
 }
 
-const PLAIN: Skin = { face: colors.surface, lip: colors.surfaceLip, text: colors.ink }
-
-const SKINS: Record<Exclude<TileKind, "hidden">, Skin> = {
-  given: { face: colors.ink, lip: colors.inkLip, text: colors.surface },
-  found: { face: colors.found, lip: colors.foundLip, text: colors.surface },
-  empty: PLAIN,
-  filled: PLAIN,
-  caret: { ...PLAIN, ring: colors.accent },
-  error: { ...PLAIN, text: colors.danger, ring: colors.danger },
+const SKINS: Record<TileKind, Skin> = {
+  given: { face: colors.ink, text: colors.surface },
+  found: { face: colors.found, text: colors.surface },
+  empty: { face: colors.surface, text: colors.ink, border: colors.line },
+  filled: { face: colors.surface, text: colors.ink, border: colors.lineStrong },
+  caret: { face: colors.surface, text: colors.ink, border: colors.ink },
+  error: { face: colors.surface, text: colors.danger, border: colors.danger },
+  hidden: { face: colors.hidden, text: colors.hidden },
 }
 
 interface TileProps {
@@ -53,55 +46,41 @@ interface TileProps {
 export function Tile({ kind, char, size, index, celebrate }: TileProps) {
   const scale = useSharedValue(1)
   const lift = useSharedValue(0)
+  const glow = useSharedValue(1)
 
   useEffect(() => {
     if (celebrate) {
-      const delay = index * LETTER_STAGGER_MS
-      const rise = { duration: 160, easing: Easing.out(Easing.quad) }
-      lift.set(withDelay(delay, withSequence(withTiming(-12, rise), withSpring(0, POP_SPRING))))
-      scale.set(withDelay(delay, withSequence(withTiming(1.12, rise), withSpring(1, POP_SPRING))))
+      const step = { duration: 160, easing: Easing.out(Easing.quad) }
+      lift.set(
+        withDelay(index * LETTER_STAGGER_MS, withSequence(withTiming(-6, step), withTiming(0, step)))
+      )
       return
     }
     if (kind === "caret") {
       const beat = { duration: 600, easing: Easing.inOut(Easing.quad) }
-      scale.set(withRepeat(withSequence(withTiming(1.05, beat), withTiming(1, beat)), -1))
+      glow.set(withRepeat(withSequence(withTiming(0.55, beat), withTiming(1, beat)), -1))
       return
     }
+    glow.set(withTiming(1, { duration: 100 }))
+    lift.set(withTiming(0, { duration: 100 }))
     if (kind === "filled") {
-      scale.set(withSequence(withTiming(0.8, { duration: 0 }), withSpring(1, TAP_SPRING)))
-      return
+      scale.set(withSequence(withTiming(0.92, { duration: 0 }), withTiming(1, { duration: 140 })))
     }
-    scale.set(withTiming(1, { duration: 120 }))
-    lift.set(withTiming(0, { duration: 120 }))
-  }, [celebrate, index, kind, lift, scale])
+  }, [celebrate, glow, index, kind, lift, scale])
 
   const motion = useAnimatedStyle(() => ({
+    opacity: glow.get(),
     transform: [{ translateY: lift.get() }, { scale: scale.get() }],
   }))
-  const radius = Math.round(size * 0.28)
-
-  if (kind === "hidden") {
-    return (
-      <View style={{ width: size, height: size + LIP }}>
-        <View style={[styles.hidden, { height: size, borderRadius: radius }]} />
-      </View>
-    )
-  }
 
   const skin = SKINS[kind]
   return (
     <Animated.View style={[{ width: size }, motion]}>
-      <Lipped
-        face={skin.face}
-        lip={skin.lip}
-        radius={radius}
-        height={size}
-        faceStyle={skin.ring ? { borderWidth: RING_WIDTH, borderColor: skin.ring } : undefined}
-      >
-        <Text style={[styles.letter, { fontSize: Math.round(size * 0.54), color: skin.text }]}>
+      <Surface face={skin.face} border={skin.border} radius={Math.round(size * 0.18)} height={size}>
+        <Text style={[styles.letter, { fontSize: Math.round(size * 0.5), color: skin.text }]}>
           {char.toUpperCase()}
         </Text>
-      </Lipped>
+      </Surface>
     </Animated.View>
   )
 }
@@ -114,11 +93,5 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontFamily: fonts.display,
     includeFontPadding: false,
-  },
-  hidden: {
-    backgroundColor: colors.hiddenFill,
-    borderWidth: 2,
-    borderStyle: "dashed",
-    borderColor: colors.hiddenBorder,
   },
 })

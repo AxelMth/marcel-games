@@ -1,4 +1,4 @@
-import { getDailyLevelId } from "./game-logic"
+import { getDailyLevelId } from "@marcel-games/earthunt-core"
 
 const STORAGE_PREFIX = "earthunt-hints-"
 

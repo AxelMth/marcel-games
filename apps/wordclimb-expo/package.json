@@ -14,8 +14,9 @@
     "lint": "eslint . && tsc --noEmit"
   },
   "dependencies": {
-    "@expo-google-fonts/fredoka": "^0.4.1",
-    "@expo-google-fonts/nunito": "^0.4.2",
+    "@expo-google-fonts/inter": "^0.4.2",
+    "@expo-google-fonts/outfit": "^0.4.3",
+    "@marcel-games/expo-ui": "workspace:*",
     "@marcel-games/wordclimb-core": "workspace:*",
     "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~58.0.26",

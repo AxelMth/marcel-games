@@ -3,7 +3,7 @@
 import { useRef, useEffect, useCallback, useState, useMemo } from "react"
 import mapboxgl from "mapbox-gl"
 import "mapbox-gl/dist/mapbox-gl.css"
-import type { Country, Continent } from "@/lib/countries"
+import type { Country, Continent } from "@marcel-games/earthunt-core"
 import { Spinner } from "@marcel-games/ui"
 import { useLanguage } from "@/components/language-provider"
 import { buildCountryFillExpression, COUNTRY_GREEN } from "@/lib/map-paint"
