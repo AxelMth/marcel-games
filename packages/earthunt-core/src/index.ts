@@ -12,6 +12,7 @@ export {
   getCountriesByCodes,
   getCountriesByContinent,
   getCountryName,
+  getFlagEmoji,
   type Continent,
   type Country,
   type CountryLocale,
@@ -25,6 +26,7 @@ export {
   getMissingCountries,
   getWorldLevelId,
   matchCountry,
+  suggestCountries,
   normalizeCountryName,
   type GameConfig,
 } from "./game-logic"

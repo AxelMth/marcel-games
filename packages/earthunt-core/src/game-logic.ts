@@ -230,3 +230,35 @@ export function matchCountry(input: string, countriesList: Country[]): Country |
   if (!key) return null
   return countriesList.find((c) => keysOf(c).includes(key)) ?? null
 }
+
+/** Countries whose name, or an alias, has a word starting with what was typed. Found ones are left out. */
+export function suggestCountries(
+  input: string,
+  countriesList: readonly Country[],
+  foundCodes: readonly string[],
+  locale: "en" | "fr",
+  limit = 4
+): Country[] {
+  const prefix = normalizeCountryName(input).replace(/-/g, " ").trim()
+  if (prefix.length < MIN_SUGGEST_LENGTH) return []
+  const matches = (name: string) =>
+    normalizeCountryName(name)
+      .replace(/-/g, " ")
+      .split(/\s+/)
+      .some((word) => word.startsWith(prefix)) ||
+    normalizeCountryName(name).replace(/-/g, " ").startsWith(prefix)
+  return countriesList
+    .filter(
+      (country) =>
+        !foundCodes.includes(country.code) &&
+        [country.nameEn, country.nameFr, ...(ALIASES[country.code] ?? [])].some(matches)
+    )
+    .sort((a, b) => {
+      const name = (c: Country) => (locale === "fr" ? c.nameFr : c.nameEn)
+      const starts = (c: Country) => (normalizeCountryName(name(c)).startsWith(prefix) ? 0 : 1)
+      return starts(a) - starts(b) || name(a).localeCompare(name(b), locale)
+    })
+    .slice(0, limit)
+}
+
+const MIN_SUGGEST_LENGTH = 2

@@ -48,6 +48,8 @@ export const translations = {
       notEnoughCoins: "Not enough coins",
       hint: "Hint",
       revealed: "It is {{country}}",
+      coinsWon: "+{{n}} coins",
+      noNewCoins: "Already won: no new coins",
     },
     tour: {
       skip: "Skip",
@@ -196,6 +198,8 @@ export const translations = {
       notEnoughCoins: "Pas assez de pièces",
       hint: "Indice",
       revealed: "C'est {{country}}",
+      coinsWon: "+{{n}} pièces",
+      noNewCoins: "Déjà gagné : pas de nouvelles pièces",
     },
     tour: {
       skip: "Passer",
