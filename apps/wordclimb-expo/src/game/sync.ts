@@ -1,4 +1,4 @@
-import { deviceStore, launchDevice, newDeviceId } from "@marcel-games/expo-ui"
+import { deviceStore, identityStore, launchDevice, newDeviceId } from "@marcel-games/expo-ui"
 import { createGameSync } from "@marcel-games/game-sync"
 import {
   WORDCLIMB_API_URL,
@@ -14,6 +14,7 @@ const api = createWordClimbApi(process.env.EXPO_PUBLIC_API_BASE_URL ?? WORDCLIMB
 
 const sync = createGameSync<LevelResult>({
   store: deviceStore,
+  identityStore,
   namespace: "wordclimb",
   isResult: isLevelResult,
   newDeviceId,
@@ -33,6 +34,19 @@ export async function syncWithServer(): Promise<void> {
   } catch (error) {
     console.warn("Sync with the WordClimb server is postponed", error)
   }
+}
+
+let firstSync: Promise<void> | null = null
+
+/**
+ * Settles once the server has been asked for the player's progress, whether it
+ * answered or not. A level is banked after this, so that one replayed right
+ * after a reinstall is recognised as already finished instead of being sent
+ * a second time.
+ */
+export function whenFirstSynced(): Promise<void> {
+  firstSync ??= syncWithServer()
+  return firstSync
 }
 
 export async function reportLevel(result: LevelResult): Promise<void> {

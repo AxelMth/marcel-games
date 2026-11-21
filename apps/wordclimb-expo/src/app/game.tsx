@@ -22,7 +22,7 @@ import { Keyboard } from "@/components/keyboard"
 import { Ladder } from "@/components/ladder"
 import { ladderLayout } from "@/game/layout"
 import { bankClassicLevel } from "@/game/progress-store"
-import { reportLevel } from "@/game/sync"
+import { reportLevel, whenFirstSynced } from "@/game/sync"
 import { useGame } from "@/game/use-game"
 import { earnCoinsForStars, useCoinBalance } from "@/game/wallet-store"
 import { deviceLocale } from "@/lib/locale"
@@ -81,7 +81,9 @@ function Game({ level, levelIndex, locale }: { level: Level; levelIndex: number;
     level,
     (finished) => {
       const earned = getStars(finished.attempts, level.wordLadder.length, finished.hintsUsed)
-      void bankClassicLevel(levelIndex).then((firstTime) => {
+      void whenFirstSynced()
+        .then(() => bankClassicLevel(levelIndex))
+        .then((firstTime) => {
         if (!firstTime) return
         earnCoinsForStars(earned)
         void reportLevel({

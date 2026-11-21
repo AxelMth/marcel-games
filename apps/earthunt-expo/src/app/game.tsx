@@ -22,7 +22,7 @@ import { KeyboardAvoidingView, StyleSheet, Text, TextInput, View } from "react-n
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { WorldMap } from "@/components/world-map"
 import { bankLevel } from "@/game/progress-store"
-import { reportLevel } from "@/game/sync"
+import { reportLevel, whenFirstSynced } from "@/game/sync"
 import { useLevel, type LevelPlay } from "@/game/use-level"
 import { deviceLocale } from "@/lib/locale"
 
@@ -77,7 +77,9 @@ function Game({ config }: { config: GameConfig }) {
   const locale = deviceLocale()
   const [input, setInput] = useState("")
   const play = useLevel(config, (outcome) => {
-    void bankLevel(config.level, config.continent).then((firstTime) => {
+    void whenFirstSynced()
+      .then(() => bankLevel(config.level, config.continent))
+      .then((firstTime) => {
       if (!firstTime) return
       void reportLevel({
         ...outcome,

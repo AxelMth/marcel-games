@@ -4,7 +4,7 @@ import {
   isLevelResult,
   type LevelResult,
 } from "@marcel-games/earthunt-core"
-import { deviceStore, launchDevice, newDeviceId } from "@marcel-games/expo-ui"
+import { deviceStore, identityStore, launchDevice, newDeviceId } from "@marcel-games/expo-ui"
 import { createGameSync } from "@marcel-games/game-sync"
 import { adoptServerProgress } from "@/game/progress-store"
 
@@ -12,6 +12,7 @@ const api = createEartHuntApi(process.env.EXPO_PUBLIC_API_BASE_URL ?? EARTHUNT_A
 
 const sync = createGameSync<LevelResult>({
   store: deviceStore,
+  identityStore,
   namespace: "earthunt",
   isResult: isLevelResult,
   newDeviceId,
@@ -31,6 +32,19 @@ export async function syncWithServer(): Promise<void> {
   } catch (error) {
     console.warn("Sync with the EartHunt server is postponed", error)
   }
+}
+
+let firstSync: Promise<void> | null = null
+
+/**
+ * Settles once the server has been asked for the player's progress, whether it
+ * answered or not. A level is banked after this, so that one replayed right
+ * after a reinstall is recognised as already finished instead of being sent
+ * a second time.
+ */
+export function whenFirstSynced(): Promise<void> {
+  firstSync ??= syncWithServer()
+  return firstSync
 }
 
 export async function reportLevel(result: LevelResult): Promise<void> {

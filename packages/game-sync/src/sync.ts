@@ -9,7 +9,13 @@ export interface KeyValueStore {
 const MAX_QUEUED_RESULTS = 50
 
 export interface SyncOptions<Result> {
+  /** Holds the queue of results. */
   store: KeyValueStore
+  /**
+   * Holds the device id. Kept apart from `store` so it can live somewhere that
+   * outlasts an uninstall: the id is what ties a reinstalled game to its levels.
+   */
+  identityStore: KeyValueStore
   /** Prefix of the storage keys, one per game. */
   namespace: string
   isResult: (value: unknown) => value is Result
@@ -23,8 +29,9 @@ export interface GameSync<Result> {
   /** Stores a finished level so it survives until the server has it. */
   record: (result: Result) => Promise<void>
   /**
-   * Sends every stored result, oldest first, and answers the player's id.
-   * Rejects when the server cannot be reached; what was not sent stays stored.
+   * Sends the stored results, oldest first, and answers the player's id. A
+   * result that could not be sent stays stored and ends the pass. Rejects only
+   * when the player could not be identified.
    */
   flush: () => Promise<string>
   pendingCount: () => Promise<number>
@@ -49,7 +56,7 @@ function isRefused(error: unknown): boolean {
  * whichever id the device is given.
  */
 export function createGameSync<Result>(options: SyncOptions<Result>): GameSync<Result> {
-  const { store, namespace, isResult, newDeviceId, launch, send } = options
+  const { store, identityStore, namespace, isResult, newDeviceId, launch, send } = options
   const queueKey = `${namespace}-pending-results`
   const deviceKey = `${namespace}-device-id`
 
@@ -57,12 +64,22 @@ export function createGameSync<Result>(options: SyncOptions<Result>): GameSync<R
   let userId: Promise<string> | null = null
   let flushing: Promise<string> | null = null
 
+  // A queue that cannot be parsed is given up: keeping it would make every
+  // later read fail too, and no finished level would ever be stored again.
+  const parseQueue = (stored: string): Result[] => {
+    try {
+      const data: unknown = JSON.parse(stored)
+      if (Array.isArray(data)) return data.filter(isResult)
+      console.error("Stored results are not a list, starting an empty queue", stored)
+    } catch (error) {
+      console.error("Stored results cannot be read, starting an empty queue", error)
+    }
+    return []
+  }
+
   const readQueue = async (): Promise<Result[]> => {
     const stored = await store.getItem(queueKey)
-    if (stored === null) return []
-    const data: unknown = JSON.parse(stored)
-    if (!Array.isArray(data)) throw new Error(`Stored results are not a list: ${stored}`)
-    return data.filter(isResult)
+    return stored === null ? [] : parseQueue(stored)
   }
 
   const loadQueue = (): Promise<Result[]> => {
@@ -77,10 +94,10 @@ export function createGameSync<Result>(options: SyncOptions<Result>): GameSync<R
     store.setItem(queueKey, JSON.stringify(results))
 
   const deviceId = async (): Promise<string> => {
-    const stored = await store.getItem(deviceKey)
+    const stored = await identityStore.getItem(deviceKey)
     if (stored) return stored
     const created = newDeviceId()
-    await store.setItem(deviceKey, created)
+    await identityStore.setItem(deviceKey, created)
     return created
   }
 
@@ -102,7 +119,10 @@ export function createGameSync<Result>(options: SyncOptions<Result>): GameSync<R
       try {
         await send(id, next)
       } catch (error) {
-        if (!isRefused(error)) throw error
+        if (!isRefused(error)) {
+          console.warn("A finished level could not be sent, it stays stored", error)
+          return id
+        }
         console.error("The server refused a finished level, dropping it", error)
       }
       // By identity, not by position: a level finished during the request may

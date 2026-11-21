@@ -23,6 +23,7 @@ function setup(overrides: Partial<SyncOptions<Result>> = {}, initial?: Record<st
   const send = vi.fn(async (_userId: string, _result: Result) => {})
   const sync = createGameSync<Result>({
     store,
+    identityStore: store,
     namespace: "game",
     isResult: (value): value is Result =>
       typeof value === "object" && value !== null && "level" in value,
@@ -66,7 +67,8 @@ describe("createGameSync", () => {
     await sync.record({ level: 1 })
     await sync.record({ level: 2 })
 
-    await expect(sync.flush()).rejects.toThrow("Network request failed")
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+    await expect(sync.flush()).resolves.toBe("user-of-device-1")
 
     expect(data.get("game-pending-results")).toBe('[{"level":2}]')
     await expect(sync.pendingCount()).resolves.toBe(1)
@@ -74,6 +76,7 @@ describe("createGameSync", () => {
 
   it("retries a server error but drops a result the server refuses", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {})
+    vi.spyOn(console, "warn").mockImplementation(() => {})
     const send = vi
       .fn<(userId: string, result: Result) => Promise<void>>()
       .mockRejectedValueOnce(new ApiHttpError("bad payload", 400))
@@ -82,7 +85,8 @@ describe("createGameSync", () => {
     await sync.record({ level: 1 })
     await sync.record({ level: 2 })
 
-    await expect(sync.flush()).rejects.toThrow("down")
+    await sync.flush()
+    expect(send).toHaveBeenCalledTimes(2)
     await expect(sync.pendingCount()).resolves.toBe(1)
   })
 
@@ -95,6 +99,15 @@ describe("createGameSync", () => {
 
     await expect(sync.flush()).rejects.toThrow("offline")
     await expect(sync.flush()).resolves.toBe("user-1")
+  })
+
+  it("starts an empty queue over stored results it cannot read", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {})
+    const { sync, send, data } = setup({}, { "game-pending-results": '[{"level":' })
+    await sync.record({ level: 3 })
+    await sync.flush()
+    expect(send.mock.calls).toEqual([["user-of-device-1", { level: 3 }]])
+    expect(data.get("game-pending-results")).toBe("[]")
   })
 
   it("replays results stored by an earlier session", async () => {
