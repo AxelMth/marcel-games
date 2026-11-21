@@ -39,8 +39,11 @@ export default function HomeScreen() {
   const progress = useProgress()
   const today = daily.useToday()
   const dailyDone = today?.done ?? false
+  const globalRank = today?.stats?.globalRank ?? 0
   const dailyNote = !dailyDone
-    ? t(locale, "dailyChallengeDesc")
+    ? globalRank > 0
+      ? `${t(locale, "profileGlobalRank")} : ${globalRank}`
+      : t(locale, "dailyChallengeDesc")
     : today?.stats && today.stats.todayRank > 0
       ? `${t(locale, "doneForToday")} ${t(locale, "profileTodaysRank")} : ${today.stats.todayRank}`
       : t(locale, "doneForToday")

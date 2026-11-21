@@ -1,6 +1,7 @@
 import {
   getCountryName,
   getStars,
+  HINT_STEP_COSTS,
   judgeGuess,
   type Country,
   type CountryLocale,
@@ -9,11 +10,12 @@ import {
 } from "@marcel-games/earthunt-core"
 import { hapticError, hapticSuccess } from "@marcel-games/expo-ui"
 import { useState } from "react"
+import { payCoins } from "@/game/wallet-store"
 
 /**
  * How much the hint has given away about the country it points at: nothing,
- * its first letter, where it is on the map, then its name. Each step costs a
- * hint, and the steps come in that order.
+ * its first letter, where it is on the map, then its name. Each step is paid
+ * in coins, and the steps come in that order.
  */
 export type HintStep = 0 | 1 | 2 | 3
 
@@ -28,7 +30,8 @@ export interface LevelPlay {
   isComplete: boolean
   stars: number
   guess: (input: string) => GuessVerdict
-  takeHint: () => void
+  /** False when the next step could not be paid for. */
+  takeHint: () => boolean
   firstLetter: (locale: CountryLocale) => string
 }
 
@@ -82,9 +85,12 @@ export function useLevel(
   }
 
   const takeHint = () => {
-    if (isComplete || hintStep === 3) return
-    setHintStep((hintStep + 1) as HintStep)
+    if (isComplete || hintStep === 3) return true
+    const next = (hintStep + 1) as Exclude<HintStep, 0>
+    if (!payCoins(HINT_STEP_COSTS[next])) return false
+    setHintStep(next)
     setHintsUsed(hintsUsed + 1)
+    return true
   }
 
   return {

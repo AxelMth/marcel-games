@@ -11,7 +11,7 @@
     "ios": {
       "bundleIdentifier": "com.marcelgames.earthunt",
       "appleTeamId": "7H6S64378V",
-      "buildNumber": "33",
+      "buildNumber": "34",
       "supportsTablet": false,
       "config": {
         "usesNonExemptEncryption": false

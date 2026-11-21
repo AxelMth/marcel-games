@@ -3,6 +3,8 @@ import {
   createGameConfig,
   getCountriesByCodes,
   getCountryName,
+  getStars,
+  HINT_STEP_COSTS,
   t,
   tReplace,
   type Continent,
@@ -12,6 +14,7 @@ import {
 } from "@marcel-games/earthunt-core"
 import {
   ChevronLeftIcon,
+  CoinIcon,
   MIN_TOUCH,
   PressableSurface,
   StarIcon,
@@ -27,6 +30,7 @@ import { WorldMap } from "@/components/world-map"
 import { daily } from "@/game/daily-store"
 import { bankLevel } from "@/game/progress-store"
 import { reportLevel, whenFirstSynced } from "@/game/sync"
+import { earnCoinsForStars, useCoinBalance } from "@/game/wallet-store"
 import { useLevel, type LevelPlay } from "@/game/use-level"
 import { deviceLocale } from "@/lib/locale"
 
@@ -129,12 +133,16 @@ function Game({ config, dailyDay }: { config: GameConfig; dailyDay?: string }) {
   const [input, setInput] = useState("")
   const isDaily = config.mode === "daily"
   const today = daily.useToday()
+  const [broke, setBroke] = useState(false)
+  const coins = useCoinBalance()
   const play = useLevel(config, (outcome) => {
+    const stars = getStars(outcome.attempts, config.missingCountries.length, outcome.hintsUsed)
     const banked = isDaily
       ? daily.markDone(dailyDay ?? "")
       : whenFirstSynced().then(() => bankLevel(config.level, config.continent))
     void banked.then((firstTime) => {
       if (!firstTime) return
+      earnCoinsForStars(stars)
       void reportLevel({
         ...outcome,
         gameMode: isDaily ? "LEVEL_OF_THE_DAY" : config.continent ? "CONTINENTS" : "WORLD",
@@ -178,7 +186,14 @@ function Game({ config, dailyDay }: { config: GameConfig; dailyDay?: string }) {
         <Text accessibilityRole="header" style={styles.title}>
           {title}
         </Text>
-        <View style={styles.side} />
+        <View
+          accessible
+          accessibilityLabel={`${coins ?? 0} ${t(locale, "game.coins")}`}
+          style={styles.coins}
+        >
+          <CoinIcon color={colors.star} />
+          <Text style={styles.coinsLabel}>{coins ?? "–"}</Text>
+        </View>
       </View>
 
       <WorldMap
@@ -218,7 +233,14 @@ function Game({ config, dailyDay }: { config: GameConfig; dailyDay?: string }) {
                 )}
               </View>
             ) : (
-              hint && <Text style={styles.hint}>{hint}</Text>
+              <>
+                {hint && <Text style={styles.hint}>{hint}</Text>}
+                {broke && (
+                  <Text accessibilityLiveRegion="polite" style={styles.broke}>
+                    {t(locale, "game.notEnoughCoins")}
+                  </Text>
+                )}
+              </>
             )}
           </View>
           {play.isComplete ? (
@@ -243,8 +265,12 @@ function Game({ config, dailyDay }: { config: GameConfig; dailyDay?: string }) {
             </PressableSurface>
           ) : (
             <PressableSurface
-              onPress={play.takeHint}
-              accessibilityLabel={t(locale, "game.hint")}
+              onPress={() => setBroke(!play.takeHint())}
+              accessibilityLabel={
+                play.hintStep < 3
+                  ? `${t(locale, "game.hint")}, ${HINT_STEP_COSTS[(play.hintStep + 1) as 1 | 2 | 3]} ${t(locale, "game.coins")}`
+                  : t(locale, "game.hint")
+              }
               disabled={play.hintStep === 3}
               face={colors.surface}
               border={colors.line}
@@ -253,6 +279,14 @@ function Game({ config, dailyDay }: { config: GameConfig; dailyDay?: string }) {
               style={styles.action}
             >
               <Text style={styles.actionLabel}>{t(locale, "game.hint")}</Text>
+              {play.hintStep < 3 && (
+                <View style={styles.cost}>
+                  <CoinIcon size={14} color={colors.star} />
+                  <Text style={styles.costLabel}>
+                    {HINT_STEP_COSTS[(play.hintStep + 1) as 1 | 2 | 3]}
+                  </Text>
+                </View>
+              )}
             </PressableSurface>
           )}
         </View>
@@ -295,6 +329,16 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   side: { width: MIN_TOUCH },
+  coins: {
+    minWidth: MIN_TOUCH,
+    height: MIN_TOUCH,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 6,
+  },
+  coinsLabel: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
+  broke: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.danger },
   title: { fontFamily: fonts.display, fontSize: 18, color: colors.ink },
   panel: { paddingHorizontal: 16, paddingTop: 12, gap: 12, backgroundColor: colors.ground },
   statusRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
@@ -304,7 +348,9 @@ const styles = StyleSheet.create({
   hint: { fontFamily: fonts.body, fontSize: 14, color: colors.muted },
   stars: { flexDirection: "row", alignItems: "center", gap: 2 },
   rank: { marginLeft: 8, fontFamily: fonts.body, fontSize: 13, color: colors.muted },
-  action: { paddingHorizontal: 18 },
+  action: { flexDirection: "row", gap: 8, paddingHorizontal: 18 },
+  cost: { flexDirection: "row", alignItems: "center", gap: 3 },
+  costLabel: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.star },
   actionLabel: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   actionLabelOnInk: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.surface },
   input: {

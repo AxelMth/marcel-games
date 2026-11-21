@@ -200,14 +200,33 @@ export function normalizeCountryName(name: string): string {
     .replace(/[^a-z\s-]/g, "")
 }
 
+/**
+ * Other names players type for a country, keyed by its code. Only names that
+ * point at a single country belong here: "Congo" or "Guinea" would be guesses.
+ */
+const ALIASES: Readonly<Record<string, readonly string[]>> = {
+  USA: ["usa", "us", "etats-unis d'amerique", "united states of america", "amerique"],
+  GBR: ["uk", "angleterre", "england", "great britain", "grande-bretagne"],
+  ARE: ["uae", "eau", "emirats"],
+  CZE: ["czechia", "tchequie", "republique tcheque"],
+  NLD: ["hollande", "holland"],
+  MMR: ["birmanie", "burma"],
+  MKD: ["macedoine"],
+  SWZ: ["eswatini"],
+}
+
+// Spaces, hyphens and dots are dropped, so "Royaume Uni", "Royaume-Uni" and
+// "U.S.A." all reach the same name.
+function matchKey(name: string): string {
+  return normalizeCountryName(name).replace(/[\s-]/g, "")
+}
+
+function keysOf(country: Country): string[] {
+  return [country.nameEn, country.nameFr, ...(ALIASES[country.code] ?? [])].map(matchKey)
+}
+
 export function matchCountry(input: string, countriesList: Country[]): Country | null {
-  const normalized = normalizeCountryName(input)
-  if (!normalized) return null
-  return (
-    countriesList.find(
-      (c) =>
-        normalizeCountryName(c.nameEn) === normalized ||
-        normalizeCountryName(c.nameFr) === normalized
-    ) ?? null
-  )
+  const key = matchKey(input)
+  if (!key) return null
+  return countriesList.find((c) => keysOf(c).includes(key)) ?? null
 }

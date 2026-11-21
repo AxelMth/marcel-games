@@ -332,3 +332,21 @@ describe("buildOfflineLevelParams", () => {
     }
   })
 })
+
+describe("matchCountry aliases", () => {
+  it("accepts the short names players type", async () => {
+    const { countries } = await import("./countries")
+    expect(matchCountry("USA", countries)?.code).toBe("USA")
+    expect(matchCountry("U.S.A.", countries)?.code).toBe("USA")
+    expect(matchCountry("UK", countries)?.code).toBe("GBR")
+    expect(matchCountry("Royaume-Uni", countries)?.code).toBe("GBR")
+    expect(matchCountry("Hollande", countries)?.code).toBe("NLD")
+    expect(matchCountry("Royaume Uni", countries)?.code).toBe("GBR")
+    expect(matchCountry("Cote d Ivoire", countries)?.code).toBe("CIV")
+  })
+
+  it("still refuses a name that is not a country", async () => {
+    const { countries } = await import("./countries")
+    expect(matchCountry("Atlantide", countries)).toBeNull()
+  })
+})
