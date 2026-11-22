@@ -18,11 +18,14 @@ import {
   ChevronLeftIcon,
   CoinCounter,
   GoldCoin,
+  InfoBubble,
   LevelComplete,
   MIN_TOUCH,
   PressableSurface,
+  Toast,
   colors,
   fonts,
+  useFlash,
 } from "@marcel-games/expo-ui"
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router"
 import { utcDay } from "@marcel-games/game-sync"
@@ -137,7 +140,7 @@ function Game({ config, dailyDay }: { config: GameConfig; dailyDay?: string }) {
   const [input, setInput] = useState("")
   const isDaily = config.mode === "daily"
   const today = daily.useToday()
-  const [broke, setBroke] = useState(false)
+  const [flash, showFlash] = useFlash()
   const balance = useCoinBalance()
   const counterRef = useRef<ComponentRef<typeof View>>(null)
   const [coinTarget, setCoinTarget] = useState<{ x: number; y: number } | null>(null)
@@ -227,12 +230,42 @@ function Game({ config, dailyDay }: { config: GameConfig; dailyDay?: string }) {
         />
       </View>
 
-      <WorldMap
-        playable={config.allCountries.map((country) => country.code)}
-        missing={config.missingCountries.map((country) => country.code)}
-        found={play.found}
-        highlighted={play.hintStep >= 2 ? (play.hintTarget?.code ?? null) : null}
-      />
+      <View style={styles.mapArea}>
+        <WorldMap
+          playable={config.allCountries.map((country) => country.code)}
+          missing={config.missingCountries.map((country) => country.code)}
+          found={play.found}
+          highlighted={play.hintStep >= 2 ? (play.hintTarget?.code ?? null) : null}
+        />
+        {!play.isComplete && hint && (
+          <InfoBubble key={play.hintStep}>
+            <Text style={styles.hint}>{hint}</Text>
+          </InfoBubble>
+        )}
+        <Toast flash={flash} />
+        {!play.isComplete && suggestions.length > 0 && (
+          <View pointerEvents="box-none" style={styles.suggestions}>
+            {suggestions.map((country) => {
+              const name = getCountryName(country, locale)
+              return (
+                <PressableSurface
+                  key={country.code}
+                  onPress={() => submit(name)}
+                  accessibilityLabel={name}
+                  face={colors.surface}
+                  radius={18}
+                  height={36}
+                  outerStyle={styles.chipShadow}
+                  style={styles.chip}
+                >
+                  <Text style={styles.chipFlag}>{getFlagEmoji(country)}</Text>
+                  <Text style={styles.chipLabel}>{name}</Text>
+                </PressableSurface>
+              )
+            })}
+          </View>
+        )}
+      </View>
 
       <View style={[styles.panel, { paddingBottom: insets.bottom + 12 }]}>
         <View style={styles.statusRow}>
@@ -244,20 +277,18 @@ function Game({ config, dailyDay }: { config: GameConfig; dailyDay?: string }) {
                   ? verdictMessage(play.lastVerdict, locale)
                   : `${left} ${t(locale, left === 1 ? "game.missingOne" : "game.missing")}`}
             </Text>
-            {!play.isComplete && (
-              <>
-                {hint && <Text style={styles.hint}>{hint}</Text>}
-                {broke && (
-                  <Text accessibilityLiveRegion="polite" style={styles.broke}>
-                    {t(locale, "game.notEnoughCoins")}
-                  </Text>
-                )}
-              </>
-            )}
           </View>
           {!play.isComplete && (
             <PressableSurface
-              onPress={() => setBroke(!play.takeHint())}
+              onPress={() => {
+                if (play.takeHint()) return
+                showFlash({
+                  title: t(locale, "game.notEnoughCoins"),
+                  detail: tReplace(locale, "game.nextHintCosts", {
+                    n: HINT_STEP_COSTS[(play.hintStep + 1) as 1 | 2 | 3],
+                  }),
+                })
+              }}
               accessibilityLabel={
                 play.hintStep < 3
                   ? `${t(locale, "game.hint")}, ${HINT_STEP_COSTS[(play.hintStep + 1) as 1 | 2 | 3]} ${t(locale, "game.coins")}`
@@ -281,29 +312,6 @@ function Game({ config, dailyDay }: { config: GameConfig; dailyDay?: string }) {
             </PressableSurface>
           )}
         </View>
-
-        {!play.isComplete && suggestions.length > 0 && (
-          <View style={styles.suggestions}>
-            {suggestions.map((country) => {
-              const name = getCountryName(country, locale)
-              return (
-                <PressableSurface
-                  key={country.code}
-                  onPress={() => submit(name)}
-                  accessibilityLabel={name}
-                  face={colors.surface}
-                  border={colors.line}
-                  radius={18}
-                  height={36}
-                  style={styles.chip}
-                >
-                  <Text style={styles.chipFlag}>{getFlagEmoji(country)}</Text>
-                  <Text style={styles.chipLabel}>{name}</Text>
-                </PressableSurface>
-              )
-            })}
-          </View>
-        )}
 
         {!play.isComplete && (
           <TextInput
@@ -375,20 +383,35 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   side: { width: MIN_TOUCH },
-  broke: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.danger },
   title: { fontFamily: fonts.display, fontSize: 18, color: colors.ink },
   panel: { paddingHorizontal: 16, paddingTop: 12, gap: 12, backgroundColor: colors.ground },
   statusRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
-  // Tall enough for a status and a two-line hint, so the map above never resizes mid-level.
-  statusText: { flexShrink: 1, gap: 2, minHeight: 64, justifyContent: "center" },
+  statusText: { flexShrink: 1, minHeight: MIN_TOUCH, justifyContent: "center" },
   status: { fontFamily: fonts.display, fontSize: 17, color: colors.ink },
-  hint: { fontFamily: fonts.body, fontSize: 14, color: colors.muted },
+  hint: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   action: { flexDirection: "row", gap: 8, paddingHorizontal: 18 },
   cost: { flexDirection: "row", alignItems: "center", gap: 3 },
   costLabel: { fontFamily: fonts.bodyBold, fontSize: 15, color: OCHRE },
   actionLabel: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   actionLabelOnInk: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.surface },
-  suggestions: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  mapArea: { flex: 1, position: "relative" },
+  suggestions: {
+    position: "absolute",
+    left: 12,
+    right: 12,
+    bottom: 12,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    zIndex: 1,
+  },
+  chipShadow: {
+    shadowColor: NAVY,
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
   chip: { flexDirection: "row", gap: 6, paddingHorizontal: 12 },
   chipFlag: { fontSize: 18 },
   chipLabel: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },

@@ -2,10 +2,11 @@ import {
   EARTHUNT_API_URL,
   createEartHuntApi,
   isLevelResult,
+  type HistoryEntry,
   type LevelResult,
 } from "@marcel-games/earthunt-core"
 import { deviceStore, identityStore, launchDevice, newDeviceId } from "@marcel-games/expo-ui"
-import { createGameSync } from "@marcel-games/game-sync"
+import { createGameSync, type Profile } from "@marcel-games/game-sync"
 import { daily } from "@/game/daily-store"
 import { adoptServerProgress } from "@/game/progress-store"
 
@@ -35,6 +36,14 @@ export async function syncWithServer(): Promise<void> {
   } catch (error) {
     console.warn("Sync with the EartHunt server is postponed", error)
   }
+}
+
+export function currentUserId(): Promise<string> {
+  return sync.flush()
+}
+
+export function fetchProfile(): Promise<Profile<HistoryEntry>> {
+  return currentUserId().then(api.profile)
 }
 
 let firstSync: Promise<void> | null = null

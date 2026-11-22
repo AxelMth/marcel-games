@@ -2,7 +2,16 @@ import { t } from "@marcel-games/wordclimb-core"
 import { useRouter } from "expo-router"
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { CoinCounter, colors, fonts, LegalLink, PressableSurface, Surface } from "@marcel-games/expo-ui"
+import {
+  ChartIcon,
+  CoinCounter,
+  colors,
+  fonts,
+  LegalLink,
+  MIN_TOUCH,
+  PressableSurface,
+  Surface,
+} from "@marcel-games/expo-ui"
 import { daily } from "@/game/daily-store"
 import { retryLoadProgress, useProgress } from "@/game/progress-store"
 import { useCoinBalance } from "@/game/wallet-store"
@@ -54,6 +63,16 @@ export default function HomeScreen() {
   return (
     <View style={[styles.screen, { paddingTop: insets.top, paddingBottom: insets.bottom + 4 }]}>
       <View style={styles.topBar}>
+        <PressableSurface
+          onPress={() => router.push("/stats")}
+          accessibilityLabel={t(locale, "rankingTitle")}
+          face={colors.surface}
+          radius={12}
+          height={MIN_TOUCH}
+          outerStyle={styles.statsButton}
+        >
+          <ChartIcon color={brand.accentDeep} />
+        </PressableSurface>
         <CoinCounter value={coins} accessibilityLabel={`${coins ?? 0} ${t(locale, "coins")}`} />
       </View>
       <View style={styles.hero}>
@@ -129,7 +148,14 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: brand.accentSoft },
-  topBar: { height: 48, paddingHorizontal: 16, alignItems: "flex-end", justifyContent: "center" },
+  topBar: {
+    height: 48,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  statsButton: { width: MIN_TOUCH },
   hero: { flex: 1, alignItems: "center", justifyContent: "center", gap: 28 },
   wordmarkRow: { flexDirection: "row", gap: WORDMARK_GAP },
   wordmarkSecondRow: { marginTop: WORDMARK_GAP, marginLeft: WORDMARK_STEP },

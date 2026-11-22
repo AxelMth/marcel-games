@@ -25,9 +25,14 @@ import {
   colors,
   fonts,
   GoldCoin,
+  HintStack,
+  InfoBubble,
   LevelComplete,
   MIN_TOUCH,
   PressableSurface,
+  Toast,
+  useFlash,
+  type HintOption,
   type Point,
 } from "@marcel-games/expo-ui"
 import { Keyboard } from "@/components/keyboard"
@@ -138,7 +143,7 @@ function Game({ level, levelIndex, dailyDay, locale }: GameProps) {
   const router = useRouter()
   const [ladderHeight, setLadderHeight] = useState(0)
   const [hintsOpen, setHintsOpen] = useState(false)
-  const [broke, setBroke] = useState(false)
+  const [flash, showFlash] = useFlash()
   const coins = useCoinBalance()
   // Coins won but still flying to the counter: the counter shows them only once they land.
   const [inFlight, setInFlight] = useState(0)
@@ -187,6 +192,38 @@ function Game({ level, levelIndex, dailyDay, locale }: GameProps) {
   })
   const target = level.wordLadder[state.currentWordIndex]
   const showHints = hintsOpen && !state.isComplete
+
+  // A hint that could not be paid for says so over the level; one that was bought closes the stack so its effect shows.
+  const buy = (take: () => boolean, cost: number) => {
+    if (take()) {
+      setHintsOpen(false)
+      return
+    }
+    showFlash({
+      title: t(locale, "notEnoughCoins"),
+      detail: t(locale, "hintCostsCoins").replace("{n}", String(cost)),
+    })
+  }
+  const hintOptions: HintOption[] = [
+    ...(hasDefinition(target, locale)
+      ? [
+          {
+            key: "definition",
+            label: t(locale, "definition"),
+            cost: HINT_COSTS.definition,
+            taken: session.hinted.definition,
+            onPress: () => buy(hintDefinition, HINT_COSTS.definition),
+          },
+        ]
+      : []),
+    {
+      key: "fullWord",
+      label: t(locale, "fullWord"),
+      cost: HINT_COSTS.fullWord,
+      taken: session.hinted.fullWord,
+      onPress: () => buy(hintFullWord, HINT_COSTS.fullWord),
+    },
+  ]
 
   useEffect(() => {
     if (!state.isComplete) return
@@ -246,52 +283,14 @@ function Game({ level, levelIndex, dailyDay, locale }: GameProps) {
             locale={locale}
           />
         )}
+        {session.hinted.definition && !state.isComplete && (
+          <InfoBubble>
+            <Text style={styles.definition}>{getDefinition(target, locale)}</Text>
+          </InfoBubble>
+        )}
+        <Toast flash={flash} />
+        {showHints && <HintStack options={hintOptions} coinsLabel={t(locale, "coins")} />}
       </View>
-
-      {showHints && (
-        <View style={styles.hints}>
-          <View style={styles.hintButtons}>
-            {hasDefinition(target, locale) && (
-              <PressableSurface
-                onPress={() => setBroke(!hintDefinition())}
-                accessibilityLabel={`${t(locale, "definition")}, ${HINT_COSTS.definition} ${t(locale, "coins")}`}
-                face={brand.goldSoft}
-                border={brand.gold}
-                radius={12}
-                height={MIN_TOUCH}
-                style={styles.hintFace}
-                outerStyle={styles.hintButton}
-              >
-                <Text style={styles.hintLabel}>{t(locale, "definition")}</Text>
-                {!session.hinted.definition && <HintCost cost={HINT_COSTS.definition} />}
-              </PressableSurface>
-            )}
-            <PressableSurface
-              onPress={() => setBroke(!hintFullWord())}
-              accessibilityLabel={`${t(locale, "fullWord")}, ${HINT_COSTS.fullWord} ${t(locale, "coins")}`}
-              face={brand.goldSoft}
-              border={brand.gold}
-              radius={12}
-              height={MIN_TOUCH}
-              style={styles.hintFace}
-              outerStyle={styles.hintButton}
-            >
-              <Text style={styles.hintLabel}>{t(locale, "fullWord")}</Text>
-              {!session.hinted.fullWord && <HintCost cost={HINT_COSTS.fullWord} />}
-            </PressableSurface>
-          </View>
-          {broke && (
-            <Text accessibilityLiveRegion="polite" style={styles.broke}>
-              {t(locale, "notEnoughCoins")}
-            </Text>
-          )}
-          {session.hinted.definition && (
-            <Text accessibilityLiveRegion="polite" style={styles.definition}>
-              {getDefinition(target, locale)}
-            </Text>
-          )}
-        </View>
-      )}
 
       <View style={styles.statusRow}>
         <View style={styles.statusText}>
@@ -350,15 +349,6 @@ function Game({ level, levelIndex, dailyDay, locale }: GameProps) {
   )
 }
 
-function HintCost({ cost }: { cost: number }) {
-  return (
-    <View style={styles.cost}>
-      <GoldCoin size={16} />
-      <Text style={styles.hintCost}>{cost}</Text>
-    </View>
-  )
-}
-
 const styles = StyleSheet.create({
   waiting: {
     flex: 1,
@@ -376,7 +366,7 @@ const styles = StyleSheet.create({
   },
   back: { width: MIN_TOUCH },
   title: { fontFamily: fonts.display, fontSize: 18, color: colors.ink },
-  ladderArea: { flex: 1 },
+  ladderArea: { flex: 1, position: "relative" },
   statusRow: {
     height: 56,
     paddingHorizontal: 20,
@@ -388,15 +378,8 @@ const styles = StyleSheet.create({
   statusText: { flexShrink: 1, gap: 2 },
   status: { fontFamily: fonts.display, fontSize: 17, color: colors.ink },
   subStatus: { fontFamily: fonts.body, fontSize: 13, color: colors.muted },
-  hints: { paddingHorizontal: 20, paddingTop: 8, gap: 10 },
-  hintButtons: { flexDirection: "row", gap: 10 },
-  hintButton: { flex: 1 },
   hintFace: { flexDirection: "row", gap: 8 },
-  cost: { flexDirection: "row", alignItems: "center", gap: 3 },
-  hintCost: { fontFamily: fonts.bodyBold, fontSize: 15, color: brand.goldInk },
   hintToggleLabel: { fontFamily: fonts.bodyBold, fontSize: 15, color: brand.goldInk },
-  broke: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.danger },
-  hintLabel: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   definition: { fontFamily: fonts.body, fontSize: 15, lineHeight: 21, color: colors.inkSoft },
   next: { paddingHorizontal: 18 },
 })

@@ -75,6 +75,17 @@ describe("createWordClimbApi", () => {
     await expect(api.daily("u", "FR")).resolves.toEqual({ puzzle: null, stats: null })
   })
 
+  it("reads the player's ranks and history", async () => {
+    const entry = { level: 2, gameMode: "NORMAL", beginWord: "suit", endWord: "cuir", wordLadder: ["fuit", "fuir"], stars: 3, rank: 1 }
+    const fetch = answer({ stats: { dailyLevelsCompleted: 1, lastLevelRank: 4, globalRank: 37 }, gameHistory: [entry] })
+    vi.stubGlobal("fetch", fetch)
+    await expect(api.profile("u")).resolves.toEqual({
+      stats: { dailyLevelsCompleted: 1, lastLevelRank: 4, globalRank: 37 },
+      history: [entry],
+    })
+    expect(fetch.mock.calls[0]?.[0]).toBe("https://api.test/profile?userId=u")
+  })
+
   it("turns an error status into an ApiHttpError", async () => {
     vi.stubGlobal("fetch", answer({ error: "Invalid request payload" }, 400))
     await expect(api.finishLevel("u", result)).rejects.toMatchObject({ status: 400 })

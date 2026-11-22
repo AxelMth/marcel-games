@@ -2,8 +2,10 @@ export {
   EARTHUNT_API_URL,
   createEartHuntApi,
   isCountryCodes,
+  isHistoryEntry,
   isLevelResult,
   type EartHuntApi,
+  type HistoryEntry,
   type LevelResult,
   type ServerProgress,
 } from "./api"
