@@ -30,7 +30,16 @@ import {
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router"
 import { utcDay } from "@marcel-games/game-sync"
 import { useEffect, useMemo, useRef, useState, type ComponentRef } from "react"
-import { ActivityIndicator, KeyboardAvoidingView, StyleSheet, Text, TextInput, View, type LayoutChangeEvent } from "react-native"
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  type LayoutChangeEvent,
+} from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { WorldMap } from "@/components/world-map"
 import { daily } from "@/game/daily-store"
@@ -244,7 +253,14 @@ function Game({ config, dailyDay }: { config: GameConfig; dailyDay?: string }) {
         )}
         <Toast flash={flash} />
         {!play.isComplete && suggestions.length > 0 && (
-          <View pointerEvents="box-none" style={styles.suggestions}>
+          // One scrolling line: with the keyboard up the map is short, and wrapped chips covered it.
+          <ScrollView
+            horizontal
+            keyboardShouldPersistTaps="handled"
+            showsHorizontalScrollIndicator={false}
+            style={styles.suggestions}
+            contentContainerStyle={styles.suggestionsRow}
+          >
             {suggestions.map((country) => {
               const name = getCountryName(country, locale)
               return (
@@ -263,7 +279,7 @@ function Game({ config, dailyDay }: { config: GameConfig; dailyDay?: string }) {
                 </PressableSurface>
               )
             })}
-          </View>
+          </ScrollView>
         )}
       </View>
 
@@ -395,16 +411,8 @@ const styles = StyleSheet.create({
   actionLabel: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   actionLabelOnInk: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.surface },
   mapArea: { flex: 1, position: "relative" },
-  suggestions: {
-    position: "absolute",
-    left: 12,
-    right: 12,
-    bottom: 12,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    zIndex: 1,
-  },
+  suggestions: { position: "absolute", left: 0, right: 0, bottom: 10, zIndex: 1 },
+  suggestionsRow: { paddingHorizontal: 12, paddingVertical: 6, gap: 8 },
   chipShadow: {
     shadowColor: NAVY,
     shadowOpacity: 0.18,
