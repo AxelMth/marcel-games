@@ -1,11 +1,15 @@
 import {
   isCount,
+  isHistoryBase,
   isRecord,
   parseDailyStats,
   parseLaunchedUserId,
+  parseProfile,
   requestJson,
   type DailyAnswer,
+  type HistoryBase,
   type LaunchDevice,
+  type Profile,
 } from "@marcel-games/game-sync"
 import type { Continent } from "./countries"
 
@@ -81,6 +85,15 @@ function parseDaily(data: unknown): DailyAnswer<string[]> {
   }
 }
 
+/** A level in the player's history. `continent` is empty for a world level or a daily challenge. */
+export interface HistoryEntry extends HistoryBase {
+  continent: string
+}
+
+export function isHistoryEntry(value: unknown): value is HistoryEntry {
+  return isHistoryBase(value) && typeof (value as { continent?: unknown }).continent === "string"
+}
+
 export interface EartHuntApi {
   /** Registers the device and answers the server's id for its player. */
   launch: (deviceUUID: string, device: LaunchDevice) => Promise<string>
@@ -88,6 +101,7 @@ export interface EartHuntApi {
   progress: (userId: string) => Promise<ServerProgress>
   /** Today's challenge, without countries once the player has finished it. */
   daily: (userId: string) => Promise<DailyAnswer<string[]>>
+  profile: (userId: string) => Promise<Profile<HistoryEntry>>
 }
 
 export function createEartHuntApi(baseUrl: string): EartHuntApi {
@@ -111,6 +125,12 @@ export function createEartHuntApi(baseUrl: string): EartHuntApi {
         `${baseUrl}/level?userId=${encodeURIComponent(userId)}&gameMode=LEVEL_OF_THE_DAY`,
         { method: "GET" },
         parseDaily
+      ),
+    profile: (userId) =>
+      requestJson(
+        `${baseUrl}/profile?userId=${encodeURIComponent(userId)}`,
+        { method: "GET" },
+        (data) => parseProfile(data, isHistoryEntry)
       ),
   }
 }

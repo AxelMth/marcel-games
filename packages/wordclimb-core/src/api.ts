@@ -1,11 +1,15 @@
 import {
   isCount,
+  isHistoryBase,
+  parseProfile,
   isRecord,
   parseDailyStats,
   parseLaunchedUserId,
   requestJson,
   type DailyAnswer,
+  type HistoryBase,
   type LaunchDevice,
+  type Profile,
 } from "@marcel-games/game-sync"
 import type { Level } from "./catalogue"
 import { levelFromApi, type BackendGameMode, type BackendLocale } from "./game"
@@ -71,6 +75,24 @@ function parseDaily(data: unknown): DailyAnswer<Level> {
   }
 }
 
+/** A level in the player's history. `wordLadder` is the intermediate words only. */
+export interface HistoryEntry extends HistoryBase {
+  beginWord: string
+  endWord: string
+  wordLadder: string[]
+}
+
+export function isHistoryEntry(value: unknown): value is HistoryEntry {
+  return (
+    isHistoryBase(value) &&
+    isRecord(value) &&
+    typeof value.beginWord === "string" &&
+    typeof value.endWord === "string" &&
+    Array.isArray(value.wordLadder) &&
+    value.wordLadder.every((word) => typeof word === "string")
+  )
+}
+
 export interface WordClimbApi {
   /** Registers the device and answers the server's id for its player. */
   launch: (deviceUUID: string, device: LaunchDevice, locale: BackendLocale) => Promise<string>
@@ -79,6 +101,8 @@ export interface WordClimbApi {
   classicLevelsFinished: (userId: string) => Promise<number>
   /** Today's challenge, without a puzzle once the player has finished it. */
   daily: (userId: string, locale: BackendLocale) => Promise<DailyAnswer<Level>>
+  /** The player's ranks and their last levels, newest first. */
+  profile: (userId: string) => Promise<Profile<HistoryEntry>>
 }
 
 export function createWordClimbApi(baseUrl: string): WordClimbApi {
@@ -108,6 +132,10 @@ export function createWordClimbApi(baseUrl: string): WordClimbApi {
         `${baseUrl}/level?userId=${encodeURIComponent(userId)}&gameMode=LEVEL_OF_THE_DAY&locale=${locale}`,
         { method: "GET" },
         parseDaily
+      ),
+    profile: (userId) =>
+      requestJson(`${baseUrl}/profile?userId=${encodeURIComponent(userId)}`, { method: "GET" }, (data) =>
+        parseProfile(data, isHistoryEntry)
       ),
   }
 }

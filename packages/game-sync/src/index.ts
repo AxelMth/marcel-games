@@ -19,3 +19,10 @@ export {
   spendCoins,
   type Wallet,
 } from "./wallet"
+export {
+  isHistoryBase,
+  parseProfile,
+  type HistoryBase,
+  type Profile,
+  type ProfileStats,
+} from "./profile"

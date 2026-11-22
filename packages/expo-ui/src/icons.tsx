@@ -15,6 +15,14 @@ export function ChevronLeftIcon({ size = 22, color }: IconProps) {
   )
 }
 
+export function ChartIcon({ size = 22, color }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Path d="M6 20V11M12 20V5M18 20v-6" stroke={color} strokeWidth={2.4} {...STROKE} />
+    </Svg>
+  )
+}
+
 export function BackspaceIcon({ size = 22, color }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24">

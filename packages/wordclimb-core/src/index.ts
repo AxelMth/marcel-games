@@ -2,7 +2,9 @@ export {
   WORDCLIMB_API_URL,
   createWordClimbApi,
   isLevel,
+  isHistoryEntry,
   isLevelResult,
+  type HistoryEntry,
   type LevelResult,
   type WordClimbApi,
 } from "./api"

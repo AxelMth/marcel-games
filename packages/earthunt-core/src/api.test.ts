@@ -53,6 +53,21 @@ describe("createEartHuntApi", () => {
     })
   })
 
+  it("reads the profile and leaves out history entries it cannot read", async () => {
+    const stats = { dailyLevelsCompleted: 2, lastLevelRank: 0, globalRank: 5 }
+    const entry = { level: 3, gameMode: "CONTINENTS", stars: 2, rank: 0, continent: "ASIA" }
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({ stats, gameHistory: [entry, { ...entry, continent: 4 }, { level: "x" }] })
+          )
+      )
+    )
+    await expect(api.profile("u")).resolves.toEqual({ stats, history: [entry] })
+  })
+
   it("refuses a launch answer without a user id", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({}))))
     const device = {

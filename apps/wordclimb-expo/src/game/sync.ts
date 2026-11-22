@@ -52,6 +52,13 @@ export function whenFirstSynced(): Promise<void> {
   return firstSync
 }
 
+/** The player's id on the server, after sending what was played offline. */
+export function currentUserId(): Promise<string> {
+  return sync.flush()
+}
+
+export const fetchProfile = (userId: string) => api.profile(userId)
+
 export async function reportLevel(result: LevelResult): Promise<void> {
   try {
     await sync.record(result)
