@@ -24,6 +24,7 @@ export {
   getContinentLevelId,
   getDailyLevelId,
   getMissingCountries,
+  getProgressiveMissingCountries,
   getWorldLevelId,
   matchCountry,
   suggestCountries,

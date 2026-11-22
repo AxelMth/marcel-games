@@ -71,6 +71,53 @@ function byRecognisability(pool: Country[]): Country[] {
     .sort((a, b) => DIFFICULTY_RANK.get(a.code)! - DIFFICULTY_RANK.get(b.code)!)
 }
 
+/** Neighbours in the recognisability order are shuffled within blocks this size, so the order bends without losing its climb. */
+const PROGRESSION_BLOCK = 6
+
+/** One pass through the pool, easiest first, shuffled block by block; each pass is shuffled differently. */
+function progressionPass(ordered: Country[], family: string, pass: number): Country[] {
+  const result: Country[] = []
+  for (let start = 0; start < ordered.length; start += PROGRESSION_BLOCK) {
+    const block = ordered.slice(start, start + PROGRESSION_BLOCK)
+    result.push(...seededShuffle(block, hashString(`${family}-pass-${pass}-block-${start}`)))
+  }
+  return result
+}
+
+/**
+ * The countries a classic level asks for. Levels walk through the pool from
+ * the best-known countries to the least known, each taking the next ones in
+ * line, so no country comes back before the whole pool has been played and
+ * the levels get harder as they go. Once through, the walk starts again with
+ * the counts the later levels ask for, several countries at a time.
+ */
+export function getProgressiveMissingCountries(
+  family: string,
+  pool: Country[],
+  level: number
+): Country[] {
+  const ordered = byRecognisability(pool)
+  if (ordered.length === 0) return []
+  const countAt = (n: number) =>
+    Math.min(countForLevel(n, hashString(`${family}-level-${n}`)), ordered.length)
+
+  let cursor = 0
+  for (let n = 1; n < level; n++) cursor += countAt(n)
+
+  const count = countAt(level)
+  const passes = new Map<number, Country[]>()
+  const picked: Country[] = []
+  for (let i = 0; picked.length < count; i++) {
+    const position = cursor + i
+    const pass = Math.floor(position / ordered.length)
+    if (!passes.has(pass)) passes.set(pass, progressionPass(ordered, family, pass))
+    const country = passes.get(pass)![position % ordered.length]
+    // At a pass boundary the next pass may start with a country this level already holds.
+    if (!picked.includes(country)) picked.push(country)
+  }
+  return picked
+}
+
 export function getMissingCountries(
   levelId: string,
   pool: Country[],
@@ -131,6 +178,7 @@ export function createGameConfig(
 ): GameConfig {
   let levelId: string
   let pool: Country[]
+  let family: string | null = null
   // The difficulty the curve is asked for, which is the player's level
   // everywhere except the daily.
   let difficulty = level
@@ -139,10 +187,12 @@ export function createGameConfig(
     case "world":
       levelId = getWorldLevelId(level)
       pool = countries
+      family = "world"
       break
     case "continent":
       levelId = getContinentLevelId(continent!, level)
       pool = getCountriesByContinent(continent!)
+      family = `continent-${continent}`
       break
     case "daily":
       levelId = getDailyLevelId()
@@ -159,7 +209,10 @@ export function createGameConfig(
     mode,
     continent,
     level,
-    missingCountries: getMissingCountries(levelId, pool, difficulty),
+    missingCountries:
+      family === null
+        ? getMissingCountries(levelId, pool, difficulty)
+        : getProgressiveMissingCountries(family, pool, level),
     allCountries: mode === "continent" ? pool : countries,
   }
 }
