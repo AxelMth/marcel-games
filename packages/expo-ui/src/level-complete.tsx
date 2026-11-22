@@ -49,12 +49,14 @@ interface LevelCompleteProps {
 const MAX_STARS = 3
 const STAR_START_MS = 350
 const STAR_STEP_MS = 260
-const COIN_STEP_MS = 140
-const COIN_FLIGHT_MS = 700
+const COIN_STEP_MS = 160
+const COIN_FLIGHT_MS = 1000
+const COIN_SIZE = 40
 const CONFETTI = 34
 const CONFETTI_COLOURS = ["#FFD23F", "#FFFFFF", "#FF6B8B", "#5CC8FF", "#9BE564", "#FF9F43"]
-/** Coins drawn in flight at most: a big reward still lands as a short burst. */
-const MAX_FLYING = 8
+/** Coins drawn in flight: two per coin won, so even one coin reads as a burst, and never a swarm. */
+const MIN_FLYING = 4
+const MAX_FLYING = 10
 
 function Confetti({ index, width, height }: { index: number; width: number; height: number }) {
   const piece = useMemo(() => {
@@ -122,20 +124,21 @@ function FlyingCoin({ from, to, delay }: { from: Point; to: Point; delay: number
   const style = useAnimatedStyle(() => {
     const t = progress.get()
     // A lift in the middle of the flight turns the straight line into an arc.
-    const arc = -120 * 4 * t * (1 - t)
+    const arc = -180 * 4 * t * (1 - t)
     return {
       // Hidden before take-off and once landed, where the counter takes over.
       opacity: t === 0 || t === 1 ? 0 : 1,
       transform: [
-        { translateX: from.x + (to.x - from.x) * t - 14 },
-        { translateY: from.y + (to.y - from.y) * t + arc - 14 },
-        { scale: 1.4 - 0.6 * t },
+        { translateX: from.x + (to.x - from.x) * t - COIN_SIZE / 2 },
+        { translateY: from.y + (to.y - from.y) * t + arc - COIN_SIZE / 2 },
+        { scale: 1.3 - 0.8 * t },
+        { rotate: `${t * 540}deg` },
       ],
     }
   })
   return (
     <Animated.View pointerEvents="none" style={[styles.flying, style]}>
-      <GoldCoin size={28} />
+      <GoldCoin size={COIN_SIZE} />
     </Animated.View>
   )
 }
@@ -159,17 +162,17 @@ export function LevelComplete(props: LevelCompleteProps) {
   }, [enter])
 
   const starsDone = STAR_START_MS + (stars === null ? 0 : MAX_STARS * STAR_STEP_MS)
-  const flying = coins === null ? 0 : Math.min(coins, MAX_FLYING)
+  const flying = !coins ? 0 : Math.min(Math.max(coins * 2, MIN_FLYING), MAX_FLYING)
 
-  // Every coin is counted even when fewer are drawn: the last flight carries the rest.
-  useEffect(() => {
+    useEffect(() => {
     if (!coins || !coinOrigin || !coinTarget) return
     const timers = Array.from({ length: flying }, (_, index) =>
       setTimeout(
         () => {
-          const share = index === flying - 1 ? coins - (flying - 1) : 1
+          // Arrivals share the coins out evenly; the counter moves on the ones that carry one.
+          const share = Math.floor(((index + 1) * coins) / flying) - Math.floor((index * coins) / flying)
           for (let i = 0; i < share; i++) landed.current()
-          hapticKey()
+          if (share > 0) hapticKey()
         },
         starsDone + index * COIN_STEP_MS + COIN_FLIGHT_MS
       )

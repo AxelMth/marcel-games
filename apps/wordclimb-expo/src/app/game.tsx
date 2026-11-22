@@ -190,7 +190,12 @@ function Game({ level, levelIndex, dailyDay, locale }: GameProps) {
 
   useEffect(() => {
     if (!state.isComplete) return
-    const timer = setTimeout(() => setShowComplete(true), COMPLETE_DELAY_MS)
+    // Measured now rather than on layout: the header was laid out while the
+    // screen was still sliding in, at a position the coins must not fly to.
+    const timer = setTimeout(() => {
+      measureHeader()
+      setShowComplete(true)
+    }, COMPLETE_DELAY_MS)
     return () => clearTimeout(timer)
   }, [state.isComplete])
 
