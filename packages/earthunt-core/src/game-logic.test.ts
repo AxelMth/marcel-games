@@ -1,12 +1,13 @@
 import { COUNTRY_DIFFICULTY_ORDER } from "./country-difficulty"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { countries, getCountriesByContinent } from "./countries"
+import { type Country, countries, getCountriesByContinent } from "./countries"
 import {
   buildOfflineLevelParams,
   createGameConfig,
   getContinentLevelId,
   getDailyLevelId,
   getMissingCountries,
+  getProgressiveMissingCountries,
   getWorldLevelId,
   matchCountry,
   normalizeCountryName,
@@ -348,5 +349,38 @@ describe("matchCountry aliases", () => {
   it("still refuses a name that is not a country", async () => {
     const { countries } = await import("./countries")
     expect(matchCountry("Atlantide", countries)).toBeNull()
+  })
+})
+
+describe("getProgressiveMissingCountries", () => {
+  const levels = (family: string, pool: Country[], upTo: number) =>
+    Array.from({ length: upTo }, (_, i) => getProgressiveMissingCountries(family, pool, i + 1))
+
+  it("does not repeat a country before the whole pool has been played", () => {
+    const pool = getCountriesByContinent("EUROPE")
+    const played = levels("continent-EUROPE", pool, 30).flat().map((c) => c.code)
+    const firstPass = played.slice(0, new Set(played).size)
+    expect(new Set(firstPass).size).toBe(firstPass.length)
+    expect(new Set(played.slice(0, 15)).size).toBe(15)
+  })
+
+  it("gets harder as the levels go", () => {
+    const rank = (c: Country) => COUNTRY_DIFFICULTY_ORDER.indexOf(c.code)
+    const average = (picked: Country[]) => picked.reduce((sum, c) => sum + rank(c), 0) / picked.length
+    const world = levels("world", countries, 60)
+    expect(average(world.slice(0, 10).flat())).toBeLessThan(average(world.slice(40, 60).flat()))
+  })
+
+  it("gives the same level the same countries every time", () => {
+    expect(getProgressiveMissingCountries("world", countries, 42)).toEqual(
+      getProgressiveMissingCountries("world", countries, 42)
+    )
+  })
+
+  it("never asks twice for the same country in one level, even across a pass", () => {
+    const pool = getCountriesByContinent("OCEANIA")
+    for (const picked of levels("continent-OCEANIA", pool, 120)) {
+      expect(new Set(picked.map((c) => c.code)).size).toBe(picked.length)
+    }
   })
 })
