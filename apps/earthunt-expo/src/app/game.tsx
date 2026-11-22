@@ -336,7 +336,7 @@ function Game({ config, dailyDay }: { config: GameConfig; dailyDay?: string }) {
           }
           stars={play.stars}
           coins={reward}
-          coinsLabel={(n) => tReplace(locale, "game.coinsWon", { n })}
+          coinsLabel={(n) => (n === 1 ? t(locale, "game.coinWon") : tReplace(locale, "game.coinsWon", { n }))}
           noCoinsLabel={t(locale, "game.noNewCoins")}
           coinTarget={coinTarget}
           onCoinLanded={() => setInFlight((n) => Math.max(0, n - 1))}

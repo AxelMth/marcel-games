@@ -329,7 +329,7 @@ function Game({ level, levelIndex, dailyDay, locale }: GameProps) {
           subtitle={levelIndex === null ? t(locale, "dailyChallenge") : `${t(locale, "level")} ${levelIndex + 1}`}
           stars={reward?.stars ?? null}
           coins={reward?.coins ?? null}
-          coinsLabel={(won) => `+${won} ${t(locale, "coins").toLowerCase()}`}
+          coinsLabel={(won) => (won === 1 ? t(locale, "coinWon") : `+${won} ${t(locale, "coinsWon")}`)}
           noCoinsLabel={t(locale, "alreadyWon")}
           coinTarget={coinTarget}
           onCoinLanded={() => setInFlight((left) => Math.max(0, left - 1))}

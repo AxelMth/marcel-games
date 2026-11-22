@@ -1,6 +1,6 @@
 import { colors } from "@marcel-games/expo-ui"
 import { useEffect, useRef, useState, type ComponentRef } from "react"
-import { ScrollView, StyleSheet, View } from "react-native"
+import { Platform, ScrollView, StyleSheet, View } from "react-native"
 import Svg, { Path, Rect } from "react-native-svg"
 import { MAP_HEIGHT, MAP_WIDTH, SHAPES } from "@/map/shapes"
 
@@ -9,7 +9,6 @@ const LAND = "#8CC084"
 const LAND_OUTSIDE = "#DCE7D6"
 const LAND_STROKE = "#F4F8F1"
 const FOUND = "#2E9D6A"
-const MISSING_FILL = "#F6F8F2"
 const MAX_ZOOM = 10
 /** Room left around a country or a continent when the map frames it, in map units. */
 const FRAME_MARGIN = 12
@@ -43,6 +42,8 @@ interface ZoomableScroll {
 
 /** Frames a box given in map units, where one map unit is `unit` points. */
 function zoomTo(scroll: unknown, box: Box, unit: number, animated: boolean): void {
+  // React Native Web implements the method only to throw.
+  if (Platform.OS === "web") return
   ;(scroll as ZoomableScroll | null)?.scrollResponderZoomTo?.({
     x: (box[0] - FRAME_MARGIN) * unit,
     y: (box[1] - FRAME_MARGIN) * unit,
@@ -55,7 +56,7 @@ function zoomTo(scroll: unknown, box: Box, unit: number, animated: boolean): voi
 interface WorldMapProps {
   /** Countries that belong to the level. The others are drawn faded, as scenery. */
   playable: readonly string[]
-  /** Countries taken off the map, to be found. Drawn as a dashed outline until they are. */
+  /** Countries taken off the map, to be found. Drawn as sea until they are. */
   missing: readonly string[]
   found: readonly string[]
   /** The country a hint is pointing at, or null. */
@@ -73,6 +74,9 @@ export function WorldMap({ playable, missing, found, highlighted }: WorldMapProp
   const minZoom = viewport && unit > 0 ? Math.min(1, viewport.width / (MAP_WIDTH * unit)) : 1
 
   const playableKey = playable.join(",")
+  // On a whole-world level the few outlines with no country of their own (South
+  // Sudan, Western Sahara…) would otherwise stand out as pale holes.
+  const wholeWorld = playable.length > WHOLE_WORLD
   const firstMissing = missing[0] ?? null
   const viewportWidth = viewport?.width ?? 0
   // Framed once per level. The viewport is measured again whenever the panel
@@ -144,23 +148,15 @@ export function WorldMap({ playable, missing, found, highlighted }: WorldMapProp
               if (found.includes(shape.code)) {
                 return <Path key={shape.code} d={shape.d} fill={FOUND} stroke={LAND_STROKE} strokeWidth={0.4} />
               }
+              // A country to find is a hole in the land, the colour of the sea.
               if (missing.includes(shape.code)) {
-                return (
-                  <Path
-                    key={shape.code}
-                    d={shape.d}
-                    fill={MISSING_FILL}
-                    stroke={colors.lineStrong}
-                    strokeWidth={0.6}
-                    strokeDasharray="2 1.5"
-                  />
-                )
+                return <Path key={shape.code} d={shape.d} fill={SEA} />
               }
               return (
                 <Path
                   key={shape.code}
                   d={shape.d}
-                  fill={playable.includes(shape.code) ? LAND : LAND_OUTSIDE}
+                  fill={wholeWorld || playable.includes(shape.code) ? LAND : LAND_OUTSIDE}
                   stroke={LAND_STROKE}
                   strokeWidth={0.4}
                 />

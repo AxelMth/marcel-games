@@ -29,6 +29,23 @@
         "8081"
       ],
       "port": 8081
+    },
+    {
+      "name": "earthunt-expo",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "BROWSER=none",
+        "pnpm",
+        "--filter",
+        "@marcel-games/earthunt-expo",
+        "exec",
+        "expo",
+        "start",
+        "--web",
+        "--port",
+        "8082"
+      ],
+      "port": 8082
     }
   ]
 }
