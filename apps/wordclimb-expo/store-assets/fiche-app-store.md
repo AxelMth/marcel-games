@@ -1,4 +1,4 @@
-# WordClimb — fiche App Store Connect (version 1.0.0, build 19)
+# WordClimb — fiche App Store Connect (version 1.0.0, build 20)
 
 À coller dans App Store Connect. Les limites de caractères sont celles d'Apple.
 

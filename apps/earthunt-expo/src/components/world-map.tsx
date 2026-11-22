@@ -1,6 +1,13 @@
 import { colors } from "@marcel-games/expo-ui"
-import { useEffect, useRef, useState, type ComponentRef } from "react"
-import { Platform, ScrollView, StyleSheet, View } from "react-native"
+import { useEffect, useMemo, useRef, useState, type ComponentRef } from "react"
+import {
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from "react-native"
 import Svg, { Path, Rect } from "react-native-svg"
 import { MAP_HEIGHT, MAP_WIDTH, SHAPES } from "@/map/shapes"
 
@@ -10,6 +17,18 @@ const LAND_OUTSIDE = "#DCE7D6"
 const LAND_STROKE = "#F4F8F1"
 const FOUND = "#2E9D6A"
 const MAX_ZOOM = 10
+/** Quiet time after the last scroll or pinch before the map is redrawn sharp. */
+const SETTLE_MS = 160
+/** Below this zoom the scaled drawing is sharp enough. */
+const SHARP_FROM_ZOOM = 1.05
+
+/** The part of the map on screen, in map units. */
+interface Region {
+  x: number
+  y: number
+  width: number
+  height: number
+}
 /** Room left around a country or a continent when the map frames it, in map units. */
 const FRAME_MARGIN = 12
 /** A level with more countries than any continent holds is a whole-world level. */
@@ -71,6 +90,17 @@ export function WorldMap({ playable, missing, found, highlighted }: WorldMapProp
   // shrinks when the keyboard opens, and rescaling the map under the player's
   // zoom would throw the view somewhere else entirely.
   const [unit, setUnit] = useState(0)
+  // iOS zooms a scroll view by scaling a picture of its content, which blurs
+  // the map. Once the player stops, the visible part is drawn again on top at
+  // the screen's own resolution, and hidden as soon as they move it.
+  const [sharp, setSharp] = useState<Region | null>(null)
+  const settle = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(
+    () => () => {
+      if (settle.current) clearTimeout(settle.current)
+    },
+    []
+  )
   const minZoom = viewport && unit > 0 ? Math.min(1, viewport.width / (MAP_WIDTH * unit)) : 1
 
   const playableKey = playable.join(",")
@@ -107,6 +137,53 @@ export function WorldMap({ playable, missing, found, highlighted }: WorldMapProp
   // keyboard does not leave it out of sight.
   const focus = highlighted ?? found.at(-1) ?? null
   const viewportHeight = viewport?.height ?? 0
+  useEffect(() => setSharp(null), [viewportWidth, viewportHeight])
+
+  const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { contentOffset, layoutMeasurement } = event.nativeEvent
+    const zoomScale = event.nativeEvent.zoomScale ?? 1
+    setSharp(null)
+    if (settle.current) clearTimeout(settle.current)
+    if (zoomScale < SHARP_FROM_ZOOM || unit === 0) return
+    const scale = unit * zoomScale
+    const region = {
+      x: contentOffset.x / scale,
+      y: contentOffset.y / scale,
+      width: layoutMeasurement.width / scale,
+      height: layoutMeasurement.height / scale,
+    }
+    settle.current = setTimeout(() => setSharp(region), SETTLE_MS)
+  }
+
+  const shapes = useMemo(
+    () => (
+      <>
+        <Rect x={-MAP_WIDTH} y={-MAP_HEIGHT} width={MAP_WIDTH * 3} height={MAP_HEIGHT * 3} fill={SEA} />
+        {SHAPES.map((shape) => {
+          if (shape.code === highlighted) {
+            return <Path key={shape.code} d={shape.d} fill={colors.star} />
+          }
+          if (found.includes(shape.code)) {
+            return <Path key={shape.code} d={shape.d} fill={FOUND} stroke={LAND_STROKE} strokeWidth={0.4} />
+          }
+          // A country to find is a hole in the land, the colour of the sea.
+          if (missing.includes(shape.code)) {
+            return <Path key={shape.code} d={shape.d} fill={SEA} />
+          }
+          return (
+            <Path
+              key={shape.code}
+              d={shape.d}
+              fill={wholeWorld || playable.includes(shape.code) ? LAND : LAND_OUTSIDE}
+              stroke={LAND_STROKE}
+              strokeWidth={0.4}
+            />
+          )
+        })}
+      </>
+    ),
+    [found, highlighted, missing, playable, wholeWorld]
+  )
   useEffect(() => {
     const box = focus ? boxAround([focus]) : null
     if (unit > 0 && viewportHeight > 0 && box) zoomTo(scroll.current, box, unit, true)
@@ -134,36 +211,29 @@ export function WorldMap({ playable, missing, found, highlighted }: WorldMapProp
           showsHorizontalScrollIndicator={false}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ width: MAP_WIDTH * unit, height: MAP_HEIGHT * unit }}
+          onScroll={onScroll}
+          scrollEventThrottle={32}
         >
           <Svg
             width={MAP_WIDTH * unit}
             height={MAP_HEIGHT * unit}
             viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
           >
-            <Rect width={MAP_WIDTH} height={MAP_HEIGHT} fill={SEA} />
-            {SHAPES.map((shape) => {
-              if (shape.code === highlighted) {
-                return <Path key={shape.code} d={shape.d} fill={colors.star} />
-              }
-              if (found.includes(shape.code)) {
-                return <Path key={shape.code} d={shape.d} fill={FOUND} stroke={LAND_STROKE} strokeWidth={0.4} />
-              }
-              // A country to find is a hole in the land, the colour of the sea.
-              if (missing.includes(shape.code)) {
-                return <Path key={shape.code} d={shape.d} fill={SEA} />
-              }
-              return (
-                <Path
-                  key={shape.code}
-                  d={shape.d}
-                  fill={wholeWorld || playable.includes(shape.code) ? LAND : LAND_OUTSIDE}
-                  stroke={LAND_STROKE}
-                  strokeWidth={0.4}
-                />
-              )
-            })}
+            {shapes}
           </Svg>
         </ScrollView>
+      )}
+      {viewport && sharp && (
+        <Svg
+          pointerEvents="none"
+          style={StyleSheet.absoluteFill}
+          width={viewport.width}
+          height={viewport.height}
+          viewBox={`${sharp.x} ${sharp.y} ${sharp.width} ${sharp.height}`}
+          preserveAspectRatio="xMinYMin slice"
+        >
+          {shapes}
+        </Svg>
       )}
     </View>
   )
