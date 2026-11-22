@@ -51,9 +51,9 @@ Première version de WordClimb.
 À envoyer, dans cet ordre, depuis `store-assets/ios/6.9/fr/fiche/` :
 
 1. `01-change-une-lettre.png` — la règle, sur une partie en cours
-2. `02-trois-etoiles.png` — la récompense, sur un niveau terminé
+2. `02-trois-etoiles.png` — l'écran de victoire : étoiles et pièces gagnées
 3. `03-sans-pub.png` — le volume et l'absence de pub, sur l'accueil
-4. `04-defi-du-jour.png` — le défi du jour et le rang, sur un défi terminé
+4. `04-defi-du-jour.png` — le défi du jour, avec les indices et leur prix en pièces
 
 Les captures sans habillage sont dans `store-assets/ios/6.9/fr/brut/`.
 
