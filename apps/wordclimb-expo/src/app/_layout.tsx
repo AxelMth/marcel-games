@@ -11,7 +11,7 @@ import { daily } from "@/game/daily-store"
 import { loadProgress } from "@/game/progress-store"
 import { syncWithServer, whenFirstSynced } from "@/game/sync"
 import { loadWallet } from "@/game/wallet-store"
-import { colors } from "@marcel-games/expo-ui"
+import { colors, startAds } from "@marcel-games/expo-ui"
 
 void SplashScreen.preventAutoHideAsync()
 void loadProgress()
@@ -29,7 +29,8 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontError) console.error("Game fonts failed to load", fontError)
-    if (settled) void SplashScreen.hideAsync()
+    // The consent form needs the app on screen: shown under the splash, it and every ad after it present invisibly.
+    if (settled) void SplashScreen.hideAsync().then(startAds)
   }, [fontError, settled])
 
   // The day may have turned, or the daily been played elsewhere, while the app was away.

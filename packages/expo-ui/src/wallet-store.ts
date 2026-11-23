@@ -1,4 +1,4 @@
-import { openWallet, rewardForStars, spendCoins, type Wallet } from "@marcel-games/game-sync"
+import { openWallet, rewardForAd, rewardForStars, spendCoins, type Wallet } from "@marcel-games/game-sync"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useSyncExternalStore } from "react"
 
@@ -26,6 +26,7 @@ export interface WalletStore {
   /** Pays for a hint. False when the wallet is not open or cannot cover the cost. */
   pay: (cost: number) => boolean
   earnForStars: (stars: number) => void
+  earnForAd: () => void
   /** The coin balance, or null while the wallet has not been read. */
   useBalance: () => number | null
 }
@@ -82,6 +83,12 @@ export function createWalletStore(storageKey: string): WalletStore {
     earnForStars(stars) {
       if (!wallet) return
       const richer = rewardForStars(wallet, stars)
+      publish(richer)
+      void save(richer)
+    },
+    earnForAd() {
+      if (!wallet) return
+      const richer = rewardForAd(wallet)
       publish(richer)
       void save(richer)
     },

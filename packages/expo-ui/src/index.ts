@@ -9,4 +9,11 @@ export { PressableSurface, Surface } from "./surface"
 export { MIN_TOUCH, colors, fonts } from "./tokens"
 export { createWalletStore, type WalletStore } from "./wallet-store"
 export { HintStack, InfoBubble, Toast, useFlash, type Flash, type HintOption } from "./overlays"
+export {
+  rewardedUnitId,
+  startAds,
+  useRewardedAd,
+  type AdUnitIds,
+  type RewardedAdHandle,
+} from "./rewarded-ad"
 export { StatsScreen, type HistoryItem, type StatTile, type StatsTab } from "./stats-screen"

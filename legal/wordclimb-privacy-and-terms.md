@@ -5,7 +5,7 @@ description: "Politique de confidentialité et conditions d'utilisation de WordC
 
 # WordClimb — Privacy Policy & Terms of Use
 
-_Last updated: 2026-11-21_
+_Last updated: 2026-11-23_
 
 
 ## Privacy Policy
@@ -24,8 +24,13 @@ The game can be played offline: results are kept on your device and sent the nex
 time the server can be reached. Your coin balance stays on your device. The app
 has no analytics.
 
-**Advertising.** WordClimb shows no ads. We do not use your device's
+**Advertising.** When you run out of coins, you can choose to watch a video ad
+to earn some. WordClimb shows an ad only when you ask for one. Ads are served by
+Google AdMob and are non-personalised: we do not ask for your device's
 advertising identifier and we do not track you across other apps or websites.
+Google processes device and usage data to serve and measure the ad, under its
+[privacy policy](https://policies.google.com/privacy). Where the law requires
+it, you are asked for your consent first.
 
 **Your choices.** Uninstalling the app removes locally stored data. To have the
 data held on our game server deleted, contact us at the address below.

@@ -42,7 +42,9 @@ import { ladderLayout } from "@/game/layout"
 import { bankClassicLevel } from "@/game/progress-store"
 import { reportLevel, whenFirstSynced } from "@/game/sync"
 import { useGame } from "@/game/use-game"
+import { useCoinsAd } from "@/game/ads"
 import { earnCoinsForStars, loadWallet, useCoinBalance } from "@/game/wallet-store"
+import { AD_REWARD_COINS } from "@marcel-games/game-sync"
 import { brand } from "@/lib/brand"
 import { deviceLocale } from "@/lib/locale"
 
@@ -143,7 +145,8 @@ function Game({ level, levelIndex, dailyDay, locale }: GameProps) {
   const router = useRouter()
   const [ladderHeight, setLadderHeight] = useState(0)
   const [hintsOpen, setHintsOpen] = useState(false)
-  const [flash, showFlash] = useFlash()
+  const [flash, showFlash, hideFlash] = useFlash()
+  const coinsAd = useCoinsAd()
   const coins = useCoinBalance()
   // Coins won but still flying to the counter: the counter shows them only once they land.
   const [inFlight, setInFlight] = useState(0)
@@ -202,6 +205,15 @@ function Game({ level, levelIndex, dailyDay, locale }: GameProps) {
     showFlash({
       title: t(locale, "notEnoughCoins"),
       detail: t(locale, "hintCostsCoins").replace("{n}", String(cost)),
+      action: coinsAd.ready
+        ? {
+            label: t(locale, "watchAdForCoins").replace("{n}", String(AD_REWARD_COINS)),
+            onPress: () => {
+              hideFlash()
+              void coinsAd.watch()
+            },
+          }
+        : undefined,
     })
   }
   const hintOptions: HintOption[] = [

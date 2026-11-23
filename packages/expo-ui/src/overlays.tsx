@@ -11,10 +11,12 @@ const HINT_STAGGER_MS = 50
 export interface Flash {
   title: string
   detail?: string
+  /** A way out of the problem, such as watching an ad for coins. A flash with one stays twice as long. */
+  action?: { label: string; onPress: () => void }
 }
 
 /** A message that shows for a moment, then goes; showing another restarts the clock. */
-export function useFlash(durationMs = FLASH_MS): [Flash | null, (flash: Flash) => void] {
+export function useFlash(durationMs = FLASH_MS): [Flash | null, (flash: Flash) => void, () => void] {
   const [flash, setFlash] = useState<Flash | null>(null)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(
@@ -27,11 +29,15 @@ export function useFlash(durationMs = FLASH_MS): [Flash | null, (flash: Flash) =
     (next: Flash) => {
       if (timer.current) clearTimeout(timer.current)
       setFlash(next)
-      timer.current = setTimeout(() => setFlash(null), durationMs)
+      timer.current = setTimeout(() => setFlash(null), next.action ? durationMs * 2 : durationMs)
     },
     [durationMs]
   )
-  return [flash, show]
+  const hide = useCallback(() => {
+    if (timer.current) clearTimeout(timer.current)
+    setFlash(null)
+  }, [])
+  return [flash, show, hide]
 }
 
 /** A banner laid over the top of the play area, so a warning never pushes the level around. */
@@ -47,6 +53,20 @@ export function Toast({ flash }: { flash: Flash | null }) {
     >
       <Text style={styles.toastTitle}>{flash.title}</Text>
       {flash.detail ? <Text style={styles.toastDetail}>{flash.detail}</Text> : null}
+      {flash.action ? (
+        <PressableSurface
+          onPress={flash.action.onPress}
+          accessibilityLabel={flash.action.label}
+          face={colors.surface}
+          radius={12}
+          height={MIN_TOUCH}
+          outerStyle={styles.toastAction}
+          style={styles.toastActionInner}
+        >
+          <GoldCoin size={20} />
+          <Text style={styles.toastActionLabel}>{flash.action.label}</Text>
+        </PressableSurface>
+      ) : null}
     </Animated.View>
   )
 }
@@ -134,6 +154,9 @@ const styles = StyleSheet.create({
   },
   toastTitle: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.surface },
   toastDetail: { fontFamily: fonts.body, fontSize: 13, color: "rgba(255,255,255,0.9)" },
+  toastAction: { marginTop: 8 },
+  toastActionInner: { flexDirection: "row", gap: 8, paddingHorizontal: 14 },
+  toastActionLabel: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   bubble: {
     position: "absolute",
     top: 10,

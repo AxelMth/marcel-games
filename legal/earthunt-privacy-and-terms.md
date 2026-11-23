@@ -5,7 +5,7 @@ description: "Politique de confidentialité et conditions d'utilisation d'EartHu
 
 # EartHunt — Privacy Policy & Terms of Use
 
-_Last updated: 2026-08-24_
+_Last updated: 2026-11-23_
 
 
 ## Privacy Policy
@@ -20,8 +20,13 @@ account and we do not collect your name, email address, or contacts.
   game server to compute rankings.
 - **Device info** — brand, model and OS version, for diagnostics and compatibility.
 
-**Advertising.** EartHunt shows no ads. We do not use your device's advertising
-identifier and we do not track you across other apps or websites.
+**Advertising.** When you run out of coins, you can choose to watch a video ad
+to earn some. EartHunt shows an ad only when you ask for one. Ads are served by
+Google AdMob and are non-personalised: we do not ask for your device's
+advertising identifier and we do not track you across other apps or websites.
+Google processes device and usage data to serve and measure the ad, under its
+[privacy policy](https://policies.google.com/privacy). Where the law requires
+it, you are asked for your consent first.
 
 **Maps & analytics.** Maps are provided by Mapbox. Anonymous usage analytics help
 us improve the app.

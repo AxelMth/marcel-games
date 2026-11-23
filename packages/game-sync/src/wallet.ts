@@ -63,3 +63,10 @@ export function spendCoins(wallet: Wallet, cost: number): Wallet | null {
 export function rewardForStars(wallet: Wallet, stars: number): Wallet {
   return { ...wallet, balance: wallet.balance + stars }
 }
+
+/** Coins for a rewarded ad watched to the end: enough for the dearest hint of either game. */
+export const AD_REWARD_COINS = 5
+
+export function rewardForAd(wallet: Wallet): Wallet {
+  return { ...wallet, balance: wallet.balance + AD_REWARD_COINS }
+}
