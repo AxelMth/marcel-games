@@ -28,7 +28,7 @@ import {
   useFlash,
 } from "@marcel-games/expo-ui"
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router"
-import { utcDay } from "@marcel-games/game-sync"
+import { AD_REWARD_COINS, utcDay } from "@marcel-games/game-sync"
 import { useEffect, useMemo, useRef, useState, type ComponentRef } from "react"
 import {
   ActivityIndicator,
@@ -45,6 +45,7 @@ import { WorldMap } from "@/components/world-map"
 import { daily } from "@/game/daily-store"
 import { bankLevel } from "@/game/progress-store"
 import { reportLevel, whenFirstSynced } from "@/game/sync"
+import { useCoinsAd } from "@/game/ads"
 import { earnCoinsForStars, loadWallet, useCoinBalance } from "@/game/wallet-store"
 import { useLevel, type LevelPlay } from "@/game/use-level"
 import { deviceLocale } from "@/lib/locale"
@@ -149,7 +150,8 @@ function Game({ config, dailyDay }: { config: GameConfig; dailyDay?: string }) {
   const [input, setInput] = useState("")
   const isDaily = config.mode === "daily"
   const today = daily.useToday()
-  const [flash, showFlash] = useFlash()
+  const [flash, showFlash, hideFlash] = useFlash()
+  const coinsAd = useCoinsAd()
   const balance = useCoinBalance()
   const counterRef = useRef<ComponentRef<typeof View>>(null)
   const [coinTarget, setCoinTarget] = useState<{ x: number; y: number } | null>(null)
@@ -303,6 +305,15 @@ function Game({ config, dailyDay }: { config: GameConfig; dailyDay?: string }) {
                   detail: tReplace(locale, "game.nextHintCosts", {
                     n: HINT_STEP_COSTS[(play.hintStep + 1) as 1 | 2 | 3],
                   }),
+                  action: coinsAd.ready
+                    ? {
+                        label: tReplace(locale, "game.watchAdForCoins", { n: AD_REWARD_COINS }),
+                        onPress: () => {
+                          hideFlash()
+                          void coinsAd.watch()
+                        },
+                      }
+                    : undefined,
                 })
               }}
               accessibilityLabel={

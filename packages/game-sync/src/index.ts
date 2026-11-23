@@ -12,9 +12,11 @@ export {
   type DailyStats,
 } from "./daily"
 export {
+  AD_REWARD_COINS,
   WEEKLY_COIN_ALLOWANCE,
   isoWeekId,
   openWallet,
+  rewardForAd,
   rewardForStars,
   spendCoins,
   type Wallet,

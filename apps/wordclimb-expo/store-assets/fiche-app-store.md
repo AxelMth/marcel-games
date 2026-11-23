@@ -19,7 +19,7 @@
 
 ## Texte promotionnel (170 max)
 
-Change une lettre pour passer d'un mot au suivant et grimpe l'échelle jusqu'à l'arrivée. 1 500 niveaux en français, sans compte ni publicité.
+Change une lettre pour passer d'un mot au suivant et grimpe l'échelle jusqu'à l'arrivée. 1 500 niveaux en français, sans compte.
 
 ## Description
 
@@ -34,7 +34,7 @@ Tu pars d'un mot, tu dois en atteindre un autre. À chaque barreau, tu changes u
 • Des indices payés en pièces, gagnées en jouant et offertes chaque semaine
 • Un clavier intégré, pensé pour jouer à une main
 • Ta progression est sauvegardée, même après une réinstallation
-• Aucun compte, aucune publicité, aucun achat
+• Aucun compte, aucun achat
 
 L'app choisit le français ou l'anglais selon la langue de ton iPhone.
 
@@ -52,7 +52,7 @@ Première version de WordClimb.
 
 1. `01-change-une-lettre.png` — la règle, sur une partie en cours
 2. `02-trois-etoiles.png` — l'écran de victoire : étoiles et pièces gagnées
-3. `03-sans-pub.png` — le volume et l'absence de pub, sur l'accueil
+3. `03-sans-compte.png` — le volume et l'absence de compte, sur l'accueil
 4. `04-defi-du-jour.png` — le défi du jour, avec les indices et leur prix en pièces
 
 Les captures sans habillage sont dans `store-assets/ios/6.9/fr/brut/`.
@@ -61,15 +61,18 @@ Apple en demande au moins une et en accepte dix. Les autres tailles d'iPhone son
 
 ## Confidentialité de l'app
 
-Réponse au questionnaire : **Données collectées, non liées à l'utilisateur, sans suivi**.
+Réponse au questionnaire : **Données collectées, non liées à l'utilisateur, sans suivi**. Les lignes AdMob couvrent la pub récompensée (PR #45) ; elles sont déclarées dès maintenant, la déclaration valant pour l'app et non pour un build.
 
 | Type de données | Finalité | Lié à l'identité | Suivi |
 | --- | --- | --- | --- |
-| Identifiants → Identifiant de l'appareil (ID aléatoire créé par l'app) | Fonctionnalité de l'app | Non | Non |
-| Données d'utilisation → Interactions avec le produit (niveaux finis, essais, temps, indices) | Fonctionnalité de l'app | Non | Non |
-| Diagnostics → Autres données de diagnostic (marque, modèle, version d'iOS) | Fonctionnalité de l'app | Non | Non |
+| Identifiants → Identifiant de l'appareil (ID créé par l'app ; IDFV côté AdMob) | Fonctionnalité de l'app, Publicité tierce, Analyse | Non | Non |
+| Localisation → Localisation approximative (déduite de l'IP par AdMob) | Publicité tierce, Analyse | Non | Non |
+| Données d'utilisation → Interactions avec le produit (niveaux finis, essais, temps, indices ; pubs vues) | Fonctionnalité de l'app, Publicité tierce, Analyse | Non | Non |
+| Données d'utilisation → Données publicitaires (AdMob) | Publicité tierce, Analyse | Non | Non |
+| Diagnostics → Données de plantage, Données de performance (AdMob) | Analyse | Non | Non |
+| Diagnostics → Autres données de diagnostic (marque, modèle, version d'iOS) | Fonctionnalité de l'app, Publicité tierce, Analyse | Non | Non |
 
-Depuis le build 12, l'app envoie ces données à `wordclimb-api.fly.dev` pour conserver la progression. Le build 11 ne fait aucun appel réseau : si c'est lui qui est soumis, la réponse reste « Données non collectées ».
+L'app envoie ses données à `wordclimb-api.fly.dev` pour conserver la progression. AdMob ne reçoit que des requêtes non personnalisées et l'app ne demande pas l'autorisation de suivi (ATT) : rien n'est « utilisé pour le suivi ».
 
 ## Classification par âge
 
@@ -81,11 +84,11 @@ Répondre « Non » ou « Aucun » à toutes les questions de contenu. Résultat
 
 ## Notes pour App Review
 
-WordClimb is a word-ladder puzzle game. No account or sign-in is required and the app works fully offline: it makes no network requests.
+WordClimb is a word-ladder puzzle game. No account or sign-in is required. Progress is saved under a random device ID created by the app and synced with our server, so it survives a reinstall.
 
 How to play: tap "Jouer" (Play) on the home screen. Type the next word with the in-game keyboard; each word differs from the previous one by exactly one letter. A row is checked automatically once it is full. For level 1 in French, the answers are BETE then BUTE; in English, WARD then WORD.
 
-The app has no ads, no in-app purchases and collects no data. This build replaces an earlier Capacitor shell that used the same bundle identifier and was never released.
+The app has no in-app purchases. From the version with ads on, a player who cannot afford a hint can watch an optional Google AdMob rewarded ad (non-personalised, no tracking prompt) for 5 coins. This build replaces an earlier Capacitor shell that used the same bundle identifier and was never released.
 
 Contact: ceo@axelmathi.eu
 
