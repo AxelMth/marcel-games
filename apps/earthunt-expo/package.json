@@ -11,6 +11,8 @@
     "ios:prebuild": "LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 expo prebuild --platform ios --clean",
     "ios:archive": "xcodebuild -workspace ios/EartHunt.xcworkspace -scheme EartHunt -configuration Release -destination 'generic/platform=iOS' -archivePath build/EartHunt.xcarchive -allowProvisioningUpdates archive",
     "ios:export": "xcodebuild -exportArchive -archivePath build/EartHunt.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath build/ipa -allowProvisioningUpdates",
+    "android:prebuild": "LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 expo prebuild --platform android --clean",
+    "android:bundle": "cd android && ./gradlew bundleRelease",
     "lint": "eslint . && tsc --noEmit"
   },
   "dependencies": {

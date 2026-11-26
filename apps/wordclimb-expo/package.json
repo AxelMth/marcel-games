@@ -11,6 +11,8 @@
     "ios:prebuild": "LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 expo prebuild --platform ios --clean",
     "ios:archive": "xcodebuild -workspace ios/WordClimb.xcworkspace -scheme WordClimb -configuration Release -destination 'generic/platform=iOS' -archivePath build/WordClimb.xcarchive -allowProvisioningUpdates archive",
     "ios:export": "xcodebuild -exportArchive -archivePath build/WordClimb.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath build/ipa -allowProvisioningUpdates",
+    "android:prebuild": "LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 expo prebuild --platform android --clean",
+    "android:bundle": "cd android && ./gradlew bundleRelease",
     "lint": "eslint . && tsc --noEmit"
   },
   "dependencies": {
